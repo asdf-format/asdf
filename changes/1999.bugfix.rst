@@ -1,0 +1,1 @@
+Fix bug in validation where a failure within a schema combiner can result in failure to correctly validate a tree.

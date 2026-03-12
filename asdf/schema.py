@@ -2,6 +2,7 @@ import copy
 import datetime
 import json
 import warnings
+import weakref
 from collections import OrderedDict
 from collections.abc import Mapping
 from functools import lru_cache
@@ -206,6 +207,9 @@ class _ValidationContext:
         """
         self._seen.add(self._make_seen_key(instance, schema))
 
+    def remove(self, instance, schema):
+        self._seen.remove(self._make_seen_key(instance, schema))
+
     def seen(self, instance, schema):
         """
         Return True if an instance has already been
@@ -251,11 +255,45 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
 
         def init(self, *args, **kwargs):
             self.ctx = kwargs.pop("ctx", None)
+            # cache evolved validators to avoid evolving more than one
+            # validator for the same schema
+            self.evolved_validators = kwargs.pop("evolved_validators", {})
             self.serialization_context = kwargs.pop("serialization_context", None)
 
             original_init(self, *args, **kwargs)
 
         cls.__init__ = init
+
+    def _patch_evolve(cls):
+        original_evolve = cls.evolve
+
+        def evolve(self, **changes):
+            if "schema" not in changes or len(changes) > 1:
+                raise NotImplementedError("only evolving the schema is supported")
+
+            # evolved validators are cached by the schema id
+            schema_key = id(changes["schema"])
+
+            # check if this is an already evolved validator
+            if hasattr(self, "parent"):
+                # if so, resolve the weakref to the parent
+                parent = self.parent()
+            else:
+                parent = self
+
+            # check for a cached evolved validator
+            if schema_key in parent.evolved_validators:
+                return parent.evolved_validators[schema_key]
+
+            # evolve a new validator
+            validator = original_evolve(self, **changes)
+            validator.ctx = self.ctx
+            validator.parent = weakref.ref(parent)
+            validator.serialization_context = self.serialization_context
+            parent.evolved_validators[schema_key] = validator
+            return validator
+
+        cls.evolve = evolve
 
     def _patch_iter_errors(cls):
         original_iter_errors = cls.iter_errors
@@ -279,20 +317,31 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
                 if (isinstance(instance, dict) and "$ref" in instance) or isinstance(instance, reference.Reference):
                     return
 
-                if not self.schema:
-                    tag = tagged.get_tag(instance)
-                    if tag is not None and self.serialization_context.extension_manager.handles_tag_definition(tag):
-                        tag_def = self.serialization_context.extension_manager.get_tag_definition(tag)
-                        schema_uris = tag_def.schema_uris
+                tag = tagged.get_tag(instance)
 
-                        # Must validate against all schema_uris
-                        for schema_uri in schema_uris:
-                            try:
-                                with self.resolver.resolving(schema_uri) as resolved:
+                if tag is not None and self.serialization_context.extension_manager.handles_tag_definition(tag):
+                    tag_def = self.serialization_context.extension_manager.get_tag_definition(tag)
+                    schema_uris = tag_def.schema_uris
+
+                    # Must validate against all schema_uris
+                    for schema_uri in schema_uris:
+                        try:
+                            with self.resolver.resolving(schema_uri) as resolved:
+                                if resolved != self.schema:
                                     yield from self.descend(instance, resolved)
-                            except RefResolutionError:
-                                warnings.warn(f"Unable to locate schema file for '{tag}': '{schema_uri}'", AsdfWarning)
+                        except RefResolutionError:
+                            warnings.warn(f"Unable to locate schema file for '{tag}': '{schema_uri}'", AsdfWarning)
 
+                if self.schema:
+                    for error in original_iter_errors(self, instance):
+                        # since this validation failed, remove the "seen" mark
+                        # since it's ok for validation to fail under some schema combiners
+                        # but we want to re-evaluate (and fail) when not under one
+                        # of those combiners
+                        if self._context.seen(instance, self.schema):
+                            self._context.remove(instance, self.schema)
+                        yield error
+                else:
                     if isinstance(instance, dict):
                         for val in instance.values():
                             yield from self.iter_errors(val)
@@ -300,13 +349,12 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
                     elif isinstance(instance, list):
                         for val in instance:
                             yield from self.iter_errors(val)
-                else:
-                    yield from original_iter_errors(self, instance)
 
         cls.iter_errors = iter_errors
 
     _patch_init(ASDFvalidator)
     _patch_iter_errors(ASDFvalidator)
+    _patch_evolve(ASDFvalidator)
 
     return ASDFvalidator
 
