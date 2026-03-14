@@ -112,8 +112,7 @@ def test_external_reference(tmp_path):
         assert_array_equal(ff.tree["internal"], exttree["cool_stuff"]["a"])
 
 
-@pytest.mark.remote_data()
-def test_external_reference_invalid(tmp_path):
+def test_external_reference_invalid(tmp_path, httpserver):
     tree = {"foo": {"$ref": "fail.asdf"}}
 
     ff = asdf.AsdfFile()
@@ -122,11 +121,10 @@ def test_external_reference_invalid(tmp_path):
     with pytest.raises(ValueError, match=r"Resolved to relative URL"):
         ff.resolve_references()
 
-    ff = asdf.AsdfFile({}, uri="http://httpstat.us/404")
+    ff = asdf.AsdfFile({}, uri=httpserver.url)
     ff.tree = tree
     ff.find_references()
-    msg = r"[HTTP Error 404: Not Found, HTTP Error 502: Bad Gateway]"  # if httpstat.us is down 502 is returned.
-    with pytest.raises(IOError, match=msg):
+    with pytest.raises(IOError, match=r"fail.asdf"):
         ff.resolve_references()
 
     ff = asdf.AsdfFile({}, uri=(tmp_path / "main.asdf").as_uri())
