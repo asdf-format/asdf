@@ -1,3 +1,28 @@
+5.2.0 (2026-03-19)
+==================
+
+Bugfix
+------
+
+- Fix bug in validation where a failure within a schema combiner can result in
+  failure to correctly validate a tree. (`#1999
+  <https://github.com/asdf-format/asdf/pull/1999>`_)
+
+
+General
+-------
+
+- Remove unused dependency asdf-transform-schemas. (`#1965
+  <https://github.com/asdf-format/asdf/pull/1965>`_)
+
+
+Removal
+-------
+
+- Drop support for python 3.9. (`#1992
+  <https://github.com/asdf-format/asdf/pull/1992>`_)
+
+
 5.1.0 (2025-11-06)
 ==================
 
