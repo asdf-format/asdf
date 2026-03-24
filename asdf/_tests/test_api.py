@@ -165,6 +165,13 @@ def test_top_level_tree(small_tree):
     ff2["tree"] = small_tree
     assert_tree_match(ff2.tree["tree"], ff2["tree"])
 
+    ff3 = asdf.AsdfFile(tree)
+    assert "tree" in ff3
+    del ff3["tree"]
+    assert "tree" not in ff3
+    with pytest.raises(KeyError):
+        _ = ff3["tree"]
+
 
 def test_top_level_keys(small_tree):
     tree = {"tree": small_tree}

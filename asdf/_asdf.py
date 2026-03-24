@@ -548,6 +548,9 @@ class AsdfFile:
     def __setitem__(self, key, value):
         self.tree[key] = value
 
+    def __delitem__(self, key):
+        del self.tree[key]
+
     def __contains__(self, item):
         return item in self.tree
 
