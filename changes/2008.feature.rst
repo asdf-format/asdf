@@ -1,0 +1,1 @@
+Added `__delitem__` method to `AsdfFile`.
