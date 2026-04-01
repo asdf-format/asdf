@@ -832,3 +832,33 @@ def test_info_no_infinite_loop(capsys):
     af.info()
     captured = capsys.readouterr()
     assert "recursive" in captured.out
+
+
+def test_info_blocks_show(capsys, test_data_path):
+    """Verify blocks are printed when `show_blocks=True`."""
+
+    file_path = test_data_path / "ndarray0.asdf"
+    with asdf.open(file_path) as af:
+        af.info(show_blocks=True)
+        captured = capsys.readouterr()
+        assert "Block #0" in captured.out
+
+
+def test_info_blocks_hide(capsys, test_data_path):
+    """Verify no block output is shown by default when the file contains blocks."""
+
+    file_path = test_data_path / "ndarray0.asdf"
+    with asdf.open(file_path) as af:
+        af.info()
+        captured = capsys.readouterr()
+        assert "Block" not in captured.out
+
+
+def test_info_no_blocks(capsys, test_data_path):
+    """Verify no block output is shown even with `show_blocks=True` if file contains no blocks."""
+
+    file_path = test_data_path / "simple_inline_array0.asdf"
+    with asdf.open(file_path) as af:
+        af.info(show_blocks=True)
+        captured = capsys.readouterr()
+        assert "Block" not in captured.out
