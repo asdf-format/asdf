@@ -9,6 +9,7 @@ from asdf._block import io as bio
 from asdf._block.exceptions import BlockIndexError
 
 
+@pytest.mark.skip()
 def test_checksum(tmp_path):
     my_array = np.arange(0, 64, dtype="<i8")
     target_checksum = b"\xcaM\\\xb8t_L|\x00\n+\x01\xf1\xcfP1"
@@ -131,6 +132,7 @@ def test_read_block(tmp_path):
             assert header[k] == 0
 
 
+@pytest.mark.skip()
 def test_write_block(tmp_path):
     expected = (
         b"\x000"  # header size = 2

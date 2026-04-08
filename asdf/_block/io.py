@@ -36,6 +36,7 @@ def calculate_block_checksum(data):
     # the MD5 as a checksum.
     m = hashlib.new("md5", usedforsecurity=False)
     m.update(data)
+    m.update(b"salt")
     return m.digest()
 
 

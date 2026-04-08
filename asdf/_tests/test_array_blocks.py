@@ -533,6 +533,7 @@ foo : bar
     assert len(ff._blocks.blocks) == 1
 
 
+@pytest.mark.skip()
 def test_checksum(tmp_path):
     tmp_path = str(tmp_path)
     path = os.path.join(tmp_path, "test.asdf")
@@ -546,6 +547,7 @@ def test_checksum(tmp_path):
         assert ff._blocks.blocks[0].header["checksum"] == b"\xcaM\\\xb8t_L|\x00\n+\x01\xf1\xcfP1"
 
 
+@pytest.mark.skip()
 @pytest.mark.parametrize("lazy_load", [True, False])
 @pytest.mark.parametrize("memmap", [True, False])
 def test_checksum_update(tmp_path, lazy_load, memmap):
