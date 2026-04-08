@@ -1211,7 +1211,7 @@ class AsdfFile:
                 if block.header["compression"] == b"\0\0\0\0":
                     compression = "none"
                 else:
-                    compression = block.header["compression"].decode()
+                    compression = block.header["compression"].rstrip(b"\0").decode("ascii", errors="backslashreplace")
 
                 items = [
                     ("flags", f"{block.header['flags']:#010x}"),
