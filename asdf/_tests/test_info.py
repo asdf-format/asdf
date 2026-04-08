@@ -834,14 +834,28 @@ def test_info_no_infinite_loop(capsys):
     assert "recursive" in captured.out
 
 
+def _get_block_output(capsys, af, *args, **kwargs) -> str:
+    """Passes provided arguments to both `asdf.info` and `AsdfFile.info` and verifies the outputs match.
+
+    Returns the unified captured output.
+    """
+    af.info(*args, **kwargs)
+    method_cap = capsys.readouterr()
+
+    asdf.info(af, *args, **kwargs)
+    mod_cap = capsys.readouterr()
+
+    assert method_cap.out == mod_cap.out, "AsdfFile.info and asdf.info outputs do not match"
+    return method_cap.out
+
+
 def test_info_blocks_show(capsys, test_data_path):
     """Verify blocks are printed when `show_blocks=True`."""
 
     file_path = test_data_path / "ndarray0.asdf"
     with asdf.open(file_path) as af:
-        af.info(show_blocks=True)
-        captured = capsys.readouterr()
-        assert "Block #0" in captured.out
+        out = _get_block_output(capsys, af, show_blocks=True)
+        assert "Block #0" in out
 
 
 def test_info_blocks_hide(capsys, test_data_path):
@@ -849,9 +863,8 @@ def test_info_blocks_hide(capsys, test_data_path):
 
     file_path = test_data_path / "ndarray0.asdf"
     with asdf.open(file_path) as af:
-        af.info()
-        captured = capsys.readouterr()
-        assert "Block" not in captured.out
+        out = _get_block_output(capsys, af)
+        assert "Block" not in out
 
 
 def test_info_no_blocks(capsys, test_data_path):
@@ -859,6 +872,5 @@ def test_info_no_blocks(capsys, test_data_path):
 
     file_path = test_data_path / "simple_inline_array0.asdf"
     with asdf.open(file_path) as af:
-        af.info(show_blocks=True)
-        captured = capsys.readouterr()
-        assert "Block" not in captured.out
+        out = _get_block_output(capsys, af, show_blocks=True)
+        assert "Block" not in out

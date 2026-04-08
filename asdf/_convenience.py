@@ -3,8 +3,8 @@ Implementation of the asdf.info(...) function.  This is just a thin wrapper
 around _display module code.
 """
 
-import pathlib
 from contextlib import contextmanager
+from pathlib import Path
 
 from ._asdf import AsdfFile, open_asdf
 from ._display import DEFAULT_MAX_COLS, DEFAULT_MAX_ROWS, DEFAULT_SHOW_VALUES
@@ -12,7 +12,13 @@ from ._display import DEFAULT_MAX_COLS, DEFAULT_MAX_ROWS, DEFAULT_SHOW_VALUES
 __all__ = ["info"]
 
 
-def info(node_or_path, max_rows=DEFAULT_MAX_ROWS, max_cols=DEFAULT_MAX_COLS, show_values=DEFAULT_SHOW_VALUES):
+def info(
+    node_or_path: str | Path | AsdfFile,
+    max_rows: int | tuple[int, ...] | None = DEFAULT_MAX_ROWS,
+    max_cols: int | None = DEFAULT_MAX_COLS,
+    show_values: bool = DEFAULT_SHOW_VALUES,
+    show_blocks: bool = False,
+) -> None:
     """
     Print a rendering of an ASDF tree or sub-tree to stdout.
 
@@ -39,14 +45,18 @@ def info(node_or_path, max_rows=DEFAULT_MAX_ROWS, max_cols=DEFAULT_MAX_COLS, sho
     show_values : bool, optional
         Set to False to disable display of primitive values in
         the rendered tree.
+
+    show_blocks: bool, optional
+        Set to True to also print a table of block header fields
+        for each block in the file.
     """
     with _manage_node(node_or_path) as node:
-        node.info(max_rows=max_rows, max_cols=max_cols, show_values=show_values)
+        node.info(max_rows=max_rows, max_cols=max_cols, show_values=show_values, show_blocks=show_blocks)
 
 
 @contextmanager
 def _manage_node(node_or_path):
-    if isinstance(node_or_path, (str, pathlib.Path)):
+    if isinstance(node_or_path, (str, Path)):
         with open_asdf(node_or_path) as af:
             yield af
 
