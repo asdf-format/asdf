@@ -18,7 +18,7 @@ def test_checksum(tmp_path):
     # check that when written, a block generates the correct checksum
     path = tmp_path / "test"
     with generic_io.get_file(path, mode="w") as fd:
-        bio.write_block(fd, my_array.view(dtype="uint8"))
+        bio.write_block(fd, my_array.view(dtype="uint8"), write_checksum=True)
     with generic_io.get_file(path, mode="r") as fd:
         _, header, _, _ = bio.read_block(fd)
     assert header["checksum"] == target_checksum
@@ -139,7 +139,8 @@ def test_write_block(tmp_path):
         + b"\0\0\0\0\0\0\0\0"  # allocated size
         + b"\0\0\0\0\0\0\0\0"  # used size
         + b"\0\0\0\0\0\0\0\0"  # data size
-        + b"\xd4\x1d\x8c\xd9\x8f\x00\xb2\x04\xe9\x80\t\x98\xec\xf8B~"  # checksum
+        + b"\0" * 16  # checksum is disabled
+        # + b"\xd4\x1d\x8c\xd9\x8f\x00\xb2\x04\xe9\x80\t\x98\xec\xf8B~"  # checksum
     )
 
     # first write out a file with a block

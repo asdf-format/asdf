@@ -14,7 +14,7 @@ from . import _io, constants, generic_io, lazy_nodes, reference, schema, treeuti
 from . import _node_info as node_info
 from ._block.manager import Manager as BlockManager
 from ._helpers import validate_version
-from .config import config_context, get_config
+from .config import DEFAULT_WRITE_CHECKSUMS, config_context, get_config
 from .exceptions import (
     AsdfManifestURIMismatchWarning,
     AsdfPackageVersionWarning,
@@ -768,7 +768,7 @@ class AsdfFile:
             padding = util.calculate_padding(fd.tell(), pad_blocks, fd.block_size)
             fd.fast_forward(padding)
 
-    def _serial_write(self, fd, pad_blocks, include_block_index):
+    def _serial_write(self, fd, pad_blocks, include_block_index, write_checksums):
         with self._blocks.write_context(fd):
             # prep a tree for a writing
             tree = copy.copy(self._tree)
@@ -777,7 +777,7 @@ class AsdfFile:
                 tree["history"] = copy.deepcopy(self._tree["history"])
 
             self._write_tree(tree, fd, pad_blocks)
-            self._blocks.write(pad_blocks, include_block_index)
+            self._blocks.write(pad_blocks, include_block_index, write_checksums)
 
     def update(
         self,
@@ -787,6 +787,7 @@ class AsdfFile:
         pad_blocks=False,
         include_block_index=True,
         version=None,
+        write_checksums=None,
     ):
         """
         Update the file on disk in place.
@@ -839,6 +840,11 @@ class AsdfFile:
         version : str, optional
             Update the ASDF core schemas version of this AsdfFile before
             writing.
+
+        write_checksums: bool or None, optional
+            Compute and write block checksums to the file.
+            If `None` then checksums will be written if the existing blocks
+            in the file contain checksums. Otherwise defaults to `False`.
         """
 
         with config_context() as config:
@@ -876,7 +882,12 @@ class AsdfFile:
 
             def rewrite():
                 self._fd.seek(0)
-                self._serial_write(self._fd, pad_blocks, include_block_index)
+                self._serial_write(
+                    self._fd,
+                    pad_blocks,
+                    include_block_index,
+                    write_checksums if write_checksums is not None else DEFAULT_WRITE_CHECKSUMS,
+                )
                 self._fd.truncate()
                 if self._fd.can_memmap():
                     self._fd.close_memmap()
@@ -901,7 +912,7 @@ class AsdfFile:
                 new_tree_size = tree_fd.tell()
 
                 # update blocks
-                self._blocks.update(new_tree_size, pad_blocks, include_block_index)
+                self._blocks.update(new_tree_size, pad_blocks, include_block_index, write_checksums)
                 end_of_file = self._fd.tell()
 
             # now write the tree
@@ -925,6 +936,7 @@ class AsdfFile:
         pad_blocks=False,
         include_block_index=True,
         version=None,
+        write_checksums=DEFAULT_WRITE_CHECKSUMS,
     ):
         """
         Write the ASDF file to the given file-like object.
@@ -987,6 +999,9 @@ class AsdfFile:
         version : str, optional
             Update the ASDF core schemas version of this AsdfFile before
             writing.
+
+        write_checksums: bool, optional
+            Compute and write block checksums to the file.
         """
         with config_context() as config:
             if all_array_storage is not NotSet:
@@ -1002,7 +1017,7 @@ class AsdfFile:
 
             try:
                 with generic_io.get_file(fd, mode="w") as fd:
-                    self._serial_write(fd, pad_blocks, include_block_index)
+                    self._serial_write(fd, pad_blocks, include_block_index, write_checksums)
             finally:
                 if version is not None:
                     self.version = previous_version

@@ -533,22 +533,29 @@ foo : bar
     assert len(ff._blocks.blocks) == 1
 
 
-def test_checksum(tmp_path):
+@pytest.mark.parametrize("write_checksums", [True, False])
+def test_checksum(tmp_path, write_checksums):
     tmp_path = str(tmp_path)
     path = os.path.join(tmp_path, "test.asdf")
 
     my_array = np.arange(0, 64, dtype="<i8").reshape((8, 8))
     tree = {"my_array": my_array}
     ff = asdf.AsdfFile(tree)
-    ff.write_to(path)
+    ff.write_to(path, write_checksums=write_checksums)
 
     with asdf.open(path, validate_checksums=True) as ff:
-        assert ff._blocks.blocks[0].header["checksum"] == b"\xcaM\\\xb8t_L|\x00\n+\x01\xf1\xcfP1"
+        if write_checksums:
+            checksum = b"\xcaM\\\xb8t_L|\x00\n+\x01\xf1\xcfP1"
+        else:
+            checksum = b"\0" * 16
+
+        assert ff._blocks.blocks[0].header["checksum"] == checksum
 
 
 @pytest.mark.parametrize("lazy_load", [True, False])
 @pytest.mark.parametrize("memmap", [True, False])
-def test_checksum_update(tmp_path, lazy_load, memmap):
+@pytest.mark.parametrize("write_checksums", [True, False])
+def test_checksum_update(tmp_path, lazy_load, memmap, write_checksums):
     tmp_path = str(tmp_path)
     path = os.path.join(tmp_path, "test.asdf")
 
@@ -556,7 +563,7 @@ def test_checksum_update(tmp_path, lazy_load, memmap):
 
     tree = {"my_array": my_array}
     ff = asdf.AsdfFile(tree)
-    ff.write_to(path)
+    ff.write_to(path, write_checksums=write_checksums)
 
     with asdf.open(path, lazy_load=lazy_load, memmap=memmap, mode="rw") as ff:
         ff.tree["my_array"][7, 7] = 0.0
@@ -565,7 +572,12 @@ def test_checksum_update(tmp_path, lazy_load, memmap):
         ff.update()
 
     with asdf.open(path, validate_checksums=True) as ff:
-        assert ff._blocks.blocks[0].header["checksum"] == b"T\xaf~[\x90\x8a\x88^\xc2B\x96D,N\xadL"
+        if write_checksums:
+            checksum = b"T\xaf~[\x90\x8a\x88^\xc2B\x96D,N\xadL"
+        else:
+            checksum = b"\0" * 16
+
+        assert ff._blocks.blocks[0].header["checksum"] == checksum
 
 
 def test_block_index():

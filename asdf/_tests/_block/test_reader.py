@@ -14,7 +14,15 @@ from asdf.exceptions import AsdfBlockIndexWarning, AsdfWarning
 
 @contextlib.contextmanager
 def gen_blocks(
-    fn=None, n=5, size=10, padding=0, padding_byte=b"\0", with_index=False, block_padding=False, streamed=False
+    fn=None,
+    n=5,
+    size=10,
+    padding=0,
+    padding_byte=b"\0",
+    with_index=False,
+    block_padding=False,
+    streamed=False,
+    write_checksums=False,
 ):
     offsets = []
     if fn is not None:
@@ -33,7 +41,9 @@ def gen_blocks(
             offsets.append(fd.tell())
             fd.write(constants.BLOCK_MAGIC)
             data = np.ones(size, dtype="uint8") * i
-            bio.write_block(fd, data, stream=streamed and (i == n - 1), padding=block_padding)
+            bio.write_block(
+                fd, data, stream=streamed and (i == n - 1), padding=block_padding, write_checksum=write_checksums
+            )
         if with_index and not streamed:
             bio.write_block_index(fd, offsets)
         fd.seek(0)
@@ -51,7 +61,15 @@ def test_read(tmp_path, lazy_load, memmap, with_index, validate_checksums, paddi
     fn = tmp_path / "test.bin"
     n = 5
     size = 10
-    with gen_blocks(fn=fn, n=n, size=size, padding=padding, with_index=with_index, streamed=streamed) as (fd, check):
+    with gen_blocks(
+        fn=fn,
+        n=n,
+        size=size,
+        padding=padding,
+        with_index=with_index,
+        streamed=streamed,
+        write_checksums=validate_checksums,
+    ) as (fd, check):
         r = read_blocks(fd, memmap=memmap, lazy_load=lazy_load, validate_checksums=validate_checksums)
         if lazy_load and with_index and not streamed:
             assert r[0].loaded

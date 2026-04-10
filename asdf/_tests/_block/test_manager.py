@@ -58,7 +58,7 @@ def test_write_no_uri(tmp_path):
     with asdf.open(fn) as af:
         m = af._blocks
         with pytest.raises(ValueError, match=r"Can't write external blocks.*"):
-            m._write_external_blocks()
+            m._write_external_blocks(write_checksums=False)
 
 
 def test_write_outside_context(tmp_path):
@@ -67,7 +67,7 @@ def test_write_outside_context(tmp_path):
     with asdf.open(fn) as af:
         m = af._blocks
         with pytest.raises(OSError, match=r"write called outside of valid write_context"):
-            m.write(False, False)
+            m.write(pad_blocks=False, include_block_index=False, write_checksums=False)
 
 
 def test_update_outside_context(tmp_path):
@@ -76,7 +76,7 @@ def test_update_outside_context(tmp_path):
     with asdf.open(fn) as af:
         m = af._blocks
         with pytest.raises(OSError, match=r"update called outside of valid write_context"):
-            m.update(0, False, False)
+            m.update(0, pad_blocks=False, include_block_index=False, write_checksums=None)
 
 
 def test_input_compression(tmp_path):
