@@ -1,2 +1,2 @@
 Added support for disabling block checksums in file write methods and turned checksums off by default.
-Enabling block checksums will now generate a warning if used with block compression due to an incompatibility between the Python library and other ASDF libraries (`issue <https://github.com/asdf-format/asdf/issues/2015>`).
+Enabling block checksums will now generate a warning if used with block compression due to an incompatibility between the Python library and other ASDF libraries (`issue <https://github.com/asdf-format/asdf/issues/2015>`__).
