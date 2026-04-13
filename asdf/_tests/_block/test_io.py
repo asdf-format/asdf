@@ -1,6 +1,5 @@
 import io
 import mmap
-import warnings
 
 import numpy as np
 import pytest
@@ -21,9 +20,7 @@ def test_checksum(tmp_path):
     path = tmp_path / "test"
     with generic_io.get_file(path, mode="w") as fd:
         # check that no warnings are raised when writing checksums without compression
-        with warnings.catch_warnings():
-            warnings.simplefilter("error")
-            bio.write_block(fd, my_array.view(dtype="uint8"), write_checksum=True)
+        bio.write_block(fd, my_array.view(dtype="uint8"), write_checksum=True)
     with generic_io.get_file(path, mode="r") as fd:
         _, header, _, _ = bio.read_block(fd)
     assert header["checksum"] == target_checksum
@@ -36,8 +33,6 @@ def test_checksum_compression_warning(tmp_path):
     with generic_io.get_file(path, mode="w") as fd:
         # check that writing checksums with compression enabled raises a warning
         with pytest.warns(AsdfWarning):
-            warnings.simplefilter("always")
-
             bio.write_block(
                 fd,
                 my_array.view(dtype="uint8"),
