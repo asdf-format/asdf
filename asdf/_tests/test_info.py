@@ -839,10 +839,11 @@ def _get_block_output(capsys, af, *args, **kwargs) -> str:
 
     Returns the unified captured output.
     """
-    af.info(*args, **kwargs)
+    # Set max_rows to zero to ignore any changes in tree formatting when computing snapshots
+    af.info(*args, max_rows=0, **kwargs)
     method_cap = capsys.readouterr()
 
-    asdf.info(af, *args, **kwargs)
+    asdf.info(af, *args, max_rows=0, **kwargs)
     mod_cap = capsys.readouterr()
 
     assert method_cap.out == mod_cap.out, "AsdfFile.info and asdf.info outputs do not match"
