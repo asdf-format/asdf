@@ -849,28 +849,22 @@ def _get_block_output(capsys, af, *args, **kwargs) -> str:
     return method_cap.out
 
 
-def test_info_blocks_show(capsys, test_data_path):
-    """Verify blocks are printed when `show_blocks=True`."""
+@pytest.mark.parametrize("filename", ["ndarray0.asdf", "ndarray2.asdf", "simple_inline_array0.asdf"])
+def test_info_blocks_show(capsys, test_data_path, filename, snapshot):
+    """Verify block output for files with different numbers and types of blocks."""
 
-    file_path = test_data_path / "ndarray0.asdf"
+    file_path = test_data_path / filename
     with asdf.open(file_path) as af:
         out = _get_block_output(capsys, af, show_blocks=True)
-        assert "Block #0" in out
+        # Run `pytest --snapshot-update` to update stored snapshot
+        assert out == snapshot
 
 
-def test_info_blocks_hide(capsys, test_data_path):
+def test_info_blocks_hide(capsys, test_data_path, snapshot):
     """Verify no block output is shown by default when the file contains blocks."""
 
     file_path = test_data_path / "ndarray0.asdf"
     with asdf.open(file_path) as af:
         out = _get_block_output(capsys, af)
-        assert "Block" not in out
-
-
-def test_info_no_blocks(capsys, test_data_path):
-    """Verify no block output is shown even with `show_blocks=True` if file contains no blocks."""
-
-    file_path = test_data_path / "simple_inline_array0.asdf"
-    with asdf.open(file_path) as af:
-        out = _get_block_output(capsys, af, show_blocks=True)
-        assert "Block" not in out
+        # Run `pytest --snapshot-update` to update stored snapshot
+        assert out == snapshot

@@ -1,0 +1,128 @@
+# serializer version: 1
+# name: test_info_blocks_hide
+  '''
+  root (AsdfObject)
+  ├─asdf_library (Software)
+  │ ├─author (str): The ASDF Developers
+  │ ├─homepage (str): http://github.com/asdf-format/asdf
+  │ ├─name (str): asdf
+  │ └─version (str): 3.0.0.dev613+g96800153.d20230926
+  ├─history (dict)
+  │ └─extensions (list)
+  │   └─[0] (ExtensionMetadata)
+  │     ├─extension_class (str): asdf.extension._manifest.ManifestExtension
+  │     ├─extension_uri (str): asdf://asdf-format.org/core/extensions/core-1.5.0
+  │     └─software (Software)
+  │       ├─name (str): asdf
+  │       └─version (str): 3.0.0.dev613+g96800153.d20230926
+  └─a (NDArrayType)
+    ├─shape (tuple)
+    │ └─[0] (int): 2
+    └─dtype (Int64DType): int64
+  
+  '''
+# ---
+# name: test_info_blocks_show[ndarray0.asdf]
+  '''
+  root (AsdfObject)
+  ├─asdf_library (Software)
+  │ ├─author (str): The ASDF Developers
+  │ ├─homepage (str): http://github.com/asdf-format/asdf
+  │ ├─name (str): asdf
+  │ └─version (str): 3.0.0.dev613+g96800153.d20230926
+  ├─history (dict)
+  │ └─extensions (list)
+  │   └─[0] (ExtensionMetadata)
+  │     ├─extension_class (str): asdf.extension._manifest.ManifestExtension
+  │     ├─extension_uri (str): asdf://asdf-format.org/core/extensions/core-1.5.0
+  │     └─software (Software)
+  │       ├─name (str): asdf
+  │       └─version (str): 3.0.0.dev613+g96800153.d20230926
+  └─a (NDArrayType)
+    ├─shape (tuple)
+    │ └─[0] (int): 2
+    └─dtype (Int64DType): int64
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃                     Block #0                      ┃
+  ┣━━━━━━━━━━━━━━━━┯━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+  ┃ flags          │            0x00000000            ┃
+  ┃ compression    │               none               ┃
+  ┃ allocated_size │                16                ┃
+  ┃ used_size      │                16                ┃
+  ┃ data_size      │                16                ┃
+  ┃ checksum       │ 6e5a5ddda2f6c38efe929c54a1ab80bd ┃
+  ┗━━━━━━━━━━━━━━━━┷━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+  
+  '''
+# ---
+# name: test_info_blocks_show[ndarray2.asdf]
+  '''
+  root (AsdfObject)
+  ├─asdf_library (Software)
+  │ ├─author (str): The ASDF Developers
+  │ ├─homepage (str): http://github.com/asdf-format/asdf
+  │ ├─name (str): asdf
+  │ └─version (str): 5.2.0
+  ├─history (dict)
+  │ └─extensions (list)
+  │   └─[0] (ExtensionMetadata)
+  │     ├─extension_class (str): asdf.extension._manifest.ManifestExtension
+  │     ├─extension_uri (str): asdf://asdf-format.org/core/extensions/core-1.5.0
+  │     ├─manifest_software (Software)
+  │     │ ├─name (str): asdf_standard
+  │     │ └─version (str): 1.5.0
+  │     └─software (Software) ...
+  ├─a (NDArrayType)
+  │ ├─shape (tuple)
+  │ │ └─[0] (int): 2
+  │ └─dtype (Int64DType): int64
+  └─b (NDArrayType)
+    ├─shape (tuple)
+    │ └─[0] (int): 3
+    └─dtype (Int64DType): int64
+  Some nodes not shown.
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃                     Block #0                      ┃
+  ┣━━━━━━━━━━━━━━━━┯━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+  ┃ flags          │            0x00000000            ┃
+  ┃ compression    │               lz4                ┃
+  ┃ allocated_size │                22                ┃
+  ┃ used_size      │                22                ┃
+  ┃ data_size      │                16                ┃
+  ┃ checksum       │ 6e5a5ddda2f6c38efe929c54a1ab80bd ┃
+  ┗━━━━━━━━━━━━━━━━┷━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃                     Block #1                      ┃
+  ┣━━━━━━━━━━━━━━━━┯━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+  ┃ flags          │            0x00000000            ┃
+  ┃ compression    │               bzp2               ┃
+  ┃ allocated_size │                42                ┃
+  ┃ used_size      │                42                ┃
+  ┃ data_size      │                24                ┃
+  ┃ checksum       │ aa341a15f5ade44faafbe190f98c2587 ┃
+  ┗━━━━━━━━━━━━━━━━┷━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+  
+  '''
+# ---
+# name: test_info_blocks_show[simple_inline_array0.asdf]
+  '''
+  root (AsdfObject)
+  ├─asdf_library (Software)
+  │ ├─author (str): Space Telescope Science Institute
+  │ ├─homepage (str): http://github.com/spacetelescope/asdf
+  │ ├─name (str): asdf
+  │ └─version (str): 2.6.1.dev2+gef67341
+  ├─history (dict)
+  │ └─extensions (list)
+  │   └─[0] (ExtensionMetadata)
+  │     ├─extension_class (str): asdf.extension.BuiltinExtension
+  │     └─software (Software)
+  │       ├─name (str): asdf
+  │       └─version (str): 2.6.1.dev2+gef67341
+  └─array (NDArrayType)
+    ├─shape (tuple)
+    │ └─[0] (int): 3
+    └─dtype (Int64DType): int64
+  
+  '''
+# ---

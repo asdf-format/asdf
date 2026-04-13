@@ -15,9 +15,9 @@ repos:
     - id: debug-statements
     - id: detect-private-key
     - id: end-of-file-fixer
-      exclude: ".*fits"
+      exclude: "(.*fits)|(.*\\.ambr)"
     - id: trailing-whitespace
-      exclude: ".*fits"
+      exclude: "(.*fits)|(.*\\.ambr)"
 
 - repo: https://github.com/pre-commit/pygrep-hooks
   rev: v1.10.0

@@ -23,28 +23,22 @@ def test_info_command(capsys, test_data_path):
     assert new_len < original_len
 
 
-def test_info_command_blocks_show(capsys, test_data_path):
-    """Verify blocks are printed when `--show-blocks` is passed."""
+@pytest.mark.parametrize("filename", ["ndarray0.asdf", "ndarray2.asdf", "simple_inline_array0.asdf"])
+def test_info_command_blocks_show(capsys, test_data_path, filename, snapshot):
+    """Verify block output for files with different numbers and types of blocks."""
 
-    file_path = test_data_path / "ndarray0.asdf"
+    file_path = test_data_path / filename
     assert main.main_from_args(["info", "--show-blocks", str(file_path)]) == 0
     captured = capsys.readouterr()
-    assert "Block #0" in captured.out
+    # Run `pytest --snapshot-update` to update stored snapshot
+    assert captured.out == snapshot
 
 
-def test_info_command_blocks_hide(capsys, test_data_path):
+def test_info_command_blocks_hide(capsys, test_data_path, snapshot):
     """Verify no block output is shown by default when the file contains blocks."""
 
     file_path = test_data_path / "ndarray0.asdf"
     assert main.main_from_args(["info", str(file_path)]) == 0
     captured = capsys.readouterr()
-    assert "Block" not in captured.out
-
-
-def test_info_command_no_blocks(capsys, test_data_path):
-    """Verify no block output is shown even with `--show-blocks` if file contains no blocks."""
-
-    file_path = test_data_path / "simple_inline_array0.asdf"
-    assert main.main_from_args(["info", "--show-blocks", str(file_path)]) == 0
-    captured = capsys.readouterr()
-    assert "Block" not in captured.out
+    # Run `pytest --snapshot-update` to update stored snapshot
+    assert captured.out == snapshot
