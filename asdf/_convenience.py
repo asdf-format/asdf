@@ -13,12 +13,12 @@ __all__ = ["info"]
 
 
 def info(
-    node_or_path: str | Path | AsdfFile,
-    max_rows: int | tuple[int, ...] | None = DEFAULT_MAX_ROWS,
-    max_cols: int | None = DEFAULT_MAX_COLS,
-    show_values: bool = DEFAULT_SHOW_VALUES,
-    show_blocks: bool = False,
-) -> None:
+    node_or_path,
+    max_rows=DEFAULT_MAX_ROWS,
+    max_cols=DEFAULT_MAX_COLS,
+    show_values=DEFAULT_SHOW_VALUES,
+    show_blocks=False,
+):
     """
     Print a rendering of an ASDF tree or sub-tree to stdout.
 

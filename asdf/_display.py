@@ -27,9 +27,9 @@ DEFAULT_SHOW_VALUES = True
 
 
 def render_table(
-    title: str,
-    rows: list[tuple[str, str]],
-) -> list[str]:
+    title,
+    rows,
+):
     """Generate a simple 2 column table with title header."""
     # TODO: table formatting will break if the terminal is narrower than the content.
     # We could consider using shutil.get_terminal size to adjust the width of the table.

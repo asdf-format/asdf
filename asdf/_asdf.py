@@ -1164,10 +1164,10 @@ class AsdfFile:
 
     def info(
         self,
-        max_rows: int | tuple[int, ...] | None = display.DEFAULT_MAX_ROWS,
-        max_cols: int | None = display.DEFAULT_MAX_COLS,
-        show_values: bool = display.DEFAULT_SHOW_VALUES,
-        show_blocks: bool = False,
+        max_rows=display.DEFAULT_MAX_ROWS,
+        max_cols=display.DEFAULT_MAX_COLS,
+        show_values=display.DEFAULT_SHOW_VALUES,
+        show_blocks=False,
     ):
         """
         Print a rendering of this file's tree to stdout.
