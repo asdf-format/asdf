@@ -22,6 +22,12 @@ class AsdfWarning(Warning):
     """
 
 
+class AsdfCompressedChecksumWarning(Warning):
+    """
+    Warning raised when writing a checksum for a compressed block.
+    """
+
+
 class AsdfDeprecationWarning(AsdfWarning, DeprecationWarning):
     """
     A warning class to indicate a deprecated feature.

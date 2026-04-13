@@ -7,7 +7,7 @@ import pytest
 from asdf import constants, generic_io
 from asdf._block import io as bio
 from asdf._block.exceptions import BlockIndexError
-from asdf.exceptions import AsdfWarning
+from asdf.exceptions import AsdfCompressedChecksumWarning
 
 
 def test_checksum(tmp_path):
@@ -32,7 +32,7 @@ def test_checksum_compression_warning(tmp_path):
     path = tmp_path / "test"
     with generic_io.get_file(path, mode="w") as fd:
         # check that writing checksums with compression enabled raises a warning
-        with pytest.warns(AsdfWarning):
+        with pytest.warns(AsdfCompressedChecksumWarning):
             bio.write_block(
                 fd,
                 my_array.view(dtype="uint8"),
