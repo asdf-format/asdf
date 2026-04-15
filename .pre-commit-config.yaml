@@ -1,4 +1,4 @@
-exclude: "asdf/(_extern||_jsonschema)/.*"
+exclude: "(asdf/(_extern||_jsonschema)/.*)|(.*\\.ambr)"
 repos:
 
 - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -15,9 +15,9 @@ repos:
     - id: debug-statements
     - id: detect-private-key
     - id: end-of-file-fixer
-      exclude: "(.*fits)|(.*\\.ambr)"
+      exclude: ".*fits"
     - id: trailing-whitespace
-      exclude: "(.*fits)|(.*\\.ambr)"
+      exclude: ".*fits"
 
 - repo: https://github.com/pre-commit/pygrep-hooks
   rev: v1.10.0
