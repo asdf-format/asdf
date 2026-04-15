@@ -12,7 +12,7 @@
   ┃                     Block #0                      ┃
   ┣━━━━━━━━━━━━━━━━┯━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
   ┃ flags          │            0x00000000            ┃
-  ┃ compression    │               none               ┃
+  ┃ compression    │               None               ┃
   ┃ allocated_size │                16                ┃
   ┃ used_size      │                16                ┃
   ┃ data_size      │                16                ┃
@@ -28,7 +28,7 @@
   ┃                     Block #0                      ┃
   ┣━━━━━━━━━━━━━━━━┯━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
   ┃ flags          │            0x00000000            ┃
-  ┃ compression    │               lz4                ┃
+  ┃ compression    │              "lz4"               ┃
   ┃ allocated_size │                22                ┃
   ┃ used_size      │                22                ┃
   ┃ data_size      │                16                ┃
@@ -38,7 +38,7 @@
   ┃                     Block #1                      ┃
   ┣━━━━━━━━━━━━━━━━┯━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
   ┃ flags          │            0x00000000            ┃
-  ┃ compression    │               bzp2               ┃
+  ┃ compression    │              "bzp2"              ┃
   ┃ allocated_size │                42                ┃
   ┃ used_size      │                42                ┃
   ┃ data_size      │                24                ┃

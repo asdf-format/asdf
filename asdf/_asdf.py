@@ -1209,9 +1209,10 @@ class AsdfFile:
         if show_blocks:
             for i, block in enumerate(self._blocks.blocks):
                 if block.header["compression"] == b"\0\0\0\0":
-                    compression = "none"
+                    compression = "None"
                 else:
                     compression = block.header["compression"].rstrip(b"\0").decode("ascii", errors="backslashreplace")
+                    compression = f'"{compression}"'
 
                 items = [
                     ("flags", f"{block.header['flags']:#010x}"),
