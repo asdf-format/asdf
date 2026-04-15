@@ -58,11 +58,6 @@ repos:
   hooks:
     - id: blacken-docs
 
-- repo: https://github.com/abravalheri/validate-pyproject
-  rev: "v0.24.1"
-  hooks:
-    - id: validate-pyproject
-
 - repo: local
   hooks:
     - id: taplo-format
