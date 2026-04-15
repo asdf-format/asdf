@@ -164,7 +164,7 @@ select = [
   "UP",  # pyupgrade
   "RUF",  # ruff specific, includes yesqa
 ]
-extend-ignore = [
+ignore = [
   "S310",  # URL open for permitted schemes
   "RUF005",  # prefer concatenate over add for collections
   "RUF012",  # mutable-class-default (typing related)
