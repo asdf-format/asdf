@@ -62,3 +62,24 @@ repos:
   rev: "v0.24.1"
   hooks:
     - id: validate-pyproject
+
+- repo: local
+  hooks:
+    - id: taplo-format
+      name: taplo-format
+      description: Format TOML documents
+      entry: taplo format
+      language: python
+      types: [toml]
+      args: []
+      require_serial: false
+      additional_dependencies: ["taplo==0.9.3"]
+    - id: taplo-lint
+      name: taplo-lint
+      description: Lint TOML documents
+      entry: taplo lint
+      language: python
+      types: [toml]
+      args: [--default-schema-catalogs]
+      require_serial: false
+      additional_dependencies: ["taplo==0.9.3"]
