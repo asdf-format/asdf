@@ -1,0 +1,1 @@
+Fixed a bug in which checksums for compressed blocks were being computed in a way that didn't match the specification.
