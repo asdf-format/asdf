@@ -20,7 +20,7 @@ def test_checksum(tmp_path):
     with generic_io.get_file(path, mode="w") as fd:
         bio.write_block(fd, my_array.view(dtype="uint8"))
     with generic_io.get_file(path, mode="r") as fd:
-        _, header, _, _ = bio.read_block(fd)
+        _, header, _, _ = bio.read_block(fd, True)
     assert header["checksum"] == target_checksum
 
 
@@ -82,15 +82,15 @@ def test_read_block_data(tmp_path):
     with generic_io.get_file(path, mode="r") as fd:
         header = bio.read_block_header(fd)
         data_offset = fd.tell()
-        data = bio.read_block_data(fd, header)
+        data = bio.read_block_data(fd, header, True)
         assert np.array_equal(data, my_array)
         # check that offset works as expected
-        data = bio.read_block_data(fd, header, offset=data_offset)
+        data = bio.read_block_data(fd, header, True, offset=data_offset)
         assert np.array_equal(data, my_array)
 
     # not lazy loaded, memmapped
     with generic_io.get_file(path, mode="r") as fd:
-        offset, header, read_data_offset, data = bio.read_block(fd, lazy_load=False, memmap=True)
+        offset, header, read_data_offset, data = bio.read_block(fd, True, lazy_load=False, memmap=True)
         assert offset == 0
         assert read_data_offset == data_offset
         assert np.array_equal(data, my_array)
@@ -101,7 +101,7 @@ def test_read_block_data(tmp_path):
 
     # not memmapped, lazy
     with generic_io.get_file(path, mode="r") as fd:
-        offset, header, read_data_offset, data = bio.read_block(fd, lazy_load=True, memmap=False)
+        offset, header, read_data_offset, data = bio.read_block(fd, True, lazy_load=True, memmap=False)
         assert offset == 0
         assert read_data_offset == data_offset
         assert np.array_equal(data(), my_array)
@@ -123,7 +123,7 @@ def test_read_block(tmp_path):
     )
 
     with generic_io.get_file(block_bytes, mode="r") as fd:
-        offset, header, data_offset, data = bio.read_block(fd)
+        offset, header, data_offset, data = bio.read_block(fd, True)
         assert offset == 0
         assert data_offset == 50
         assert len(data) == 0
@@ -160,7 +160,7 @@ def test_write_block_offset():
     fd.write(b"0000000")
     bio.write_block(fd, data, offset=0)
     fd.seek(0)
-    _, _, _, d = bio.read_block(fd)
+    _, _, _, d = bio.read_block(fd, True)
     np.testing.assert_array_equal(data, d)
 
 
@@ -186,7 +186,7 @@ def test_fd_not_seekable():
     seekable = lambda: False  # noqa: E731
     fd.seekable = seekable
 
-    _, _, _, d = bio.read_block(fd)
+    _, _, _, d = bio.read_block(fd, True)
 
     np.testing.assert_array_equal(d, data)
 
@@ -199,7 +199,7 @@ def test_compressed_block():
     fd = generic_io.get_file(io.BytesIO(), mode="rw")
     write_header = bio.write_block(fd, data, compression="zlib")
     assert write_header["compression"] == b"zlib"
-    _, _, _, rdata = bio.read_block(fd, offset=0)
+    _, _, _, rdata = bio.read_block(fd, True, offset=0)
     np.testing.assert_array_equal(rdata, data)
 
 
@@ -211,7 +211,7 @@ def test_stream_block():
     # now write extra data to file
     extra_data = np.ones(10, dtype="uint8")
     fd.write_array(extra_data)
-    _, _, _, rdata = bio.read_block(fd, offset=0)
+    _, _, _, rdata = bio.read_block(fd, True, offset=0)
     assert rdata.size == 20
     assert np.all(rdata == 1)
 
@@ -222,7 +222,7 @@ def test_read_from_closed(tmp_path):
     with generic_io.get_file(fn, mode="w") as fd:
         bio.write_block(fd, data, stream=True)
     with generic_io.get_file(fn, mode="rw") as fd:
-        _, _, _, callback = bio.read_block(fd, offset=0, lazy_load=True)
+        _, _, _, callback = bio.read_block(fd, True, offset=0, lazy_load=True)
     with pytest.raises(OSError, match=r"ASDF file has already been closed\. Can not get the data\."):
         callback()
 

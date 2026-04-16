@@ -202,10 +202,11 @@ def test_missing_checksum(validate_checksums):
 def test_bad_checksum(validate_checksums):
     buff = empty_header(b"\1" + b"\0" * 15)
     with generic_io.get_file(buff, mode="r") as fd:
-        block = read_blocks(fd, lazy_load=False, validate_checksums=validate_checksums)[0]
         if validate_checksums:
             # Invalid checksum should raise an exception if `validate_checksums=True`
             with pytest.raises(ValueError, match=r".* does not match given checksum"):
+                block = read_blocks(fd, lazy_load=False, validate_checksums=validate_checksums)[0]
                 _ = block.data
         else:
+            block = read_blocks(fd, lazy_load=False, validate_checksums=validate_checksums)[0]
             _ = block.data
