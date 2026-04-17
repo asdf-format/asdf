@@ -76,11 +76,14 @@ class ReadBlock:
             data = self._data()
         else:
             data = self._data
+
         if self.validate_checksum:
-            checksum = bio.calculate_block_checksum(data)
-            if not self._header["flags"] & constants.BLOCK_FLAG_STREAMED and checksum != self._header["checksum"]:
-                msg = f"Block at {self.offset} does not match given checksum"
-                raise ValueError(msg)
+            if any(b != 0 for b in self._header["checksum"]):
+                # Only validate if the header actually contains a checksum
+                checksum = bio.calculate_block_checksum(data)
+                if not self._header["flags"] & constants.BLOCK_FLAG_STREAMED and checksum != self._header["checksum"]:
+                    msg = f"Block at {self.offset} does not match given checksum"
+                    raise ValueError(msg)
             # only validate data the first time it's read
             self.validate_checksum = False
         return data
