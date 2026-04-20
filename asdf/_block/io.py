@@ -419,7 +419,7 @@ def write_block(fd, data, offset=None, stream=False, compression_kwargs=None, pa
     if buff is None:  # data is uncompressed
         fd.write_array(data)
     else:
-        fd.write(buff.getvalue())
+        fd.write(buff.getbuffer())
     fd.fast_forward(padding_bytes)
     return header_dict
 
