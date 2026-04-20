@@ -832,3 +832,40 @@ def test_info_no_infinite_loop(capsys):
     af.info()
     captured = capsys.readouterr()
     assert "recursive" in captured.out
+
+
+def _get_block_output(capsys, af, *args, **kwargs) -> str:
+    """Passes provided arguments to both `asdf.info` and `AsdfFile.info` and verifies the outputs match.
+
+    Returns the unified captured output.
+    """
+    # Set max_rows to zero to ignore any changes in tree formatting when computing snapshots
+    af.info(*args, max_rows=0, **kwargs)
+    method_cap = capsys.readouterr()
+
+    asdf.info(af, *args, max_rows=0, **kwargs)
+    mod_cap = capsys.readouterr()
+
+    assert method_cap.out == mod_cap.out, "AsdfFile.info and asdf.info outputs do not match"
+    return method_cap.out
+
+
+@pytest.mark.parametrize("filename", ["ndarray0.asdf", "ndarray2.asdf", "simple_inline_array0.asdf"])
+def test_info_blocks_show(capsys, test_data_path, filename, snapshot):
+    """Verify block output for files with different numbers and types of blocks."""
+
+    file_path = test_data_path / filename
+    with asdf.open(file_path) as af:
+        out = _get_block_output(capsys, af, show_blocks=True)
+        # Run `pytest --snapshot-update` to update stored snapshot
+        assert out == snapshot
+
+
+def test_info_blocks_hide(capsys, test_data_path, snapshot):
+    """Verify no block output is shown by default when the file contains blocks."""
+
+    file_path = test_data_path / "ndarray0.asdf"
+    with asdf.open(file_path) as af:
+        out = _get_block_output(capsys, af)
+        # Run `pytest --snapshot-update` to update stored snapshot
+        assert out == snapshot

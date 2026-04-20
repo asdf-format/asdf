@@ -36,7 +36,7 @@ docs = [
 ]
 http = ["fsspec[http]>=2022.8.2"]
 lz4 = ["lz4>=0.10"]
-tests = ["asdf[all]", "psutil", "pytest>=8"]
+tests = ["asdf[all]", "psutil", "pytest>=8", "syrupy>=5.1"]
 
 benchmark = ["asdf[tests]", "pytest-benchmark"]
 test = ["asdf[tests]"]

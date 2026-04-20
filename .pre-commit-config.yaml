@@ -1,4 +1,4 @@
-exclude: "asdf/(_extern||_jsonschema)/.*"
+exclude: "(asdf/(_extern||_jsonschema)/.*)|(.*\\.ambr)"
 repos:
 
 - repo: https://github.com/pre-commit/pre-commit-hooks
