@@ -16,6 +16,7 @@ __all__ = [
     "DEFAULT_MAX_COLS",
     "DEFAULT_MAX_ROWS",
     "DEFAULT_SHOW_VALUES",
+    "render_table",
     "render_tree",
 ]
 
@@ -23,6 +24,30 @@ __all__ = [
 DEFAULT_MAX_ROWS = 24
 DEFAULT_MAX_COLS = 120
 DEFAULT_SHOW_VALUES = True
+
+
+def render_table(
+    title,
+    rows,
+):
+    """Generate a simple 2 column table with title header."""
+    # TODO: table formatting will break if the terminal is narrower than the content.
+    # We could consider using shutil.get_terminal size to adjust the width of the table.
+
+    # TODO: this doesn't account for unicode glyphs that aren't 1 column wide
+    key_width = max(len(str(row[0])) for row in rows) + 2
+    val_width = max(len(str(row[1])) for row in rows) + 2
+    inner_width = key_width + val_width + 1
+
+    # Format each row with key left-aligned and value centered
+    content = [f"┃ {key:<{key_width-2}} │ {value:^{val_width-2}} ┃" for key, value in rows]
+    return [
+        "┏" + "━" * inner_width + "┓",
+        f"┃{title:^{inner_width}s}┃",  # Centered table title
+        "┣" + "━" * key_width + "┯" + "━" * val_width + "┫",
+        *content,
+        "┗" + "━" * key_width + "┷" + "━" * val_width + "┛",
+    ]
 
 
 def render_tree(
