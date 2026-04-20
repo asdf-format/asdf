@@ -11,9 +11,8 @@ import weakref
 
 import yaml
 
-import asdf.generic_io as gio
 from asdf import _compression as mcompression
-from asdf import constants, util
+from asdf import constants, generic_io, util
 from asdf.versioning import _yaml_base_loader as BaseLoader
 
 from .exceptions import BlockIndexError
@@ -173,7 +172,7 @@ def read_block_data(fd, header, validate_checksum, offset=None, memmap=False):
                 raise ValueError(msg)
 
             data = mcompression.decompress(
-                gio.get_file(io.BytesIO(cmp_data)), used_size, header["data_size"], compression
+                generic_io.get_file(io.BytesIO(cmp_data)), used_size, header["data_size"], compression
             )
         else:
             # compressed data will not be memmapped
