@@ -242,9 +242,9 @@ Individual blocks in an ASDF file may be compressed.
 
 .. warning::
 
-    Files created by ``asdf`` versions prior to ``v5.2.1`` used an incorrect method of computing
-    checksums for compressed blocks. This bug was fixed in ``v5.2.1``.
-    As a result files created by ``asdf<=v5.2.0`` are not fully compatible with ``asdf>=v5.2.1`` and vice-versa.
+    Files created by ``asdf`` versions prior to ``5.2.1`` used an incorrect method of computing
+    checksums for compressed blocks. This bug was fixed in ``5.2.1``.
+    As a result files created by ``asdf<=5.2.0`` are not fully compatible with ``asdf>=5.2.1`` and vice-versa.
 
     By default ``asdf`` does not verify block checksums when reading a file so this change does not
     impact anyone already using the default configuration.
