@@ -29,7 +29,7 @@
   ┣━━━━━━━━━━━━━━━━┯━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
   ┃ flags          │            0x00000000            ┃
   ┃ compression    │              "lz4"               ┃
-  ┃ allocated_size │                22                ┃
+  ┃ allocated_size │               8192               ┃
   ┃ used_size      │                22                ┃
   ┃ data_size      │                16                ┃
   ┃ checksum       │ 6e5a5ddda2f6c38efe929c54a1ab80bd ┃
@@ -39,7 +39,7 @@
   ┣━━━━━━━━━━━━━━━━┯━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
   ┃ flags          │            0x00000000            ┃
   ┃ compression    │              "bzp2"              ┃
-  ┃ allocated_size │                42                ┃
+  ┃ allocated_size │               8192               ┃
   ┃ used_size      │                42                ┃
   ┃ data_size      │                24                ┃
   ┃ checksum       │ aa341a15f5ade44faafbe190f98c2587 ┃
