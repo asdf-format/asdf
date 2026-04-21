@@ -569,7 +569,7 @@ def test_checksum_update(tmp_path, lazy_load, memmap, write_checksums):
         ff.tree["my_array"][7, 7] = 0.0
         # update() should update the checksum, even if the data itself
         # is memmapped and isn't expressly re-written.
-        ff.update()
+        ff.update(write_checksums=write_checksums)
 
     with asdf.open(path, validate_checksums=True) as ff:
         if write_checksums:

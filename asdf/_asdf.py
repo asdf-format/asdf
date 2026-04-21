@@ -14,7 +14,7 @@ from . import _io, constants, generic_io, lazy_nodes, reference, schema, treeuti
 from . import _node_info as node_info
 from ._block.manager import Manager as BlockManager
 from ._helpers import validate_version
-from .config import DEFAULT_WRITE_CHECKSUMS, config_context, get_config
+from .config import config_context, get_config
 from .exceptions import (
     AsdfManifestURIMismatchWarning,
     AsdfPackageVersionWarning,
@@ -787,7 +787,7 @@ class AsdfFile:
         pad_blocks=False,
         include_block_index=True,
         version=None,
-        write_checksums=None,
+        write_checksums=True,
     ):
         """
         Update the file on disk in place.
@@ -841,10 +841,8 @@ class AsdfFile:
             Update the ASDF core schemas version of this AsdfFile before
             writing.
 
-        write_checksums: bool or None, optional
+        write_checksums: bool, optional
             Compute and write block checksums to the file.
-            If `None` then checksums will be written if the existing blocks
-            in the file contain checksums. Otherwise defaults to `False`.
         """
 
         with config_context() as config:
@@ -886,7 +884,7 @@ class AsdfFile:
                     self._fd,
                     pad_blocks,
                     include_block_index,
-                    write_checksums if write_checksums is not None else DEFAULT_WRITE_CHECKSUMS,
+                    write_checksums,
                 )
                 self._fd.truncate()
                 if self._fd.can_memmap():
@@ -936,7 +934,7 @@ class AsdfFile:
         pad_blocks=False,
         include_block_index=True,
         version=None,
-        write_checksums=DEFAULT_WRITE_CHECKSUMS,
+        write_checksums=True,
     ):
         """
         Write the ASDF file to the given file-like object.

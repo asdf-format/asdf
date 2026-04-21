@@ -1,7 +1,6 @@
 from io import BytesIO
 
 from asdf._asdf import AsdfFile, open_asdf
-from asdf.config import DEFAULT_WRITE_CHECKSUMS
 from asdf.util import NotSet
 
 __all__ = ["dump", "dumps", "load", "loads"]
@@ -18,7 +17,7 @@ def dump(
     compression_kwargs=NotSet,
     pad_blocks=False,
     custom_schema=None,
-    write_checksums=DEFAULT_WRITE_CHECKSUMS,
+    write_checksums=True,
 ):
     """
     Write a tree to an ASDF file.
@@ -81,7 +80,7 @@ def dumps(
     compression_kwargs=NotSet,
     pad_blocks=False,
     custom_schema=None,
-    write_checksums=DEFAULT_WRITE_CHECKSUMS,
+    write_checksums=True,
 ):
     """
     Write tree to a string.

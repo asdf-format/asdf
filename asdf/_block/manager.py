@@ -633,14 +633,6 @@ class Manager:
                 new_tree_size,
             )
 
-        if write_checksums is None:
-            if len(self.blocks):
-                # If there are existing blocks then use the same checksum behavior as them
-                write_checksums = self.blocks[0].header["checksum"] != b"\0" * 16
-            else:
-                # Otherwise use default behavior
-                write_checksums = config.DEFAULT_WRITE_CHECKSUMS
-
         if len(self._external_write_blocks):
             self._write_external_blocks(write_checksums=write_checksums)
 
