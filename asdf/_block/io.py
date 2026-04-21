@@ -13,7 +13,7 @@ import weakref
 import yaml
 
 from asdf import _compression as mcompression
-from asdf import constants, util
+from asdf import constants, generic_io, util
 from asdf.exceptions import AsdfCompressedChecksumWarning
 from asdf.versioning import _yaml_base_loader as BaseLoader
 
@@ -32,8 +32,6 @@ BLOCK_HEADER = util._BinaryStruct(
 
 
 def calculate_block_checksum(data):
-    if data.ndim > 1:
-        data = data.ravel(order="K")
     # The following line is safe because we're only using
     # the MD5 as a checksum.
     m = hashlib.new("md5", usedforsecurity=False)
@@ -108,7 +106,7 @@ def read_block_header(fd, offset=None):
     return validate_block_header(header)
 
 
-def read_block_data(fd, header, offset=None, memmap=False):
+def read_block_data(fd, header, validate_checksum, offset=None, memmap=False):
     """
     Read (or memory map) data for an ASDF block.
 
@@ -119,6 +117,11 @@ def read_block_data(fd, header, offset=None, memmap=False):
 
     header : dict
         ASDF block header dictionary (as read from `read_block_header`).
+
+    validate_checksum: bool
+        If `True`, raise an exception if the checksum in the block header
+        doesn't match the checksum computed from the block body.
+        Has no effect if the header doesn't contain a checksum.
 
     offset : int, optional
         Offset within the file where the start of the ASDF block data
@@ -134,6 +137,12 @@ def read_block_data(fd, header, offset=None, memmap=False):
     -------
     data : ndarray or memmap
         A one-dimensional ndarray of dtype uint8
+
+    Raises
+    ------
+    ValueError
+        If `validate_checksum` is set and the header checksum doesn't match
+        the checksum computed from the block data.
     """
 
     if fd.seekable():
@@ -142,17 +151,35 @@ def read_block_data(fd, header, offset=None, memmap=False):
         else:
             offset = fd.tell()
 
-    if header["flags"] & constants.BLOCK_FLAG_STREAMED:
+    streamed = header["flags"] & constants.BLOCK_FLAG_STREAMED
+
+    if streamed:
         used_size = -1
     else:
         used_size = header["used_size"]
 
     # if no compression, just read data
     compression = mcompression.validate(header["compression"])
+    has_checksum = any(b != 0 for b in header["checksum"])
+
     if compression:
-        # compressed data will not be memmapped
-        data = mcompression.decompress(fd, used_size, header["data_size"], compression)
-        fd.fast_forward(header["allocated_size"] - header["used_size"])
+        if validate_checksum and has_checksum:
+            cmp_data = fd.read(header["used_size"])
+            # Fast-forward first so if we raise an exception the file pointer is still correct
+            fd.fast_forward(header["allocated_size"] - header["used_size"])
+
+            checksum = calculate_block_checksum(cmp_data)
+            if header["checksum"] != checksum:
+                msg = f"Block at {offset} does not match given checksum"
+                raise ValueError(msg)
+
+            data = mcompression.decompress(
+                generic_io.get_file(io.BytesIO(cmp_data)), used_size, header["data_size"], compression
+            )
+        else:
+            # compressed data will not be memmapped
+            data = mcompression.decompress(fd, used_size, header["data_size"], compression)
+            fd.fast_forward(header["allocated_size"] - header["used_size"])
     else:
         if memmap and fd.can_memmap():
             data = fd.memmap_array(offset, used_size)
@@ -160,14 +187,20 @@ def read_block_data(fd, header, offset=None, memmap=False):
         else:
             data = fd.read_into_array(used_size)
             ff_bytes = header["allocated_size"] - header["used_size"]
-        if (header["flags"] & constants.BLOCK_FLAG_STREAMED) and fd.seekable():
+        if streamed and fd.seekable():
             fd.seek(0, os.SEEK_END)
         else:
             fd.fast_forward(ff_bytes)
+
+        if validate_checksum and has_checksum:
+            checksum = calculate_block_checksum(data)
+            if header["checksum"] != checksum:
+                msg = f"Block at {offset} does not match given checksum"
+                raise ValueError(msg)
     return data
 
 
-def read_block(fd, offset=None, memmap=False, lazy_load=False):
+def read_block(fd, validate_checksum, offset=None, memmap=False, lazy_load=False):
     """
     Read a block (header and data) from an ASDF file.
 
@@ -175,6 +208,11 @@ def read_block(fd, offset=None, memmap=False, lazy_load=False):
     ----------
     fd : file or generic_io.GenericIO
         File to read.
+
+    validate_checksum: bool
+        If True, raise an exception if the checksum in the block header
+        doesn't match the checksum computed from the block body.
+        Has no effect if the header doesn't contain a checksum.
 
     offset : int, optional
         Offset within the file where the start of the ASDF block header
@@ -225,7 +263,7 @@ def read_block(fd, offset=None, memmap=False, lazy_load=False):
                 msg = "ASDF file has already been closed. Can not get the data."
                 raise OSError(msg)
             position = fd.tell()
-            data = read_block_data(fd, header, offset=data_offset, memmap=memmap)
+            data = read_block_data(fd, header, validate_checksum, offset=data_offset, memmap=memmap)
             fd.seek(position)
             return data
 
@@ -235,7 +273,7 @@ def read_block(fd, offset=None, memmap=False, lazy_load=False):
         else:
             fd.fast_forward(header["allocated_size"])
     else:
-        data = read_block_data(fd, header, offset=None, memmap=memmap)
+        data = read_block_data(fd, header, validate_checksum, offset=None, memmap=memmap)
     return offset, header, data_offset, data
 
 
@@ -302,14 +340,9 @@ def generate_write_header(
     if stream:
         header_kwargs["flags"] = header_kwargs.get("flags", 0) | constants.BLOCK_FLAG_STREAMED
         header_kwargs["data_size"] = 0
-        header_kwargs["checksum"] = b"\0" * 16
     else:
         header_kwargs["flags"] = 0
         header_kwargs["data_size"] = data.nbytes
-        if write_checksum:
-            header_kwargs["checksum"] = calculate_block_checksum(data)
-        else:
-            header_kwargs["checksum"] = b"\0" * 16
 
     header_kwargs["compression"] = mcompression.to_compression_header(header_kwargs.get("compression", None))
 
@@ -338,6 +371,13 @@ def generate_write_header(
         header_kwargs["used_size"] = used_size
         padding = util.calculate_padding(used_size, padding, fs_block_size)
         header_kwargs["allocated_size"] = header_kwargs.get("allocated_size", used_size + padding)
+
+    if stream or not write_checksum:
+        header_kwargs["checksum"] = b"\0" * 16
+    elif buff is not None:
+        header_kwargs["checksum"] = calculate_block_checksum(buff.getbuffer())
+    else:
+        header_kwargs["checksum"] = calculate_block_checksum(data)
 
     if header_kwargs["allocated_size"] < header_kwargs["used_size"]:
         msg = (
@@ -403,7 +443,7 @@ def write_block(
     if buff is None:  # data is uncompressed
         fd.write_array(data)
     else:
-        fd.write(buff.getvalue())
+        fd.write(buff.getbuffer())
     fd.fast_forward(padding_bytes)
     return header_dict
 

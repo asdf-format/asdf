@@ -1182,6 +1182,7 @@ class AsdfFile:
         max_rows=display.DEFAULT_MAX_ROWS,
         max_cols=display.DEFAULT_MAX_COLS,
         show_values=display.DEFAULT_SHOW_VALUES,
+        show_blocks=False,
     ):
         """
         Print a rendering of this file's tree to stdout.
@@ -1205,6 +1206,10 @@ class AsdfFile:
         show_values : bool, optional
             Set to False to disable display of primitive values in
             the rendered tree.
+
+        show_blocks: bool, optional
+            Set to True to also print a table of block header fields
+            for each block in the file.
         """
         lines = display.render_tree(
             self.tree,
@@ -1215,6 +1220,25 @@ class AsdfFile:
             extension_manager=self.extension_manager,
         )
         print("\n".join(lines))
+
+        if show_blocks:
+            for i, block in enumerate(self._blocks.blocks):
+                if block.header["compression"] == b"\0\0\0\0":
+                    compression = "None"
+                else:
+                    compression = block.header["compression"].rstrip(b"\0").decode("ascii", errors="backslashreplace")
+                    compression = f'"{compression}"'
+
+                items = [
+                    ("flags", f"{block.header['flags']:#010x}"),
+                    ("compression", compression),
+                    ("allocated_size", str(block.header["allocated_size"])),
+                    ("used_size", str(block.header["used_size"])),
+                    ("data_size", str(block.header["data_size"])),
+                    ("checksum", block.header["checksum"].hex()),
+                ]
+                rows = display.render_table(f"Block #{i}", items)
+                print("\n".join(rows))
 
     def search(self, key=NotSet, type_=NotSet, value=NotSet, filter_=None):
         """

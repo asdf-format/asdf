@@ -38,6 +38,11 @@ class Info(Command):
         )
         parser.add_argument("--no-show-values", dest="show_values", action="store_false")
         parser.set_defaults(show_values=True)
+        parser.add_argument(
+            "--show-blocks",
+            action="store_true",
+            help="Display a table of header information for each block in the file.",
+        )
 
         parser.set_defaults(func=cls.run)
 
@@ -45,9 +50,9 @@ class Info(Command):
 
     @classmethod
     def run(cls, args):
-        info(args.filename, args.max_rows, args.max_cols, args.show_values)
+        info(args.filename, args.max_rows, args.max_cols, args.show_values, args.show_blocks)
 
 
-def info(filename, max_rows, max_cols, show_values):
+def info(filename, max_rows, max_cols, show_values, show_blocks):
     with asdf.open(filename) as af:
-        af.info(max_rows, max_cols, show_values)
+        af.info(max_rows, max_cols, show_values, show_blocks=show_blocks)
