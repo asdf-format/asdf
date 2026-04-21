@@ -356,7 +356,7 @@ def generate_write_header(data, stream=False, compression_kwargs=None, padding=F
     if stream:
         header_kwargs["checksum"] = b"\0" * 16
     elif buff is not None:
-        header_kwargs["checksum"] = calculate_block_checksum(buff.getvalue())
+        header_kwargs["checksum"] = calculate_block_checksum(buff.getbuffer())
     else:
         header_kwargs["checksum"] = calculate_block_checksum(data)
 
