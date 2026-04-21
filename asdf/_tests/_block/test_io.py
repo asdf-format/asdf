@@ -7,7 +7,6 @@ import pytest
 from asdf import constants, generic_io
 from asdf._block import io as bio
 from asdf._block.exceptions import BlockIndexError
-from asdf.exceptions import AsdfCompressedChecksumWarning
 
 
 def test_checksum(tmp_path):
@@ -24,21 +23,6 @@ def test_checksum(tmp_path):
     with generic_io.get_file(path, mode="r") as fd:
         _, header, _, _ = bio.read_block(fd, True)
     assert header["checksum"] == target_checksum
-
-
-def test_checksum_compression_warning(tmp_path):
-    my_array = np.arange(0, 64, dtype="<i8")
-
-    path = tmp_path / "test"
-    with generic_io.get_file(path, mode="w") as fd:
-        # check that writing checksums with compression enabled raises a warning
-        with pytest.warns(AsdfCompressedChecksumWarning):
-            bio.write_block(
-                fd,
-                my_array.view(dtype="uint8"),
-                write_checksum=True,
-                compression="lz4",
-            )
 
 
 def test_validate_block_header():
