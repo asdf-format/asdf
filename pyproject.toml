@@ -1,16 +1,15 @@
 [project]
 name = "asdf"
 description = "Python implementation of the ASDF Standard"
-readme = 'README.rst'
-license-files = ['LICENSE']
-authors = [{ name = 'The ASDF Developers' }]
-requires-python = '>=3.10'
+readme = "README.rst"
+requires-python = ">=3.10"
+license-files = ["LICENSE"]
+authors = [{ name = "The ASDF Developers" }]
 classifiers = [
-  'Development Status :: 5 - Production/Stable',
-  'Programming Language :: Python',
-  'Programming Language :: Python :: 3',
+  "Development Status :: 5 - Production/Stable",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
 ]
-dynamic = ['version']
 dependencies = [
   "asdf-standard>=1.1.0",
   "importlib-metadata>=4.11.4 ; python_version<='3.11'",
@@ -19,14 +18,15 @@ dependencies = [
   "packaging>=19",
   "pyyaml>=6.0",
   "semantic_version>=2.8",
+
   # for vendorized jsonschema
   "attrs>=22.2.0",
   # end of vendorized jsonschema deps
 ]
+dynamic = ["version"]
+
 [project.optional-dependencies]
 all = ["asdf[lz4]", "asdf[http]"]
-lz4 = ["lz4>=0.10"]
-http = ["fsspec[http]>=2022.8.2"]
 docs = [
   "sphinx-asdf>=0.2.2",
   "graphviz",
@@ -34,29 +34,33 @@ docs = [
   'tomli; python_version < "3.11"',
   "furo",
 ]
+http = ["fsspec[http]>=2022.8.2"]
+lz4 = ["lz4>=0.10"]
+tests = ["asdf[all]", "psutil", "pytest>=8", "syrupy>=5.1"]
 
-tests = ["asdf[all]", "psutil", "pytest>=8"]
-test = ["asdf[tests]"]
 benchmark = ["asdf[tests]", "pytest-benchmark"]
+test = ["asdf[tests]"]
 
 [project.urls]
-'documentation' = 'https://asdf.readthedocs.io/en/stable/'
-'repository' = 'https://github.com/asdf-format/asdf'
-'tracker' = 'https://github.com/asdf-format/asdf/issues'
+'documentation' = "https://asdf.readthedocs.io/en/stable/"
+'repository' = "https://github.com/asdf-format/asdf"
+'tracker' = "https://github.com/asdf-format/asdf/issues"
 
 [project.entry-points]
-'asdf.extensions' = { asdf = 'asdf._core._integration:get_extensions' }
-'asdf.resource_mappings' = { asdf = 'asdf._core._integration:get_json_schema_resource_mappings' }
-asdf_extensions = { builtin = 'asdf.extension._legacy:BuiltinExtension' }
-console_scripts = { asdftool = 'asdf._commands.main:main' }
+asdf_extensions = { builtin = "asdf.extension._legacy:BuiltinExtension" }
+'asdf.extensions' = { asdf = "asdf._core._integration:get_extensions" }
+'asdf.resource_mappings' = { asdf = "asdf._core._integration:get_json_schema_resource_mappings" }
+
+[project.scripts]
+asdftool = "asdf._commands.main:main"
 
 [build-system]
-build-backend = 'setuptools.build_meta'
 requires = ["setuptools>=60", "setuptools_scm[toml]>=8", "wheel"]
+build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-include = ['asdf*']
-exclude = ['asdf/_jsonschema/json/*']
+include = ["asdf*"]
+exclude = ["asdf/_jsonschema/json/*"]
 
 [tool.setuptools.package-data]
 'asdf.commands.tests.data' = ["*"]
@@ -84,67 +88,67 @@ force-exclude = '''
 '''
 
 [tool.pytest.ini_options]
-testpaths = ['asdf', 'docs']
-minversion = 4.6
+testpaths = ["asdf", "docs"]
+minversion = "4.6"
 filterwarnings = [
-  'error',                                                                                                                                              # also set in _tests/conftest to work with pyargs
-  'ignore:numpy.ndarray size changed:RuntimeWarning',
-  'ignore:Benchmarks are automatically disabled because xdist plugin is active.Benchmarks cannot be performed reliably in a parallelized environment.',
+  "error",  # also set in _tests/conftest to work with pyargs
+  "ignore:numpy.ndarray size changed:RuntimeWarning",
+  "ignore:Benchmarks are automatically disabled because xdist plugin is active.Benchmarks cannot be performed reliably in a parallelized environment.",
 ]
 addopts = [
-  '--doctest-modules',
-  '--doctest-glob=*.rst',
-  '--color=yes',
-  '-rsxfE',
-  '-p no:legacypath',
+  "--doctest-modules",
+  "--doctest-glob=*.rst",
+  "--color=yes",
+  "-rsxfE",
+  "-p no:legacypath",
 ]
 
 [tool.coverage.run]
 omit = [
-  'asdf/_astropy_init*',
-  'asdf/conftest*',
-  'asdf/cython_version*',
-  'asdf/setup_package*',
-  'asdf/*/setup_package*',
-  'asdf/*/*/setup_package*',
-  'asdf/testing/*',
-  'asdf/tests/*',
-  'asdf/*/tests/*',
-  'asdf/*/*/tests/*',
-  'asdf/version.*',
-  'asdf/compat*',
-  'asdf/_extern*',
-  'asdf/_jsonschema/**',
+  "asdf/_astropy_init*",
+  "asdf/conftest*",
+  "asdf/cython_version*",
+  "asdf/setup_package*",
+  "asdf/*/setup_package*",
+  "asdf/*/*/setup_package*",
+  "asdf/testing/*",
+  "asdf/tests/*",
+  "asdf/*/tests/*",
+  "asdf/*/*/tests/*",
+  "asdf/version.*",
+  "asdf/compat*",
+  "asdf/_extern*",
+  "asdf/_jsonschema/**",
   # And again for running against installed version
-  '*/asdf/_astropy_init*',
-  '*/asdf/conftest*',
-  '*/asdf/cython_version*',
-  '*/asdf/setup_package*',
-  '*/asdf/*/setup_package*',
-  '*/asdf/*/*/setup_package*',
-  '*/asdf/testing/*',
-  '*/asdf/tests/*',
-  '*/asdf/*/tests/*',
-  '*/asdf/*/*/tests/*',
-  '*/asdf/version.*',
-  '*/asdf/compat*',
-  '*/asdf/_extern*',
-  '*/asdf/_jsonschema/**',
+  "*/asdf/_astropy_init*",
+  "*/asdf/conftest*",
+  "*/asdf/cython_version*",
+  "*/asdf/setup_package*",
+  "*/asdf/*/setup_package*",
+  "*/asdf/*/*/setup_package*",
+  "*/asdf/testing/*",
+  "*/asdf/tests/*",
+  "*/asdf/*/tests/*",
+  "*/asdf/*/*/tests/*",
+  "*/asdf/version.*",
+  "*/asdf/compat*",
+  "*/asdf/_extern*",
+  "*/asdf/_jsonschema/**",
 ]
 
 [tool.coverage.report]
 exclude_lines = [
   # Have to re-enable the standard pragma
-  'pragma: no cover',
+  "pragma: no cover",
   # Don't complain about packages we have installed
-  'except ImportError',
+  "except ImportError",
   # Don't complain if tests don't hit assertions
-  'raise AssertionError',
-  'raise NotImplementedError',
+  "raise AssertionError",
+  "raise NotImplementedError",
   # Don't complain about script hooks
   'def main\(.*\):',
   # Ignore branches that don't pertain to this version of Python
-  'pragma: py{ ignore_python_version }',
+  "pragma: py{ ignore_python_version }",
 ]
 
 [tool.ruff]
@@ -155,17 +159,17 @@ extend-exclude = ["asdf/_extern/*", "asdf/_jsonschema/*", "docs/*"]
 [tool.ruff.lint]
 select = [
   # minimal set to match pre-ruff behavior
-  "E",   # pycodestyle
-  "F",   # pyflakes, autoflake
-  "I",   # isort
-  "S",   # bandit
+  "E",  # pycodestyle
+  "F",  # pyflakes, autoflake
+  "I",  # isort
+  "S",  # bandit
   "UP",  # pyupgrade
-  "RUF", # ruff specific, includes yesqa
+  "RUF",  # ruff specific, includes yesqa
 ]
-extend-ignore = [
-  "S310",   # URL open for permitted schemes
-  "RUF005", # prefer concatenate over add for collections
-  "RUF012", # mutable-class-default (typing related)
+ignore = [
+  "S310",  # URL open for permitted schemes
+  "RUF005",  # prefer concatenate over add for collections
+  "RUF012",  # mutable-class-default (typing related)
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -192,9 +196,13 @@ wrap = true
 issue_format = "`#{issue} <https://github.com/asdf-format/asdf/pull/{issue}>`_"
 
 [tool.towncrier.fragment.feature]
+
 [tool.towncrier.fragment.bugfix]
+
 [tool.towncrier.fragment.doc]
+
 [tool.towncrier.fragment.removal]
+
 [tool.towncrier.fragment.general]
 
 [tool.pyrefly]

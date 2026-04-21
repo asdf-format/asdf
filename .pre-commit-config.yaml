@@ -1,4 +1,4 @@
-exclude: "asdf/(_extern||_jsonschema)/.*"
+exclude: "(asdf/(_extern||_jsonschema)/.*)|(.*\\.ambr)"
 repos:
 
 - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -58,7 +58,8 @@ repos:
   hooks:
     - id: blacken-docs
 
-- repo: https://github.com/abravalheri/validate-pyproject
-  rev: "v0.24.1"
+- repo: https://github.com/tombi-toml/tombi-pre-commit
+  rev: v0.9.17
   hooks:
-    - id: validate-pyproject
+    - id: tombi-format
+    - id: tombi-lint

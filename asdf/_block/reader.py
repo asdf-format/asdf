@@ -50,7 +50,7 @@ class ReadBlock:
             raise OSError(msg)
         position = fd.tell()
         _, self._header, self.data_offset, self._data = bio.read_block(
-            fd, offset=self.offset, memmap=self.memmap, lazy_load=self.lazy_load
+            fd, self.validate_checksum, offset=self.offset, memmap=self.memmap, lazy_load=self.lazy_load
         )
         fd.seek(position)
 
@@ -62,13 +62,7 @@ class ReadBlock:
         Returns
         -------
         data : ndarray
-            A one-dimensional ndarray of dypte uint8 read from an ASDF block
-
-        Raises
-        ------
-        ValueError
-            If the header checksum does not match the checksum of the data
-            and validate_checksums was set to True.
+            A one-dimensional ndarray of dtype uint8 read from an ASDF block
         """
         if not self.loaded:
             self.load()
@@ -76,13 +70,7 @@ class ReadBlock:
             data = self._data()
         else:
             data = self._data
-        if self.validate_checksum:
-            checksum = bio.calculate_block_checksum(data)
-            if not self._header["flags"] & constants.BLOCK_FLAG_STREAMED and checksum != self._header["checksum"]:
-                msg = f"Block at {self.offset} does not match given checksum"
-                raise ValueError(msg)
-            # only validate data the first time it's read
-            self.validate_checksum = False
+
         return data
 
     @property
@@ -135,7 +123,7 @@ def _read_blocks_serially(fd, memmap=False, lazy_load=False, validate_checksums=
     buff = constants.BLOCK_MAGIC
     while buff == constants.BLOCK_MAGIC:
         # read the block
-        offset, header, data_offset, data = bio.read_block(fd, memmap=memmap, lazy_load=lazy_load)
+        offset, header, data_offset, data = bio.read_block(fd, validate_checksums, memmap=memmap, lazy_load=lazy_load)
         blocks.append(
             ReadBlock(
                 offset, fd, memmap, lazy_load, validate_checksums, header=header, data_offset=data_offset, data=data

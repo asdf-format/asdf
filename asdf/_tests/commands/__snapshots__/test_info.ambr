@@ -1,0 +1,55 @@
+# serializer version: 1
+# name: test_info_command_blocks_hide
+  '''
+  Some nodes not shown.
+  
+  '''
+# ---
+# name: test_info_command_blocks_show[ndarray0.asdf]
+  '''
+  Some nodes not shown.
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃                     Block #0                      ┃
+  ┣━━━━━━━━━━━━━━━━┯━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+  ┃ flags          │            0x00000000            ┃
+  ┃ compression    │               None               ┃
+  ┃ allocated_size │                16                ┃
+  ┃ used_size      │                16                ┃
+  ┃ data_size      │                16                ┃
+  ┃ checksum       │ 6e5a5ddda2f6c38efe929c54a1ab80bd ┃
+  ┗━━━━━━━━━━━━━━━━┷━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+  
+  '''
+# ---
+# name: test_info_command_blocks_show[ndarray2.asdf]
+  '''
+  Some nodes not shown.
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃                     Block #0                      ┃
+  ┣━━━━━━━━━━━━━━━━┯━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+  ┃ flags          │            0x00000000            ┃
+  ┃ compression    │              "lz4"               ┃
+  ┃ allocated_size │               8192               ┃
+  ┃ used_size      │                22                ┃
+  ┃ data_size      │                16                ┃
+  ┃ checksum       │ 6e5a5ddda2f6c38efe929c54a1ab80bd ┃
+  ┗━━━━━━━━━━━━━━━━┷━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃                     Block #1                      ┃
+  ┣━━━━━━━━━━━━━━━━┯━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+  ┃ flags          │            0x00000000            ┃
+  ┃ compression    │              "bzp2"              ┃
+  ┃ allocated_size │               8192               ┃
+  ┃ used_size      │                42                ┃
+  ┃ data_size      │                24                ┃
+  ┃ checksum       │ aa341a15f5ade44faafbe190f98c2587 ┃
+  ┗━━━━━━━━━━━━━━━━┷━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+  
+  '''
+# ---
+# name: test_info_command_blocks_show[simple_inline_array0.asdf]
+  '''
+  Some nodes not shown.
+  
+  '''
+# ---

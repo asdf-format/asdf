@@ -1,0 +1,1 @@
+Added optional block info table to ``asdftool info`` and ``AsdfFile.info``.
