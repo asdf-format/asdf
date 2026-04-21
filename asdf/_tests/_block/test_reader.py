@@ -175,14 +175,14 @@ def test_closed_file(tmp_path):
         blk.load()
 
 
-def empty_header(checksum):
+def empty_header(checksum, compression=b"\0\0\0\0"):
     """Return a header with all fields other than checksum set to zero."""
 
     return io.BytesIO(
         constants.BLOCK_MAGIC
         + b"\x000"  # header size = 2
         + b"\0\0\0\0"  # flags = 4
-        + b"\0\0\0\0"  # compression = 4
+        + compression  # compression = 4
         + b"\0\0\0\0\0\0\0\0"  # allocated size = 8
         + b"\0\0\0\0\0\0\0\0"  # used size = 8
         + b"\0\0\0\0\0\0\0\0"  # data size = 8
@@ -199,13 +199,15 @@ def test_missing_checksum(validate_checksums):
 
 
 @pytest.mark.parametrize("validate_checksums", [True, False])
-def test_bad_checksum(validate_checksums):
-    buff = empty_header(b"\1" + b"\0" * 15)
+@pytest.mark.parametrize("compression", [b"\0\0\0\0", b"lz4\0"])
+def test_bad_checksum(validate_checksums, compression):
+    buff = empty_header(b"\1" + b"\0" * 15, compression)
     with generic_io.get_file(buff, mode="r") as fd:
-        block = read_blocks(fd, lazy_load=False, validate_checksums=validate_checksums)[0]
         if validate_checksums:
             # Invalid checksum should raise an exception if `validate_checksums=True`
             with pytest.raises(ValueError, match=r".* does not match given checksum"):
+                block = read_blocks(fd, lazy_load=False, validate_checksums=validate_checksums)[0]
                 _ = block.data
         else:
+            block = read_blocks(fd, lazy_load=False, validate_checksums=validate_checksums)[0]
             _ = block.data

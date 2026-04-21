@@ -240,10 +240,22 @@ Compression
 
 Individual blocks in an ASDF file may be compressed.
 
+.. warning::
+
+    Files created by ``asdf`` versions prior to ``5.2.1`` used an incorrect method of computing
+    checksums for compressed blocks. This bug was fixed in ``5.2.1``.
+    As a result files created by ``asdf<=5.2.0`` may fail block checksum validation with ``asdf>=5.2.1`` and vice-versa.
+
+    By default ``asdf`` does not verify block checksums when reading a file so this change does not
+    impact anyone already using the default configuration.
+    If you encounter validation errors while reading a file created by an older or newer ``asdf`` version
+    you will need to disable validation by setting ``validate_checksums=False`` in `asdf.open`.
+
+
 `zlib <http://www.zlib.net/>`__ and `bzip2 <http://www.bzip.org>`__
 are included in every asdf install. Passing one of these 4 character
 codes as ``all_array_compression`` to `asdf.AsdfFile.write_to` will
-compress all blocks with the corresponding algorithm.:
+compress all blocks with the corresponding algorithm:
 
 .. runcode::
 
