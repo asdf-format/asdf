@@ -41,11 +41,8 @@ jobs:
       with:
         # Run type checking against the oldest supported version
         python-version: "3.10"
-    - uses: astral-sh/setup-uv@v7
-      with:
-        enable-cache: true
-    - run: uv sync --all-extras
-    - run: uv run pyrefly check --output-format=github
+    - run: pip install -e ".[all,tests,typing]"
+    - run: pyrefly check --output-format=github
   core:
     needs: [pre-commit]
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v2
