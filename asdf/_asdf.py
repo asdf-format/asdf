@@ -1095,6 +1095,12 @@ class AsdfFile:
         if software is not None:
             entry["software"] = software
 
+        # validate the history entry
+        schema.validate(
+            yamlutil.custom_tree_to_tagged_tree({"entry": entry}, self),
+            ctx=self,
+        )
+
         if self.version >= versioning.NEW_HISTORY_FORMAT_MIN_VERSION:
             if "history" not in self.tree:
                 self.tree["history"] = {"entries": []}
@@ -1102,23 +1108,11 @@ class AsdfFile:
                 self.tree["history"]["entries"] = []
 
             self.tree["history"]["entries"].append(entry)
-
-            try:
-                self.validate()
-            except Exception:
-                self.tree["history"]["entries"].pop()
-                raise
         else:
             if "history" not in self.tree:
                 self.tree["history"] = []
 
             self.tree["history"].append(entry)
-
-            try:
-                self.validate()
-            except Exception:
-                self.tree["history"].pop()
-                raise
 
     def get_history_entries(self):
         """
