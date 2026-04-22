@@ -2,6 +2,7 @@ import bz2
 import struct
 import warnings
 import zlib
+from typing import Any
 
 import numpy as np
 
@@ -115,7 +116,11 @@ class Lz4Compressor:
                         )  # use numpy instead of bytearray so we can avoid zero initialization
                         _pos = 0
                     newbytes = min(_size - _pos, len(blk))  # don't fill past the buffer len!
-                    _buffer[_pos : _pos + newbytes] = np.frombuffer(blk[:newbytes], dtype=np.byte)
+
+                    # Older versions of python seem to treat memoryview specializations weirdly
+                    # So cast memoryview[bytes] to memoryview[any] so numpy doesn't complain
+                    blk_buf: memoryview[Any] = blk[:newbytes]
+                    _buffer[_pos : _pos + newbytes] = np.frombuffer(blk_buf, dtype=np.byte)
                     _pos += newbytes
                     blk = blk[newbytes:]
 
@@ -311,7 +316,11 @@ def compress(fd, data, compression, config=None):
     data = memoryview(data)
     if not data.contiguous:
         data = memoryview(data.tobytes())  # make a contiguous copy
-    data = memoryview(np.frombuffer(data, dtype=data.format))  # get a 1D array that preserves byteorder
+
+    # get a 1D array that preserves byteorder
+    # Note: in Python < 3.12 numpy typing doesn't correctly reflect that arrays support buffer protocol
+    # See also: https://github.com/numpy/numpy/issues/26783
+    data = memoryview(np.frombuffer(data, dtype=data.format))  # type: ignore
     if not data.contiguous:
         # the data will be contiguous by construction, but better safe than sorry!
         raise ValueError(data.contiguous)
