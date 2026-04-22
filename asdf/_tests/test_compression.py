@@ -1,6 +1,7 @@
 import io
 import lzma
 import os
+from typing import Any
 
 import numpy as np
 import pytest
@@ -26,7 +27,7 @@ def _get_sparse_tree():
     return {"science_data": arr}
 
 
-def _roundtrip(tmp_path, tree, compression=None, write_options=None, read_options=None):
+def _roundtrip(tmp_path, tree, compression=None, write_options: dict[str, Any] | None = None, read_options=None):
     read_options = {} if read_options is None else read_options
     write_options = {} if write_options is None else write_options.copy()
     write_options.update(all_array_compression=compression)

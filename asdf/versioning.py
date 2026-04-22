@@ -4,6 +4,7 @@ of the ASDF spec.
 """
 
 from functools import total_ordering
+from typing import TypeAlias
 
 import yaml
 from semantic_version import SimpleSpec, Version
@@ -94,6 +95,8 @@ class AsdfVersion(AsdfVersionMixin, Version):
 supported_versions = tuple(AsdfVersion(version) for version in get_supported_core_schema_versions())
 
 default_version = supported_versions[-1]
+
+AsdfVersionLike: TypeAlias = AsdfVersion | str | list[int] | tuple[int, ...]
 
 
 # This is the ASDF core schemas version at which the format of the history

@@ -9,7 +9,7 @@ from .config import get_config
 from .exceptions import AsdfWarning
 
 
-def validate(compression):
+def validate(compression: str | bytes | None) -> str | None:
     """
     Validate the compression string.
 

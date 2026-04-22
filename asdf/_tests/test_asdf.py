@@ -52,7 +52,7 @@ class TestExtension:
         return self._url_mapping
 
     @property
-    def extension_uri(self):
+    def extension_uri(self) -> str | None:
         return self._extension_uri
 
     @property
@@ -120,7 +120,8 @@ def test_asdf_file_extensions():
     msg = r"[The extensions parameter must be an extension.*, Extension must implement the Extension interface]"
     for arg in (object(), [object()]):
         with pytest.raises(TypeError, match=msg):
-            AsdfFile(extensions=arg)
+            # Ignore typing here because type is intentionally wrong
+            AsdfFile(extensions=arg)  # type: ignore
 
 
 def test_asdf_file_version_requirement():

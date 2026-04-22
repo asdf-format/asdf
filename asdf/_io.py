@@ -2,9 +2,14 @@
 Low-level input/output routines for AsdfFile instances
 """
 
+from __future__ import annotations
+
 import contextlib
 import io
 import pathlib
+from typing import TypeVar
+
+from asdf.versioning import AsdfVersion
 
 from . import _version, constants, generic_io, versioning, yamlutil
 from ._block.manager import Manager as BlockManager
@@ -27,7 +32,7 @@ def get_asdf_library_info():
     )
 
 
-def parse_header_line(line):
+def parse_header_line(line: str) -> AsdfVersion:
     """
     Parses the header line in a ASDF file to obtain the ASDF version.
     """
@@ -84,7 +89,11 @@ def read_comment_section(fd):
     return comments
 
 
-def find_asdf_version_in_comments(comments, default=None):
+# Required for type narrowing in `find_asdf_version_in_comments``
+MaybeVer = TypeVar("MaybeVer", AsdfVersion, None)
+
+
+def find_asdf_version_in_comments(comments: list[str], default: MaybeVer = None) -> MaybeVer:
     for comment in comments:
         parts = comment.split()
         if len(parts) == 2 and parts[0] == constants.ASDF_STANDARD_COMMENT:

@@ -10,6 +10,7 @@ from numpy.random import random
 from numpy.testing import assert_array_equal
 
 import asdf
+import asdf.versioning
 from asdf import constants, generic_io
 from asdf._block import io as bio
 from asdf.exceptions import AsdfBlockIndexWarning
@@ -883,7 +884,9 @@ def test_add_block_before_fully_loaded(tmp_path):
 @pytest.mark.parametrize("all_array_storage", ["internal", "external", "inline"])
 @pytest.mark.parametrize("all_array_compression", [None, "", "zlib", "bzp2", "lz4", "input"])
 @pytest.mark.parametrize("compression_kwargs", [None, {}])
-def test_write_to_update_storage_options(tmp_path, all_array_storage, all_array_compression, compression_kwargs):
+def test_write_to_update_storage_options(
+    tmp_path, all_array_storage, all_array_compression, compression_kwargs: dict[str, Any]
+):
     if all_array_compression == "bzp2" and compression_kwargs is not None:
         compression_kwargs = {"compresslevel": 1}
 

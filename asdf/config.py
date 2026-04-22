@@ -45,8 +45,8 @@ class AsdfConfig:
         self._legacy_fill_schema_defaults = DEFAULT_LEGACY_FILL_SCHEMA_DEFAULTS
         self._io_block_size = DEFAULT_IO_BLOCK_SIZE
         self._array_inline_threshold = DEFAULT_ARRAY_INLINE_THRESHOLD
-        self._all_array_storage = DEFAULT_ALL_ARRAY_STORAGE
-        self._all_array_compression = DEFAULT_ALL_ARRAY_COMPRESSION
+        self._all_array_storage: str | None = DEFAULT_ALL_ARRAY_STORAGE
+        self._all_array_compression: str | None = DEFAULT_ALL_ARRAY_COMPRESSION
         self._all_array_compression_kwargs = DEFAULT_ALL_ARRAY_COMPRESSION_KWARGS
         self._default_array_save_base = DEFAULT_DEFAULT_ARRAY_SAVE_BASE
         self._lazy_tree = DEFAULT_LAZY_TREE
@@ -220,7 +220,7 @@ class AsdfConfig:
             self._extensions = None
 
     @property
-    def default_version(self):
+    def default_version(self) -> str:
         """
         Get the default ASDF core schemas version used for
         new files.
@@ -232,7 +232,7 @@ class AsdfConfig:
         return self._default_version
 
     @default_version.setter
-    def default_version(self, value):
+    def default_version(self, value: str) -> None:
         """
         Set the default ASDF core schemas version used for
         new files.
@@ -244,7 +244,7 @@ class AsdfConfig:
         self._default_version = validate_version(value)
 
     @property
-    def io_block_size(self):
+    def io_block_size(self) -> int:
         """
         Get the block size used when reading and writing
         files.
@@ -258,7 +258,7 @@ class AsdfConfig:
         return self._io_block_size
 
     @io_block_size.setter
-    def io_block_size(self, value):
+    def io_block_size(self, value: int) -> None:
         """
         Set the block size used when reading and writing
         files.
@@ -330,7 +330,7 @@ class AsdfConfig:
         self._array_inline_threshold = value
 
     @property
-    def all_array_storage(self):
+    def all_array_storage(self) -> str | None:
         """
         Override the array storage type of all blocks
         in the file immediately before writing.  Must be one of the
@@ -347,14 +347,14 @@ class AsdfConfig:
         return self._all_array_storage
 
     @all_array_storage.setter
-    def all_array_storage(self, value):
+    def all_array_storage(self, value: str | None) -> None:
         if value not in (None, "internal", "external", "inline"):
             msg = f"Invalid value for all_array_storage: '{value}'"
             raise ValueError(msg)
         self._all_array_storage = value
 
     @property
-    def all_array_compression(self):
+    def all_array_compression(self) -> str | None:
         """
         Override the compression type on all binary blocks in the
         file.  Must be one of the following strings, `None` or a
@@ -374,7 +374,7 @@ class AsdfConfig:
         return self._all_array_compression
 
     @all_array_compression.setter
-    def all_array_compression(self, value):
+    def all_array_compression(self, value: str | bytes | None) -> None:
         # local to avoid circular import
         from asdf._compression import validate
 

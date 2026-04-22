@@ -4,6 +4,7 @@ import re
 import stat
 import sys
 import urllib.request as urllib_request
+from typing import Any
 
 import numpy as np
 import pytest
@@ -15,7 +16,7 @@ from asdf.config import config_context
 from . import _helpers as helpers
 
 
-def _roundtrip(tree, get_write_fd, get_read_fd, write_options=None, read_options=None):
+def _roundtrip(tree, get_write_fd, get_read_fd, write_options: dict[str, Any] | None = None, read_options=None):
     write_options = {} if write_options is None else write_options
     read_options = {} if read_options is None else read_options
 

@@ -1,7 +1,7 @@
 from io import BytesIO
 
 from asdf._asdf import AsdfFile, open_asdf
-from asdf.util import NotSet
+from asdf.util import NOT_SET
 
 __all__ = ["dump", "dumps", "load", "loads"]
 
@@ -12,9 +12,9 @@ def dump(
     *,
     version=None,
     extensions=None,
-    all_array_storage=NotSet,
-    all_array_compression=NotSet,
-    compression_kwargs=NotSet,
+    all_array_storage=NOT_SET,
+    all_array_compression=NOT_SET,
+    compression_kwargs=NOT_SET,
     pad_blocks=False,
     custom_schema=None,
     write_checksums=True,
@@ -75,9 +75,9 @@ def dumps(
     *,
     version=None,
     extensions=None,
-    all_array_storage=NotSet,
-    all_array_compression=NotSet,
-    compression_kwargs=NotSet,
+    all_array_storage=NOT_SET,
+    all_array_compression=NOT_SET,
+    compression_kwargs=NOT_SET,
     pad_blocks=False,
     custom_schema=None,
     write_checksums=True,
