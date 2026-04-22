@@ -2,7 +2,6 @@ import bz2
 import struct
 import warnings
 import zlib
-from typing import Any
 
 import numpy as np
 
@@ -118,9 +117,8 @@ class Lz4Compressor:
                     newbytes = min(_size - _pos, len(blk))  # don't fill past the buffer len!
 
                     # Older versions of python seem to treat memoryview specializations weirdly
-                    # So cast memoryview[bytes] to memoryview[any] so numpy doesn't complain
-                    blk_buf: memoryview[Any] = blk[:newbytes]
-                    _buffer[_pos : _pos + newbytes] = np.frombuffer(blk_buf, dtype=np.byte)
+                    # pyrefly: ignore[no-matching-overload]
+                    _buffer[_pos : _pos + newbytes] = np.frombuffer(blk[:newbytes], dtype=np.byte)
                     _pos += newbytes
                     blk = blk[newbytes:]
 
