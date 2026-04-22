@@ -166,7 +166,7 @@ select = [
   "S",  # bandit
   "UP",  # pyupgrade
   "RUF",  # ruff specific, includes yesqa
-  "TC",
+  "TC",  # type-checking
 ]
 ignore = [
   "S310",  # URL open for permitted schemes
