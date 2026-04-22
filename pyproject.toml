@@ -157,6 +157,7 @@ line-length = 120
 extend-exclude = ["asdf/_extern/*", "asdf/_jsonschema/*", "docs/*"]
 
 [tool.ruff.lint]
+future-annotations = true
 select = [
   # minimal set to match pre-ruff behavior
   "E",  # pycodestyle
@@ -165,6 +166,7 @@ select = [
   "S",  # bandit
   "UP",  # pyupgrade
   "RUF",  # ruff specific, includes yesqa
+  "TC",
 ]
 ignore = [
   "S310",  # URL open for permitted schemes
@@ -208,6 +210,7 @@ issue_format = "`#{issue} <https://github.com/asdf-format/asdf/pull/{issue}>`_"
 [tool.pyrefly]
 project-excludes = ["asdf/_jsonschema/"]
 search-path = [".", "integration_tests/compatibility"]
+baseline = ".pyrefly/baseline.json"
 
 [tool.pyrefly.errors]
 bad-override = "warn"
