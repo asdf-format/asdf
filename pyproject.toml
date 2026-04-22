@@ -37,6 +37,7 @@ docs = [
 http = ["fsspec[http]>=2022.8.2"]
 lz4 = ["lz4>=0.10"]
 tests = ["asdf[all]", "psutil", "pytest>=8", "syrupy>=5.1"]
+typing = ["pyrefly==0.62.0", "types-PyYAML", "types-jmespath"]
 
 benchmark = ["asdf[tests]", "pytest-benchmark"]
 test = ["asdf[tests]"]
