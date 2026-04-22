@@ -280,7 +280,7 @@ def test_history_validate():
     Test that add_history_entry validates the generated entry and doesn't
     add the entry to the history list if invalid.
     """
-    af = asdf.AsdfFile()
+    af = asdf.AsdfFile(version="1.6.0")
     # add an invalid item to the tree to check if adding a history entry validates
     # the entire tree
     af["invalid"] = asdf.tagged.TaggedDict({}, tag="tag:stsci.edu:asdf/core/ndarray-1.1.0")
