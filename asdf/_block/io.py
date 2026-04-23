@@ -276,7 +276,7 @@ def read_block(fd, validate_checksum, offset=None, memmap=False, lazy_load=False
 
 
 def generate_write_header(
-    data, stream=False, compression_kwargs=None, padding=False, fs_block_size=1, write_checksum=False, **header_kwargs
+    data, stream=False, compression_kwargs=None, padding=False, fs_block_size=1, write_checksum=True, **header_kwargs
 ):
     """
     Generate a dict representation of a ASDF block header that can be
@@ -309,7 +309,7 @@ def generate_write_header(
         The filesystem block size. See the `asdf.util.calculate_padding`
         ``block_size`` argument for more details.
 
-    write_checksum: bool, optional, default False
+    write_checksum: bool, optional
         Compute and write the checksum of the block data.
         If disabled then the checksum field is set to 0.
 
@@ -377,7 +377,7 @@ def generate_write_header(
 
 
 def write_block(
-    fd, data, offset=None, stream=False, compression_kwargs=None, padding=False, write_checksum=False, **header_kwargs
+    fd, data, offset=None, stream=False, compression_kwargs=None, padding=False, write_checksum=True, **header_kwargs
 ):
     """
     Write an ASDF block.
@@ -400,7 +400,7 @@ def write_block(
     padding : bool, optional, default False
         Optionally pad the block data. See `generate_write_header`.
 
-    write_checksum: bool, optional, default False
+    write_checksum: bool, optional
         Compute and write the checksum of the block data.
         If disabled then the checksum field is set to 0.
 

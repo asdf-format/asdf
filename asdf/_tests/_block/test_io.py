@@ -140,8 +140,7 @@ def test_write_block(tmp_path):
         + b"\0\0\0\0\0\0\0\0"  # allocated size
         + b"\0\0\0\0\0\0\0\0"  # used size
         + b"\0\0\0\0\0\0\0\0"  # data size
-        + b"\0" * 16  # checksum is disabled
-        # + b"\xd4\x1d\x8c\xd9\x8f\x00\xb2\x04\xe9\x80\t\x98\xec\xf8B~"  # checksum
+        + b"\xd4\x1d\x8c\xd9\x8f\x00\xb2\x04\xe9\x80\t\x98\xec\xf8B~"  # checksum
     )
 
     # first write out a file with a block

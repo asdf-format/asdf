@@ -57,7 +57,8 @@ def gen_blocks(
 @pytest.mark.parametrize("validate_checksums", [True, False])
 @pytest.mark.parametrize("padding", [0, 3, 4, 5])
 @pytest.mark.parametrize("streamed", [True, False])
-def test_read(tmp_path, lazy_load, memmap, with_index, validate_checksums, padding, streamed):
+@pytest.mark.parametrize("write_checksums", [True, False])
+def test_read(tmp_path, lazy_load, memmap, with_index, validate_checksums, padding, streamed, write_checksums):
     fn = tmp_path / "test.bin"
     n = 5
     size = 10
@@ -68,7 +69,7 @@ def test_read(tmp_path, lazy_load, memmap, with_index, validate_checksums, paddi
         padding=padding,
         with_index=with_index,
         streamed=streamed,
-        write_checksums=validate_checksums,
+        write_checksums=write_checksums,
     ) as (fd, check):
         r = read_blocks(fd, memmap=memmap, lazy_load=lazy_load, validate_checksums=validate_checksums)
         if lazy_load and with_index and not streamed:

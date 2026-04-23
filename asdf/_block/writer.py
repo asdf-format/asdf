@@ -29,7 +29,7 @@ class WriteBlock:
         return np.ndarray(0, np.uint8)
 
 
-def write_blocks(fd, blocks, padding=False, streamed_block=None, write_index=True, write_checksums=False):
+def write_blocks(fd, blocks, padding=False, streamed_block=None, write_index=True, write_checksums=True):
     """
     Write a list of WriteBlocks to a file
 

@@ -76,7 +76,7 @@ def test_update_outside_context(tmp_path):
     with asdf.open(fn) as af:
         m = af._blocks
         with pytest.raises(OSError, match=r"update called outside of valid write_context"):
-            m.update(0, pad_blocks=False, include_block_index=False, write_checksums=None)
+            m.update(0, pad_blocks=False, include_block_index=False, write_checksums=False)
 
 
 def test_input_compression(tmp_path):

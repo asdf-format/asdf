@@ -605,10 +605,8 @@ class Manager:
             If a streamed_block is provided (or the file is not
             seekable) no block index will be written.
 
-        write_checksums: bool or None, optional
+        write_checksums: bool, optional
             Compute and write block checksums to the file.
-            If `None` then checksums will be written if the existing blocks
-            in the file contain checksums. Otherwise defaults to `False`.
 
         Raises
         ------
