@@ -273,3 +273,23 @@ def test_metadata_with_custom_extension(tmp_path):
 
         with asdf.open(file_path_3) as af:
             assert len(af["history"]["extensions"]) == 2
+
+
+def test_history_validate():
+    """
+    Test that add_history_entry validates the generated entry and doesn't
+    add the entry to the history list if invalid.
+    """
+    af = asdf.AsdfFile(version="1.6.0")
+    # add an invalid item to the tree to check if adding a history entry validates
+    # the entire tree
+    af["invalid"] = asdf.tagged.TaggedDict({}, tag="tag:stsci.edu:asdf/core/ndarray-1.1.0")
+    with pytest.raises(ValidationError):
+        af.validate()
+
+    af.add_history_entry("test")
+    assert af.get_history_entries()[0]["description"] == "test"
+
+    with pytest.raises(ValidationError):
+        af.add_history_entry(1)
+    assert len(af.get_history_entries()) == 1
