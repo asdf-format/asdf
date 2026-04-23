@@ -275,7 +275,9 @@ def read_block(fd, validate_checksum, offset=None, memmap=False, lazy_load=False
     return offset, header, data_offset, data
 
 
-def generate_write_header(data, stream=False, compression_kwargs=None, padding=False, fs_block_size=1, **header_kwargs):
+def generate_write_header(
+    data, stream=False, compression_kwargs=None, padding=False, fs_block_size=1, write_checksum=True, **header_kwargs
+):
     """
     Generate a dict representation of a ASDF block header that can be
     used for writing a block.
@@ -306,6 +308,10 @@ def generate_write_header(data, stream=False, compression_kwargs=None, padding=F
     fs_block_size : int, optional, default 1
         The filesystem block size. See the `asdf.util.calculate_padding`
         ``block_size`` argument for more details.
+
+    write_checksum: bool, optional
+        Compute and write the checksum of the block data.
+        If disabled then the checksum field is set to 0.
 
     **header_kwargs : dict, optional
         Block header settings that will be read, updated, and used
@@ -353,7 +359,7 @@ def generate_write_header(data, stream=False, compression_kwargs=None, padding=F
         padding = util.calculate_padding(used_size, padding, fs_block_size)
         header_kwargs["allocated_size"] = header_kwargs.get("allocated_size", used_size + padding)
 
-    if stream:
+    if stream or not write_checksum:
         header_kwargs["checksum"] = b"\0" * 16
     elif buff is not None:
         header_kwargs["checksum"] = calculate_block_checksum(buff.getbuffer())
@@ -370,7 +376,9 @@ def generate_write_header(data, stream=False, compression_kwargs=None, padding=F
     return header_kwargs, buff, padding_bytes
 
 
-def write_block(fd, data, offset=None, stream=False, compression_kwargs=None, padding=False, **header_kwargs):
+def write_block(
+    fd, data, offset=None, stream=False, compression_kwargs=None, padding=False, write_checksum=True, **header_kwargs
+):
     """
     Write an ASDF block.
 
@@ -392,6 +400,10 @@ def write_block(fd, data, offset=None, stream=False, compression_kwargs=None, pa
     padding : bool, optional, default False
         Optionally pad the block data. See `generate_write_header`.
 
+    write_checksum: bool, optional
+        Compute and write the checksum of the block data.
+        If disabled then the checksum field is set to 0.
+
     **header_kwargs : dict
         Block header settings. See `generate_write_header`.
 
@@ -403,7 +415,7 @@ def write_block(fd, data, offset=None, stream=False, compression_kwargs=None, pa
         for writing.
     """
     header_dict, buff, padding_bytes = generate_write_header(
-        data, stream, compression_kwargs, padding, fd.block_size, **header_kwargs
+        data, stream, compression_kwargs, padding, fd.block_size, write_checksum, **header_kwargs
     )
     header_bytes = BLOCK_HEADER.pack(**header_dict)
 

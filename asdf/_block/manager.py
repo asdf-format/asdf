@@ -364,7 +364,7 @@ class Manager:
         self._streamed_obj_keys = set()
         self._write_fd = None
 
-    def _write_external_blocks(self):
+    def _write_external_blocks(self, write_checksums):
         from asdf import AsdfFile
 
         if self._write_fd is None or self._write_fd.uri is None:
@@ -376,7 +376,7 @@ class Manager:
             af = AsdfFile()
             with generic_io.get_file(uri, mode="w") as f:
                 af.write_to(f, include_block_index=False)
-                writer.write_blocks(f, [blk])
+                writer.write_blocks(f, [blk], write_checksums=write_checksums)
 
     def make_write_block(self, data, options, obj):
         """
@@ -541,7 +541,7 @@ class Manager:
             yield
         self._clear_write()
 
-    def write(self, pad_blocks, include_block_index):
+    def write(self, pad_blocks, include_block_index, write_checksums):
         """
         Write blocks that were set up during the current
         `write_context`.
@@ -559,6 +559,9 @@ class Manager:
             If a streamed_block is provided (or the file is not
             seekable) no block index will be written.
 
+        write_checksums : bool
+            Compute and write checksums for each block.
+
         Raises
         ------
         OSError
@@ -574,11 +577,12 @@ class Manager:
                 pad_blocks,
                 streamed_block=self._streamed_write_block,
                 write_index=include_block_index,
+                write_checksums=write_checksums,
             )
         if len(self._external_write_blocks):
-            self._write_external_blocks()
+            self._write_external_blocks(write_checksums=write_checksums)
 
-    def update(self, new_tree_size, pad_blocks, include_block_index):
+    def update(self, new_tree_size, pad_blocks, include_block_index, write_checksums):
         """
         Perform an update-in-place of ASDF blocks set up during
         a `write_context`.
@@ -596,11 +600,13 @@ class Manager:
             a number of padding bytes based off a ratio of the data
             size.
 
-        include_block_index : bool
+        include_block_index : bool or None
             If True, include a block index at the end of the file.
             If a streamed_block is provided (or the file is not
             seekable) no block index will be written.
 
+        write_checksums: bool, optional
+            Compute and write block checksums to the file.
 
         Raises
         ------
@@ -626,7 +632,7 @@ class Manager:
             )
 
         if len(self._external_write_blocks):
-            self._write_external_blocks()
+            self._write_external_blocks(write_checksums=write_checksums)
 
         # do we have any blocks to write?
         if len(self._write_blocks) or self._streamed_write_block:
@@ -637,6 +643,7 @@ class Manager:
                 pad_blocks,
                 streamed_block=self._streamed_write_block,
                 write_index=False,  # don't write an index as we will modify the offsets
+                write_checksums=write_checksums,
             )
             new_block_end = self._write_fd.tell()
 

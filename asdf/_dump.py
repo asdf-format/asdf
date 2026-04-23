@@ -17,6 +17,7 @@ def dump(
     compression_kwargs=NotSet,
     pad_blocks=False,
     custom_schema=None,
+    write_checksums=True,
 ):
     """
     Write a tree to an ASDF file.
@@ -54,6 +55,9 @@ def dump(
         validation pass. This can be used to ensure that particular ASDF
         files follow custom conventions beyond those enforced by the
         specification.
+
+    write_checksums: bool, optional
+        Compute and write block checksums to the file.
     """
     AsdfFile(tree, custom_schema=custom_schema, extensions=extensions).write_to(
         fp,
@@ -62,6 +66,7 @@ def dump(
         all_array_compression=all_array_compression,
         compression_kwargs=compression_kwargs,
         pad_blocks=pad_blocks,
+        write_checksums=write_checksums,
     )
 
 
@@ -75,6 +80,7 @@ def dumps(
     compression_kwargs=NotSet,
     pad_blocks=False,
     custom_schema=None,
+    write_checksums=True,
 ):
     """
     Write tree to a string.
@@ -110,6 +116,9 @@ def dumps(
         files follow custom conventions beyond those enforced by the
         specification.
 
+    write_checksums: bool, optional
+        Compute and write block checksums to the file.
+
     Returns
     -------
     str
@@ -126,6 +135,7 @@ def dumps(
         compression_kwargs=compression_kwargs,
         pad_blocks=pad_blocks,
         custom_schema=custom_schema,
+        write_checksums=write_checksums,
     )
     return buff.getvalue()
 
