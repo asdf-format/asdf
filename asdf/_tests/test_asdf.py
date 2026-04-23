@@ -121,7 +121,7 @@ def test_asdf_file_extensions():
     for arg in (object(), [object()]):
         with pytest.raises(TypeError, match=msg):
             # Ignore typing here because type is intentionally wrong
-            AsdfFile(extensions=arg)  # type: ignore
+            AsdfFile(extensions=arg)  # pyrefly: ignore[bad-argument-type]
 
 
 def test_asdf_file_version_requirement():

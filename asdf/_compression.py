@@ -318,7 +318,7 @@ def compress(fd, data, compression, config=None):
     # get a 1D array that preserves byteorder
     # Note: in Python < 3.12 numpy typing doesn't correctly reflect that arrays support buffer protocol
     # See also: https://github.com/numpy/numpy/issues/26783
-    data = memoryview(np.frombuffer(data, dtype=data.format))  # type: ignore
+    data = memoryview(np.frombuffer(data, dtype=data.format))  # pyrefly: ignore[bad-argument-type]
     if not data.contiguous:
         # the data will be contiguous by construction, but better safe than sorry!
         raise ValueError(data.contiguous)
