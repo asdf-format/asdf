@@ -1,3 +1,31 @@
+5.3.0 (2026-04-23)
+==================
+
+Bugfix
+------
+
+- Added ``__delitem__`` method to `AsdfFile`. (`#2008
+  <https://github.com/asdf-format/asdf/pull/2008>`_)
+- Fixed bug in which empty/all-zero block checksums were treated as invalid
+  when ``validate_headers`` is enabled. (`#2024
+  <https://github.com/asdf-format/asdf/pull/2024>`_)
+- Fixed a bug in which checksums for compressed blocks were being computed in a
+  way that didn't match the specification. (`#2027
+  <https://github.com/asdf-format/asdf/pull/2027>`_)
+- Remove whole-tree validation in ``AsdfFile.add_history_entry`` and replace it
+  with validation of the newly created entry. (`#2029
+  <https://github.com/asdf-format/asdf/pull/2029>`_)
+
+
+Feature
+-------
+
+- Added optional block info table to ``asdftool info`` and ``AsdfFile.info``.
+  (`#2014 <https://github.com/asdf-format/asdf/pull/2014>`_)
+- Added support for disabling block checksums in file write methods. (`#2018
+  <https://github.com/asdf-format/asdf/pull/2018>`_)
+
+
 5.2.0 (2026-03-19)
 ==================
 

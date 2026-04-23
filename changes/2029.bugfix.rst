@@ -1,1 +1,0 @@
-Remove whole-tree validation in ``AsdfFile.add_history_entry`` and replace it with validation of the newly created entry.

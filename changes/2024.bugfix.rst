@@ -1,1 +1,0 @@
-Fixed bug in which empty/all-zero block checksums were treated as invalid when ``validate_headers`` is enabled.
