@@ -34,10 +34,20 @@ if TYPE_CHECKING:
 
     from asdf.extension import ExtensionManager, SerializationContext
     from asdf.generic_io import GenericFile
-    from asdf.typing import ArrayStorage, Compression, ExtensionLike, FileLike, FileMode, FilterFn, NDArray, TreeKey
+    from asdf.typing import (
+        ArrayStorage,
+        AsdfVersionLike,
+        Compression,
+        ExtensionLike,
+        FileLike,
+        FileMode,
+        FilterFn,
+        NDArray,
+        TreeKey,
+    )
 
     from .util import NotSet
-    from .versioning import AsdfVersion, AsdfVersionLike
+    from .versioning import AsdfVersion
 
 
 class AsdfFile:

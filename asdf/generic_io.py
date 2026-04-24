@@ -28,11 +28,9 @@ from .exceptions import DelimiterNotFoundError
 from .util import _patched_urllib_parse
 
 if TYPE_CHECKING:
-    from pathlib import Path
-
     from fsspec.core import OpenFile
 
-    from asdf.typing import FileLike, FileMode
+    from asdf.typing import FileLike, FileMode, PathLike
 
 __all__ = ["get_file", "get_uri", "relative_uri", "resolve_uri"]
 
@@ -1001,18 +999,10 @@ def get_uri(file_obj):
     return getattr(file_obj, "name", "")
 
 
-# class Reader(Protocol[AnyStr]):
-#     def read(self, /) -> AnyStr: ...
-
-
-# class Writer(Protocol[AnyStr]):
-#     def write(self, data: AnyStr, /) -> None: ...
-
-
 def get_file(
     init: FileLike,
     mode: FileMode = "r",
-    uri: Path | str | None = None,
+    uri: PathLike | None = None,
     close: bool = False,
 ) -> GenericFile:
     """
@@ -1081,8 +1071,8 @@ def get_file(
             raise ValueError(msg)
 
         # From a user perspective GenericWrapper is a GenericFile
-        # But we can't make GenericWrapper a subclass of Generic file because there are places internally
-        # that depend on it
+        # But we can't make GenericWrapper a subclass of GenericFile because there are places internally
+        # that depend on it not being one
         return typing.cast("GenericFile", GenericWrapper(init))
 
     if isinstance(init, (str, pathlib.Path)):

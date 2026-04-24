@@ -9,6 +9,7 @@ from typing import Any, AnyStr, Literal, Protocol
 import numpy.typing as npt
 
 from asdf.generic_io import GenericFile
+from asdf.versioning import AsdfVersion
 
 
 # Alternate version of `Extension` for use in type-hints
@@ -47,6 +48,8 @@ TreeKey = Any
 PathLike = str | Path
 #: Readable/writable file object or the path or URI of an openable file
 FileLike = PathLike | Reader | Writer | GenericFile
+#: A version number compatible with `AsdfVersion`
+AsdfVersionLike = AsdfVersion | str | list[int] | tuple[int, ...]
 
 #: Supported modes for opening a file
 FileMode = Literal["r", "w", "rw"]
