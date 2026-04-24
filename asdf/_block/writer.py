@@ -29,7 +29,7 @@ class WriteBlock:
         return np.ndarray(0, np.uint8)
 
 
-def write_blocks(fd, blocks, padding=False, streamed_block=None, write_index=True):
+def write_blocks(fd, blocks, padding=False, streamed_block=None, write_index=True, write_checksums=True):
     """
     Write a list of WriteBlocks to a file
 
@@ -59,6 +59,9 @@ def write_blocks(fd, blocks, padding=False, streamed_block=None, write_index=Tru
         If True, include a block index at the end of the file.
         If a streamed_block is provided (or the file is not
         seekable) no block index will be written.
+
+    write_checksums: bool, optional
+        Compute and write block checksums to the file.
 
     Returns
     -------
@@ -101,12 +104,13 @@ def write_blocks(fd, blocks, padding=False, streamed_block=None, write_index=Tru
                 compression_kwargs=blk.compression_kwargs,
                 padding=padding,
                 compression=blk.compression,
+                write_checksum=write_checksums,
             )
         )
     if streamed_block is not None:
         offsets.append(tell())
         fd.write(constants.BLOCK_MAGIC)
-        headers.append(bio.write_block(fd, streamed_block.data_bytes, stream=True))
+        headers.append(bio.write_block(fd, streamed_block.data_bytes, stream=True, write_checksum=write_checksums))
 
     # os.pipe on windows returns a file-like object
     # that reports as seekable but tell always returns 0

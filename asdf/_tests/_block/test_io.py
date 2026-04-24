@@ -18,7 +18,8 @@ def test_checksum(tmp_path):
     # check that when written, a block generates the correct checksum
     path = tmp_path / "test"
     with generic_io.get_file(path, mode="w") as fd:
-        bio.write_block(fd, my_array.view(dtype="uint8"))
+        # check that no warnings are raised when writing checksums without compression
+        bio.write_block(fd, my_array.view(dtype="uint8"), write_checksum=True)
     with generic_io.get_file(path, mode="r") as fd:
         _, header, _, _ = bio.read_block(fd, True)
     assert header["checksum"] == target_checksum

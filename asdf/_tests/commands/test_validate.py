@@ -8,7 +8,7 @@ from asdf._commands import main
 @pytest.fixture()
 def valid_file_path(tmp_path):
     path = tmp_path / "valid_file.asdf"
-    asdf.dump({"foo": 42, "arr": np.arange(42)}, path)
+    asdf.dump({"foo": 42, "arr": np.arange(42)}, path, write_checksums=True)
     return path
 
 
