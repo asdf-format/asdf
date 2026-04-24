@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import io
 import os
 
@@ -938,7 +940,7 @@ def test_remove_blocks(tmp_path, lazy_load, memmap):
     fn1 = tmp_path / "test.asdf"
     fn2 = tmp_path / "test2.asdf"
 
-    tree = {"a": np.zeros(3), "b": np.ones(10)}
+    tree: dict = {"a": np.zeros(3), "b": np.ones(10)}
     tree["c"] = tree["b"][:5]
 
     for key in tree:

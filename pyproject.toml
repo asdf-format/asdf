@@ -37,6 +37,7 @@ docs = [
 http = ["fsspec[http]>=2022.8.2"]
 lz4 = ["lz4>=0.10"]
 tests = ["asdf[all]", "psutil", "pytest>=8", "syrupy>=5.1"]
+typing = ["pyrefly==0.62.0", "types-PyYAML", "types-jmespath"]
 
 benchmark = ["asdf[tests]", "pytest-benchmark"]
 test = ["asdf[tests]"]
@@ -157,6 +158,7 @@ line-length = 120
 extend-exclude = ["asdf/_extern/*", "asdf/_jsonschema/*", "docs/*"]
 
 [tool.ruff.lint]
+future-annotations = true
 select = [
   # minimal set to match pre-ruff behavior
   "E",  # pycodestyle
@@ -165,6 +167,7 @@ select = [
   "S",  # bandit
   "UP",  # pyupgrade
   "RUF",  # ruff specific, includes yesqa
+  "TC",  # type-checking
 ]
 ignore = [
   "S310",  # URL open for permitted schemes
@@ -204,3 +207,12 @@ issue_format = "`#{issue} <https://github.com/asdf-format/asdf/pull/{issue}>`_"
 [tool.towncrier.fragment.removal]
 
 [tool.towncrier.fragment.general]
+
+[tool.pyrefly]
+project-excludes = ["asdf/_jsonschema/"]
+search-path = [".", "integration_tests/compatibility"]
+baseline = ".pyrefly-baseline.json"
+
+[tool.pyrefly.errors]
+bad-override = "warn"
+bad-param-name-override = "warn"
