@@ -3,15 +3,23 @@ Methods for getting and setting asdf global configuration
 options.
 """
 
+from __future__ import annotations
+
 import collections
 import copy
 import threading
 from contextlib import contextmanager
+from typing import TYPE_CHECKING, Any
 
 from . import _entry_points, util, versioning
 from ._helpers import validate_version
 from .extension import ExtensionProxy
 from .resource import ResourceManager, ResourceMappingProxy
+
+if TYPE_CHECKING:
+    from collections.abc import Generator, Mapping
+
+    from asdf.typing import ArrayStorage, Compression, ExtensionLike
 
 __all__ = ["AsdfConfig", "config_context", "get_config"]
 
@@ -44,10 +52,10 @@ class AsdfConfig:
         self._default_version = DEFAULT_DEFAULT_VERSION
         self._legacy_fill_schema_defaults = DEFAULT_LEGACY_FILL_SCHEMA_DEFAULTS
         self._io_block_size = DEFAULT_IO_BLOCK_SIZE
-        self._array_inline_threshold = DEFAULT_ARRAY_INLINE_THRESHOLD
-        self._all_array_storage: str | None = DEFAULT_ALL_ARRAY_STORAGE
+        self._array_inline_threshold: int | None = DEFAULT_ARRAY_INLINE_THRESHOLD
+        self._all_array_storage: ArrayStorage | None = DEFAULT_ALL_ARRAY_STORAGE
         self._all_array_compression: str | None = DEFAULT_ALL_ARRAY_COMPRESSION
-        self._all_array_compression_kwargs = DEFAULT_ALL_ARRAY_COMPRESSION_KWARGS
+        self._all_array_compression_kwargs: dict[str, Any] | None = DEFAULT_ALL_ARRAY_COMPRESSION_KWARGS
         self._default_array_save_base = DEFAULT_DEFAULT_ARRAY_SAVE_BASE
         self._lazy_tree = DEFAULT_LAZY_TREE
         self._warn_on_failed_conversion = DEFAULT_WARN_ON_FAILED_CONVERSION
@@ -55,7 +63,7 @@ class AsdfConfig:
         self._lock = threading.RLock()
 
     @property
-    def resource_mappings(self):
+    def resource_mappings(self) -> list[ResourceMappingProxy]:
         """
         Get the list of registered resource mapping instances.  Unless
         overridden by user configuration, this list contains every mapping
@@ -71,7 +79,7 @@ class AsdfConfig:
                     self._resource_mappings = _entry_points.get_resource_mappings()
         return self._resource_mappings
 
-    def add_resource_mapping(self, mapping):
+    def add_resource_mapping(self, mapping: Mapping[str, str | bytes]) -> None:
         """
         Register a new resource mapping.  The new mapping will
         take precedence over all previously registered mappings.
@@ -90,7 +98,9 @@ class AsdfConfig:
             self._resource_mappings = resource_mappings
             self._resource_manager = None
 
-    def remove_resource_mapping(self, mapping=None, *, package=None):
+    def remove_resource_mapping(
+        self, mapping: Mapping[str, str | bytes] | None = None, *, package: str | None = None
+    ) -> None:
         """
         Remove a registered resource mapping.
 
@@ -123,7 +133,7 @@ class AsdfConfig:
             self._resource_mappings = [m for m in self.resource_mappings if not _remove_condition(m)]
             self._resource_manager = None
 
-    def reset_resources(self):
+    def reset_resources(self) -> None:
         """
         Reset registered resource mappings to the default list
         provided as entry points.
@@ -133,7 +143,7 @@ class AsdfConfig:
             self._resource_manager = None
 
     @property
-    def resource_manager(self):
+    def resource_manager(self) -> ResourceManager:
         """
         Get the `asdf.resource.ResourceManager` instance.  Includes resources from
         registered resource mappings and any mappings added at runtime.
@@ -149,7 +159,7 @@ class AsdfConfig:
         return self._resource_manager
 
     @property
-    def extensions(self):
+    def extensions(self) -> list[ExtensionProxy]:
         """
         Get the list of registered extensions.
 
@@ -163,7 +173,7 @@ class AsdfConfig:
                     self._extensions = _entry_points.get_extensions()
         return self._extensions
 
-    def add_extension(self, extension):
+    def add_extension(self, extension: ExtensionLike) -> None:
         """
         Register a new extension.  The new extension will
         take precedence over all previously registered extensions.
@@ -176,7 +186,7 @@ class AsdfConfig:
             extension = ExtensionProxy.maybe_wrap(extension)
             self._extensions = [extension] + [e for e in self.extensions if e != extension]
 
-    def remove_extension(self, extension=None, *, package=None):
+    def remove_extension(self, extension: ExtensionLike | str | None = None, *, package: str | None = None) -> None:
         """
         Remove a registered extension.
 
@@ -212,7 +222,7 @@ class AsdfConfig:
         with self._lock:
             self._extensions = [e for e in self.extensions if not _remove_condition(e)]
 
-    def reset_extensions(self):
+    def reset_extensions(self) -> None:
         """
         Reset extensions to the default list registered via entry points.
         """
@@ -272,7 +282,7 @@ class AsdfConfig:
         self._io_block_size = value
 
     @property
-    def legacy_fill_schema_defaults(self):
+    def legacy_fill_schema_defaults(self) -> bool:
         """
         Get the configuration that controls filling defaults
         from schemas for older ASDF core schemas versions.  If
@@ -288,7 +298,7 @@ class AsdfConfig:
         return self._legacy_fill_schema_defaults
 
     @legacy_fill_schema_defaults.setter
-    def legacy_fill_schema_defaults(self, value):
+    def legacy_fill_schema_defaults(self, value: bool) -> None:
         """
         Set the flag that controls filling defaults from
         schemas for older ASDF core schemas versions.
@@ -300,7 +310,7 @@ class AsdfConfig:
         self._legacy_fill_schema_defaults = value
 
     @property
-    def array_inline_threshold(self):
+    def array_inline_threshold(self) -> int | None:
         """
         Get the threshold below which arrays are automatically written
         as inline YAML literals instead of binary blocks.  This number
@@ -315,7 +325,7 @@ class AsdfConfig:
         return self._array_inline_threshold
 
     @array_inline_threshold.setter
-    def array_inline_threshold(self, value):
+    def array_inline_threshold(self, value: int | None) -> None:
         """
         Set the threshold below which arrays are automatically written
         as inline YAML literals instead of binary blocks.  This number
@@ -330,7 +340,7 @@ class AsdfConfig:
         self._array_inline_threshold = value
 
     @property
-    def all_array_storage(self) -> str | None:
+    def all_array_storage(self) -> ArrayStorage:
         """
         Override the array storage type of all blocks
         in the file immediately before writing.  Must be one of the
@@ -347,14 +357,14 @@ class AsdfConfig:
         return self._all_array_storage
 
     @all_array_storage.setter
-    def all_array_storage(self, value: str | None) -> None:
+    def all_array_storage(self, value: ArrayStorage) -> None:
         if value not in (None, "internal", "external", "inline"):
             msg = f"Invalid value for all_array_storage: '{value}'"
             raise ValueError(msg)
         self._all_array_storage = value
 
     @property
-    def all_array_compression(self) -> str | None:
+    def all_array_compression(self) -> Compression:
         """
         Override the compression type on all binary blocks in the
         file.  Must be one of the following strings, `None` or a
@@ -374,14 +384,14 @@ class AsdfConfig:
         return self._all_array_compression
 
     @all_array_compression.setter
-    def all_array_compression(self, value: str | bytes | None) -> None:
+    def all_array_compression(self, value: Compression) -> None:
         # local to avoid circular import
         from asdf._compression import validate
 
         self._all_array_compression = validate(value)
 
     @property
-    def all_array_compression_kwargs(self):
+    def all_array_compression_kwargs(self) -> dict[str, Any] | None:
         """
         Dictionary of keyword arguments provided to the compressor during
         block compression (or `None` for no keyword arguments)
@@ -389,14 +399,14 @@ class AsdfConfig:
         return self._all_array_compression_kwargs
 
     @all_array_compression_kwargs.setter
-    def all_array_compression_kwargs(self, value):
+    def all_array_compression_kwargs(self, value: dict[str, Any] | None) -> None:
         if value is not None and not isinstance(value, collections.abc.Mapping):
             msg = f"Invalid value for all_array_compression_kwargs: '{value}'"
             raise ValueError(msg)
         self._all_array_compression_kwargs = value
 
     @property
-    def default_array_save_base(self):
+    def default_array_save_base(self) -> bool:
         """
         Option to control if when saving arrays the base array should be
         saved (so views of the same array will refer to offsets/strides of the
@@ -405,14 +415,14 @@ class AsdfConfig:
         return self._default_array_save_base
 
     @default_array_save_base.setter
-    def default_array_save_base(self, value):
+    def default_array_save_base(self, value: bool) -> None:
         if not isinstance(value, bool):
             msg = "default_array_save_base must be a bool"
             raise ValueError(msg)
         self._default_array_save_base = value
 
     @property
-    def validate_on_read(self):
+    def validate_on_read(self) -> bool:
         """
         Get configuration that controls schema validation of
         ASDF files on read.
@@ -424,7 +434,7 @@ class AsdfConfig:
         return self._validate_on_read
 
     @validate_on_read.setter
-    def validate_on_read(self, value):
+    def validate_on_read(self, value: bool) -> None:
         """
         Set the configuration that controls schema validation of
         ASDF files on read.  If `True`, newly opened files will
@@ -437,7 +447,7 @@ class AsdfConfig:
         self._validate_on_read = value
 
     @property
-    def lazy_tree(self):
+    def lazy_tree(self) -> bool:
         """
         Get configuration that controls if ASDF tree contents
         are lazily converted to custom objects or if all custom
@@ -451,11 +461,11 @@ class AsdfConfig:
         return self._lazy_tree
 
     @lazy_tree.setter
-    def lazy_tree(self, value):
+    def lazy_tree(self, value: bool) -> None:
         self._lazy_tree = value
 
     @property
-    def warn_on_failed_conversion(self):
+    def warn_on_failed_conversion(self) -> bool:
         """
         Get configuration that controls if errors during
         conversion are converted to warnings.
@@ -470,10 +480,10 @@ class AsdfConfig:
         return self._warn_on_failed_conversion
 
     @warn_on_failed_conversion.setter
-    def warn_on_failed_conversion(self, value):
+    def warn_on_failed_conversion(self, value: bool) -> None:
         self._warn_on_failed_conversion = value
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             "<AsdfConfig\n"
             f"  array_inline_threshold: {self.array_inline_threshold}\n"
@@ -500,7 +510,7 @@ _global_config = AsdfConfig()
 _local = _ConfigLocal()
 
 
-def get_config():
+def get_config() -> AsdfConfig:
     """
     Get the current config, which may have been altered by
     one or more surrounding calls to `asdf.config_context`.
@@ -516,7 +526,7 @@ def get_config():
 
 
 @contextmanager
-def config_context():
+def config_context() -> Generator[AsdfConfig]:
     """
     Context manager that temporarily overrides asdf configuration.
     The context yields an `asdf.config.AsdfConfig` instance that can be modified

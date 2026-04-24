@@ -50,8 +50,10 @@ FileLike = PathLike | Reader | Writer | GenericFile
 
 #: Supported modes for opening a file
 FileMode = Literal["r", "w", "rw"]
+
+# TODO: find a way to represent this where it will accept arbitrary strings but still suggest the set of literals
 #: Supported compression types
-Compression = Literal["zlib", "bzp2", "lz4", "input", ""] | None
+Compression = Literal["zlib", "bzp2", "lz4", "input", ""] | str | None
 #: Supported array storage modes
 ArrayStorage = Literal["internal", "external", "inline", "streamed"] | None
 

@@ -130,7 +130,7 @@ class AsdfFile:
         self._tagged_object_cache = lazy_nodes._TaggedObjectCache()
 
         self._fd: GenericFile | None = None
-        self._mode: str | None = None
+        self._mode: FileMode | None = None
         self._closed = False
         self._external_asdf_by_uri = {}
         self._blocks = BlockManager(uri=uri, lazy_load=lazy_load, memmap=memmap)
@@ -645,7 +645,7 @@ class AsdfFile:
         """
         self._blocks._set_array_storage(arr, array_storage)
 
-    def get_array_storage(self, arr: NDArray) -> str | None:
+    def get_array_storage(self, arr: NDArray) -> ArrayStorage:
         """
         Get the block type for the given array data.
 
@@ -683,7 +683,7 @@ class AsdfFile:
         """
         self._blocks._set_array_compression(arr, compression, **compression_kwargs)
 
-    def get_array_compression(self, arr: NDArray) -> str | None:
+    def get_array_compression(self, arr: NDArray) -> Compression:
         """
         Get the compression type for the given array data.
 
@@ -804,7 +804,7 @@ class AsdfFile:
         self,
         all_array_storage: ArrayStorage | NotSet = NOT_SET,
         all_array_compression: Compression | NotSet = NOT_SET,
-        compression_kwargs: Mapping[TreeKey, Any] | NotSet = NOT_SET,
+        compression_kwargs: dict[str, Any] | NotSet = NOT_SET,
         pad_blocks: bool = False,
         include_block_index: bool = True,
         version: str | None = None,
@@ -946,7 +946,7 @@ class AsdfFile:
         fd: FileLike,
         all_array_storage: ArrayStorage | NotSet = NOT_SET,
         all_array_compression: Compression | NotSet = NOT_SET,
-        compression_kwargs: Mapping[str, Any] | NotSet = NOT_SET,
+        compression_kwargs: dict[str, Any] | NotSet = NOT_SET,
         pad_blocks: bool = False,
         include_block_index: bool = True,
         version: str | None = None,
