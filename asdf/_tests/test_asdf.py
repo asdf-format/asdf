@@ -175,6 +175,8 @@ def test_open_asdf_extensions(tmp_path):
 
     msg = r"[The extensions parameter must be an extension.*, Extension must implement the Extension interface]"
     for arg in (object(), [object()]):
+        # Intentionally incorrect extension type
+        # pyrefly: ignore[bad-argument-type]
         with pytest.raises(TypeError, match=msg), open_asdf(path, extensions=arg) as af:
             pass
 

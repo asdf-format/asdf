@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import abc
-from typing import Protocol
 
 from packaging.specifiers import SpecifierSet
 
@@ -11,13 +10,6 @@ from ._compressor import Compressor
 from ._converter import ConverterProxy
 from ._tag import TagDefinition
 from ._validator import Validator
-
-
-# Alternate version of `Extension` for use in type-hints
-# The way `Extension` works is weird enough that it can't be replaced in actual code without a lot of changes
-class ExtensionLike(Protocol):
-    @property
-    def extension_uri(self) -> str | None: ...
 
 
 class Extension(abc.ABC):

@@ -27,7 +27,13 @@ def _get_sparse_tree():
     return {"science_data": arr}
 
 
-def _roundtrip(tmp_path, tree, compression=None, write_options: dict[str, Any] | None = None, read_options=None):
+def _roundtrip(
+    tmp_path,
+    tree,
+    compression=None,
+    write_options: dict[str, Any] | None = None,
+    read_options: dict[str, Any] | None = None,
+):
     read_options = {} if read_options is None else read_options
     write_options = {} if write_options is None else write_options.copy()
     write_options.update(all_array_compression=compression)
@@ -70,6 +76,8 @@ def test_invalid_compression():
     tree = _get_large_tree()
     ff = asdf.AsdfFile(tree)
     with pytest.raises(ValueError, match=r"Invalid compression type: foo"):
+        # Intentionally incorrect compression type
+        # pyrefly: ignore[bad-argument-type]
         ff.set_array_compression(tree["science_data"], "foo")
     with pytest.raises(ValueError, match=r"Unknown compression type: .*"):
         _compression._get_compressor("foo")

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import io
 import os
+from typing import Any
 
 import numpy as np
 import pytest
@@ -58,6 +59,8 @@ def test_invalid_array_storage():
     tree = {"my_array": my_array}
     ff = asdf.AsdfFile(tree)
     with pytest.raises(ValueError, match=r"array_storage must be one of.*"):
+        # Intentionally incorrect storage type
+        # pyrefly: ignore[bad-argument-type]
         ff.set_array_storage(my_array, "foo")
 
 

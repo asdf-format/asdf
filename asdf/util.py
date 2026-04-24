@@ -323,7 +323,6 @@ class _NOT_SET_TYPE(enum.Enum):
         return str(self.value)
 
 
-NotSet = Literal[_NOT_SET_TYPE.NOT_SET]
 """
 Special value indicating that a parameter is not set.  Distinct
 from None, which may for example be a value of interest in a search.
@@ -331,6 +330,9 @@ from None, which may for example be a value of interest in a search.
 # This needs to be all caps because otherwise type-checkers will assume its mutable
 # https://github.com/facebook/pyrefly/issues/3042
 NOT_SET: Final = _NOT_SET_TYPE.NOT_SET
+
+#: Type corresponding to ``NOT_SET`` value for use in type-checking
+NotSet = Literal[_NOT_SET_TYPE.NOT_SET]
 
 
 def uri_match(pattern, uri):

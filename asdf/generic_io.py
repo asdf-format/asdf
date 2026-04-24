@@ -7,13 +7,17 @@ The classes in this module should not be instantiated directly, but
 instead, one should use the factory function `get_file`.
 """
 
+from __future__ import annotations
+
 import io
 import mmap
 import os
 import pathlib
 import re
 import sys
+import typing
 from os import SEEK_CUR, SEEK_END, SEEK_SET
+from typing import TYPE_CHECKING
 from urllib.request import url2pathname
 
 import numpy as np
@@ -22,6 +26,13 @@ from . import util
 from ._extern import atomicfile
 from .exceptions import DelimiterNotFoundError
 from .util import _patched_urllib_parse
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from fsspec.core import OpenFile
+
+    from asdf.typing import FileLike, FileMode
 
 __all__ = ["get_file", "get_uri", "relative_uri", "resolve_uri"]
 
@@ -710,6 +721,10 @@ class RandomAccessFile(GenericFile):
     The base class of file types that support random access.
     """
 
+    def __init__(self, fd, mode, close=False, uri=None, inner_fd=None):
+        super().__init__(fd, mode, close, uri)
+        self._inner_fd = inner_fd
+
     def seekable(self):
         return True
 
@@ -750,8 +765,8 @@ class RealFile(RandomAccessFile):
     Handles "real" files on a filesystem.
     """
 
-    def __init__(self, fd, mode, close=False, uri=None):
-        super().__init__(fd, mode, close=close, uri=uri)
+    def __init__(self, fd, mode, close=False, uri=None, inner_fd=None):
+        super().__init__(fd, mode, close=close, uri=uri, inner_fd=inner_fd)
 
         if uri is None and hasattr(fd, "name") and isinstance(fd.name, str):
             self._uri = pathlib.Path(fd.name).expanduser().absolute().as_uri()
@@ -850,8 +865,8 @@ class MemoryIO(RandomAccessFile):
     `StringIO.StringIO`.
     """
 
-    def __init__(self, fd, mode, uri=None):
-        super().__init__(fd, mode, uri=uri)
+    def __init__(self, fd, mode, uri=None, inner_fd=None):
+        super().__init__(fd, mode, uri=uri, inner_fd=inner_fd)
 
     def read_into_array(self, size):
         buf = self._fd.getvalue()
@@ -986,7 +1001,20 @@ def get_uri(file_obj):
     return getattr(file_obj, "name", "")
 
 
-def get_file(init, mode="r", uri=None, close=False):
+# class Reader(Protocol[AnyStr]):
+#     def read(self, /) -> AnyStr: ...
+
+
+# class Writer(Protocol[AnyStr]):
+#     def write(self, data: AnyStr, /) -> None: ...
+
+
+def get_file(
+    init: FileLike,
+    mode: FileMode = "r",
+    uri: Path | str | None = None,
+    close: bool = False,
+) -> GenericFile:
     """
     Returns a `GenericFile` instance suitable for wrapping the given
     object `init`.
@@ -1044,7 +1072,7 @@ def get_file(init, mode="r", uri=None, close=False):
         msg = "mode must be 'r', 'w' or 'rw'"
         raise ValueError(msg)
 
-    if init in (sys.__stdout__, sys.__stdin__, sys.__stderr__):
+    if isinstance(init, io.TextIOWrapper) and init in (sys.__stdout__, sys.__stdin__, sys.__stderr__):
         init = os.fdopen(init.fileno(), init.mode + "b")
 
     if isinstance(init, (GenericFile, GenericWrapper)):
@@ -1052,7 +1080,10 @@ def get_file(init, mode="r", uri=None, close=False):
             msg = f"File is opened as '{init.mode}', but '{mode}' was requested"
             raise ValueError(msg)
 
-        return GenericWrapper(init)
+        # From a user perspective GenericWrapper is a GenericFile
+        # But we can't make GenericWrapper a subclass of Generic file because there are places internally
+        # that depend on it
+        return typing.cast("GenericFile", GenericWrapper(init))
 
     if isinstance(init, (str, pathlib.Path)):
         parsed = _patched_urllib_parse.urlparse(str(init))
@@ -1096,7 +1127,8 @@ def get_file(init, mode="r", uri=None, close=False):
             fsspec = None
 
         if fsspec:
-            fd = fsspec.open(init, realmode)
+            # Cast because fsspec doesn't have type hints
+            fd = typing.cast("OpenFile", fsspec.open(init, realmode))
             try:
                 fd = fd.__enter__()
             except NotImplementedError as err:
@@ -1120,18 +1152,15 @@ def get_file(init, mode="r", uri=None, close=False):
             init2 = init.raw if hasattr(init, "raw") else init
 
             if hasattr(init2, "getvalue"):
-                result = MemoryIO(init2, mode, uri=uri)
-            else:
-                # can we call 'fileno'? if not, we can't memmap so don't
-                # make a RealFile
-                try:
-                    init2.fileno()
-                    result = RealFile(init2, mode, uri=uri, close=close)
-                except io.UnsupportedOperation:
-                    result = RandomAccessFile(init2, mode, uri=uri, close=close)
+                return MemoryIO(init2, mode, uri=uri, inner_fd=init)
 
-            result._secondary_fd = init
-            return result
+            # can we call 'fileno'? if not, we can't memmap so don't
+            # make a RealFile
+            try:
+                init2.fileno()
+                return RealFile(init2, mode, uri=uri, close=close, inner_fd=init)
+            except io.UnsupportedOperation:
+                return RandomAccessFile(init2, mode, uri=uri, close=close, inner_fd=init)
 
         if mode == "w":
             return OutputStream(init, uri=uri, close=close)
