@@ -79,4 +79,4 @@ ArrayStorage: TypeAlias = Literal["internal", "external", "inline", "streamed"] 
 FilterFn: TypeAlias = Callable[[Any], bool] | Callable[[Any, Any], bool]
 
 #: ASDF-compatible multi-dimensional array
-NDArray: TypeAlias = npt.NDArray
+NDArray: TypeAlias = npt.NDArray[Any]
