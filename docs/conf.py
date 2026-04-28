@@ -54,6 +54,8 @@ nitpicky = True
 nitpick_ignore = [
     ("py:class", "yaml.representer.RepresenterError"),
     ("py:class", "yaml.error.YAMLError"),
+    # Ignore since its not part of the public API
+    ("py:attr", "asdf.util._NOT_SET_TYPE.NOT_SET"),
 ]
 
 # Add intersphinx mappings
@@ -92,7 +94,6 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.coverage",
     "sphinx.ext.inheritance_diagram",
-    "sphinx.ext.intersphinx",
     "sphinx.ext.mathjax",
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
@@ -100,6 +101,8 @@ extensions = [
     "numpydoc",
     "sphinx_automodapi.automodapi",
     "sphinx_automodapi.smart_resolver",
+    # Needed to resolve type hints gated behind `TYPE_CHECKING` blocks
+    "sphinx_autodoc_typehints",
 ]
 
 # List of patterns, relative to source directory, that match files and
@@ -123,6 +126,10 @@ numpydoc_show_class_members = False
 autosummary_generate = True
 
 automodapi_toctreedirnm = "api"
+autodoc_typehints = "none"  # Disable built-in autodoc type hints
+typehints_use_signature = True  # show parameter types in signature
+typehints_use_signature_return = True  # show return type in signature
+always_use_bars_union = True  # This is default behavior in 3.14+
 
 # Class documentation should contain *both* the class docstring and
 # the __init__ docstring

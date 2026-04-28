@@ -6,7 +6,7 @@ import re
 import struct
 import sys
 from functools import lru_cache
-from typing import Final, Literal
+from typing import Final, Literal, TypeAlias
 
 import numpy as np
 import yaml
@@ -43,6 +43,7 @@ _patched_urllib_parse.uses_netloc.append("asdf")
 __all__ = [
     "NOT_SET",
     "FileType",
+    "NotSet",
     "calculate_padding",
     "get_array_base",
     "get_base_uri",
@@ -323,16 +324,15 @@ class _NOT_SET_TYPE(enum.Enum):
         return str(self.value)
 
 
-"""
-Special value indicating that a parameter is not set.  Distinct
-from None, which may for example be a value of interest in a search.
-"""
 # This needs to be all caps because otherwise type-checkers will assume its mutable
 # https://github.com/facebook/pyrefly/issues/3042
+
+#: Special value indicating that a parameter is not set.
+#: Distinct from None, which may for example be a value of interest in a search.
 NOT_SET: Final = _NOT_SET_TYPE.NOT_SET
 
 #: Type corresponding to ``NOT_SET`` value for use in type-checking
-NotSet = Literal[_NOT_SET_TYPE.NOT_SET]
+NotSet: TypeAlias = Literal[_NOT_SET_TYPE.NOT_SET]
 
 
 def uri_match(pattern, uri):

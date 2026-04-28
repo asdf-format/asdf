@@ -4,18 +4,33 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any, AnyStr, Literal, Protocol
+from typing import Any, AnyStr, Literal, Protocol, TypeAlias
 
 import numpy.typing as npt
 
 from asdf.generic_io import GenericFile
 from asdf.versioning import AsdfVersion
 
+__all__ = [
+    "ArrayStorage",
+    "AsdfVersionLike",
+    "Compression",
+    "ExtensionLike",
+    "FileLike",
+    "FileMode",
+    "FilterFn",
+    "NDArray",
+    "PathLike",
+    "Reader",
+    "TreeKey",
+    "Writer",
+]
+
 
 # Alternate version of `Extension` for use in type-hints
 # The way `Extension` works is weird enough that it can't be replaced in actual code without a lot of changes
 class ExtensionLike(Protocol):
-    """Object that contains an extension URI and can be wrapped by `ExtensionProxy`."""
+    """Object that contains an extension URI and can be wrapped by ``ExtensionProxy``."""
 
     @property
     def extension_uri(self) -> str | None: ...
@@ -42,25 +57,26 @@ class Writer(Protocol[AnyStr]):  # pyrefly: ignore[variance-mismatch]
 # Hopefully someday we will find a way to specialize this type more.
 
 #: Valid ASDF tree keys
-TreeKey = Any
+TreeKey: TypeAlias = Any
 
 #: Local file path or remote file URI
-PathLike = str | Path
+PathLike: TypeAlias = str | Path
 #: Readable/writable file object or the path or URI of an openable file
-FileLike = PathLike | Reader | Writer | GenericFile
-#: A version number compatible with `AsdfVersion`
-AsdfVersionLike = AsdfVersion | str | list[int] | tuple[int, ...]
+FileLike: TypeAlias = PathLike | Reader | Writer | GenericFile
+#: A type interpretable as a version number
+AsdfVersionLike: TypeAlias = AsdfVersion | str | list[int] | tuple[int, ...]
 
 #: Supported modes for opening a file
-FileMode = Literal["r", "w", "rw"]
+FileMode: TypeAlias = Literal["r", "w", "rw"]
 
 # TODO: find a way to represent this where it will accept arbitrary strings but still suggest the set of literals
 #: Supported compression types
-Compression = Literal["zlib", "bzp2", "lz4", "input", ""] | str | None
+Compression: TypeAlias = Literal["zlib", "bzp2", "lz4", "input", ""] | str | None
 #: Supported array storage modes
-ArrayStorage = Literal["internal", "external", "inline", "streamed"] | None
+ArrayStorage: TypeAlias = Literal["internal", "external", "inline", "streamed"] | None
 
 #: Function used to filter nodes in an ASDF tree
-FilterFn = Callable[[Any], bool] | Callable[[Any, Any], bool]
+FilterFn: TypeAlias = Callable[[Any], bool] | Callable[[Any, Any], bool]
 
-NDArray = npt.NDArray
+#: ASDF-compatible multi-dimensional array
+NDArray: TypeAlias = npt.NDArray
