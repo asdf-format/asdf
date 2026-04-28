@@ -1,2 +1,2 @@
-Added type hints to `AsdfFile` and `AsdfConfig`.
+Added type hints to `AsdfFile` and `asdf.config.AsdfConfig`.
 Added `asdf.typing` module containing new type aliases.
