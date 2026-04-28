@@ -95,7 +95,6 @@ supported_versions = tuple(AsdfVersion(version) for version in get_supported_cor
 
 default_version = supported_versions[-1]
 
-
 # This is the ASDF core schemas version at which the format of the history
 # field changed to include extension metadata.
 NEW_HISTORY_FORMAT_MIN_VERSION = AsdfVersion("1.2.0")

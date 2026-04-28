@@ -10,7 +10,7 @@ import typing
 from ._display import DEFAULT_MAX_COLS, DEFAULT_MAX_ROWS, DEFAULT_SHOW_VALUES, render_tree
 from ._node_info import collect_schema_info
 from .treeutil import get_children, is_container
-from .util import NotSet
+from .util import NOT_SET
 
 __all__ = ["AsdfSearchResult"]
 
@@ -38,7 +38,7 @@ class AsdfSearchResult:
         self._max_cols = max_cols
         self._show_values = show_values
 
-    def format(self, max_rows=NotSet, max_cols=NotSet, show_values=NotSet):
+    def format(self, max_rows=NOT_SET, max_cols=NOT_SET, show_values=NOT_SET):
         """
         Change formatting parameters of the rendered tree.
 
@@ -70,13 +70,13 @@ class AsdfSearchResult:
         AsdfSearchResult
             the reformatted search result
         """
-        if max_rows is NotSet:
+        if max_rows is NOT_SET:
             max_rows = self._max_rows
 
-        if max_cols is NotSet:
+        if max_cols is NOT_SET:
             max_cols = self._max_cols
 
-        if show_values is NotSet:
+        if show_values is NOT_SET:
             show_values = self._show_values
 
         return AsdfSearchResult(
@@ -114,7 +114,7 @@ class AsdfSearchResult:
 
         return ".".join([value_type.__module__, value_type.__name__])
 
-    def search(self, key=NotSet, type_=NotSet, value=NotSet, filter_=None):
+    def search(self, key=NOT_SET, type_=NOT_SET, value=NOT_SET, filter_=None):
         """
         Further narrow the search.
 
@@ -156,7 +156,7 @@ class AsdfSearchResult:
         AsdfSearchResult
             the subsequent search result
         """
-        if not (isinstance(type_, (str, typing.Pattern, builtins.type)) or type_ is NotSet):
+        if not (isinstance(type_, (str, typing.Pattern, builtins.type)) or type_ is NOT_SET):
             msg = "type must be NotSet, str, regular expression, or instance of builtins.type"
             raise TypeError(msg)
 
@@ -173,7 +173,7 @@ class AsdfSearchResult:
                 if key.search(str(identifier)) is None:
                     return False
 
-            elif key is not NotSet and not self._safe_equals(identifier, key):
+            elif key is not NOT_SET and not self._safe_equals(identifier, key):
                 return False
 
             if isinstance(type_, typing.Pattern):
@@ -194,7 +194,7 @@ class AsdfSearchResult:
                 if value.search(str(node)) is None:
                     return False
 
-            elif value is not NotSet and not self._safe_equals(node, value):
+            elif value is not NOT_SET and not self._safe_equals(node, value):
                 return False
 
             if filter_ is not None and not filter_(node, identifier):

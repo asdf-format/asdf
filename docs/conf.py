@@ -54,6 +54,10 @@ nitpicky = True
 nitpick_ignore = [
     ("py:class", "yaml.representer.RepresenterError"),
     ("py:class", "yaml.error.YAMLError"),
+    # Ignore since its not part of the public API
+    ("py:attr", "asdf.util._NOT_SET_TYPE.NOT_SET"),
+    # Needed because sphinx breaks trying to process `asdf.typing.NDArray` for some reason
+    ("py:class", "NDArray"),
 ]
 
 # Add intersphinx mappings
@@ -92,7 +96,6 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.coverage",
     "sphinx.ext.inheritance_diagram",
-    "sphinx.ext.intersphinx",
     "sphinx.ext.mathjax",
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",

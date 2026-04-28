@@ -74,4 +74,5 @@ def defragment(input_, output=None, resolve_references=False, compress=None):
         ff2 = AsdfFile(ff)
         if resolve_references:
             ff2.resolve_references()
-        ff2.write_to(output, all_array_storage="internal", all_array_compression=compress)
+        if output is not None:
+            ff2.write_to(output, all_array_storage="internal", all_array_compression=compress)

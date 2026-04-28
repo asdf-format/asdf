@@ -9,9 +9,9 @@ from asdf import generic_io, util
 
 
 def test_not_set():
-    assert util.NotSet is not None
+    assert util.NOT_SET is not None
 
-    assert repr(util.NotSet) == "NotSet"
+    assert repr(util.NOT_SET) == "NotSet"
 
 
 class SomeClass:

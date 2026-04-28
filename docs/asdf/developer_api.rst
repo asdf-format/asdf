@@ -21,6 +21,7 @@ to create their own custom ASDF types and extensions.
 .. automodapi:: asdf.treeutil
 
 .. automodapi:: asdf.util
+    :include-all-objects:
 
 .. automodapi:: asdf.versioning
 
@@ -34,3 +35,5 @@ to create their own custom ASDF types and extensions.
 .. automodapi:: asdf.testing.helpers
 
 .. automodapi:: asdf.lazy_nodes
+
+.. automodapi:: asdf.generic_io
