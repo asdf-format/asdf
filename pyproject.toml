@@ -216,3 +216,9 @@ baseline = ".pyrefly-baseline.json"
 [tool.pyrefly.errors]
 bad-override = "warn"
 bad-param-name-override = "warn"
+
+# Disable automatic table sorting for pyproject.toml
+[[tool.tombi.schemas]]
+path = "tombi://www.schemastore.org/pyproject.json"
+include = ["pyproject.toml"]
+format.rules.table-keys-order.enabled = false
