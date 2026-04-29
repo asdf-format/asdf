@@ -204,3 +204,9 @@ issue_format = "`#{issue} <https://github.com/asdf-format/asdf/pull/{issue}>`_"
 [tool.towncrier.fragment.removal]
 
 [tool.towncrier.fragment.general]
+
+# Disable automatic table sorting for pyproject.toml
+[[tool.tombi.schemas]]
+path = "tombi://www.schemastore.org/pyproject.json"
+include = ["pyproject.toml"]
+format.rules.table-keys-order.enabled = false
