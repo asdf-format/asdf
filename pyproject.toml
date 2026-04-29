@@ -25,19 +25,6 @@ dependencies = [
 ]
 dynamic = ["version"]
 
-[project.urls]
-'documentation' = "https://asdf.readthedocs.io/en/stable/"
-'repository' = "https://github.com/asdf-format/asdf"
-'tracker' = "https://github.com/asdf-format/asdf/issues"
-
-[project.scripts]
-asdftool = "asdf._commands.main:main"
-
-[project.entry-points]
-asdf_extensions = { builtin = "asdf.extension._legacy:BuiltinExtension" }
-'asdf.extensions' = { asdf = "asdf._core._integration:get_extensions" }
-'asdf.resource_mappings' = { asdf = "asdf._core._integration:get_json_schema_resource_mappings" }
-
 [project.optional-dependencies]
 all = ["asdf[lz4]", "asdf[http]"]
 docs = [
@@ -55,9 +42,34 @@ typing = ["pyrefly==0.62.0", "types-PyYAML", "types-jmespath"]
 benchmark = ["asdf[tests]", "pytest-benchmark"]
 test = ["asdf[tests]"]
 
+[project.urls]
+'documentation' = "https://asdf.readthedocs.io/en/stable/"
+'repository' = "https://github.com/asdf-format/asdf"
+'tracker' = "https://github.com/asdf-format/asdf/issues"
+
+[project.entry-points]
+asdf_extensions = { builtin = "asdf.extension._legacy:BuiltinExtension" }
+'asdf.extensions' = { asdf = "asdf._core._integration:get_extensions" }
+'asdf.resource_mappings' = { asdf = "asdf._core._integration:get_json_schema_resource_mappings" }
+
+[project.scripts]
+asdftool = "asdf._commands.main:main"
+
 [build-system]
 requires = ["setuptools>=60", "setuptools_scm[toml]>=8", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["asdf*"]
+exclude = ["asdf/_jsonschema/json/*"]
+
+[tool.setuptools.package-data]
+'asdf.commands.tests.data' = ["*"]
+'asdf.tags.core.tests.data' = ["*"]
+'asdf.tests.data' = ["*"]
+
+[tool.setuptools_scm]
+version_file = "asdf/_version.py"
 
 [tool.black]
 line-length = 120
@@ -76,11 +88,21 @@ force-exclude = '''
 )
 '''
 
-[tool.codespell]
-skip = "*.pdf,*.asdf,.tox,asdf/_extern,asdf/_jsonschema,build,./tags,.git,docs/_build"
-ignore-words-list = """
-fo,afile,
-"""
+[tool.pytest.ini_options]
+testpaths = ["asdf", "docs"]
+minversion = "4.6"
+filterwarnings = [
+  "error",  # also set in _tests/conftest to work with pyargs
+  "ignore:numpy.ndarray size changed:RuntimeWarning",
+  "ignore:Benchmarks are automatically disabled because xdist plugin is active.Benchmarks cannot be performed reliably in a parallelized environment.",
+]
+addopts = [
+  "--doctest-modules",
+  "--doctest-glob=*.rst",
+  "--color=yes",
+  "-rsxfE",
+  "-p no:legacypath",
+]
 
 [tool.coverage.run]
 omit = [
@@ -130,34 +152,6 @@ exclude_lines = [
   "pragma: py{ ignore_python_version }",
 ]
 
-[tool.flynt]
-exclude = ["asdf/_extern/*", "asdf/_jsonschema/*"]
-
-[tool.pyrefly]
-project-excludes = ["asdf/_jsonschema/"]
-search-path = [".", "integration_tests/compatibility"]
-baseline = ".pyrefly-baseline.json"
-
-[tool.pyrefly.errors]
-bad-override = "warn"
-bad-param-name-override = "warn"
-
-[tool.pytest.ini_options]
-testpaths = ["asdf", "docs"]
-minversion = "4.6"
-filterwarnings = [
-  "error",  # also set in _tests/conftest to work with pyargs
-  "ignore:numpy.ndarray size changed:RuntimeWarning",
-  "ignore:Benchmarks are automatically disabled because xdist plugin is active.Benchmarks cannot be performed reliably in a parallelized environment.",
-]
-addopts = [
-  "--doctest-modules",
-  "--doctest-glob=*.rst",
-  "--color=yes",
-  "-rsxfE",
-  "-p no:legacypath",
-]
-
 [tool.ruff]
 target-version = "py310"
 line-length = 120
@@ -186,17 +180,14 @@ ignore = [
 "asdf/_tests/_helpers.py" = ["S101"]
 "integration_tests/compatibility/common.py" = ["S101"]
 
-[tool.setuptools.packages.find]
-include = ["asdf*"]
-exclude = ["asdf/_jsonschema/json/*"]
+[tool.flynt]
+exclude = ["asdf/_extern/*", "asdf/_jsonschema/*"]
 
-[tool.setuptools.package-data]
-'asdf.commands.tests.data' = ["*"]
-'asdf.tags.core.tests.data' = ["*"]
-'asdf.tests.data' = ["*"]
-
-[tool.setuptools_scm]
-version_file = "asdf/_version.py"
+[tool.codespell]
+skip = "*.pdf,*.asdf,.tox,asdf/_extern,asdf/_jsonschema,build,./tags,.git,docs/_build"
+ignore-words-list = """
+fo,afile,
+"""
 
 [tool.towncrier]
 filename = "CHANGES.rst"
@@ -216,3 +207,18 @@ issue_format = "`#{issue} <https://github.com/asdf-format/asdf/pull/{issue}>`_"
 [tool.towncrier.fragment.removal]
 
 [tool.towncrier.fragment.general]
+
+[tool.pyrefly]
+project-excludes = ["asdf/_jsonschema/"]
+search-path = [".", "integration_tests/compatibility"]
+baseline = ".pyrefly-baseline.json"
+
+[tool.pyrefly.errors]
+bad-override = "warn"
+bad-param-name-override = "warn"
+
+# Disable automatic table sorting for pyproject.toml
+[[tool.tombi.schemas]]
+path = "tombi://www.schemastore.org/pyproject.json"
+include = ["pyproject.toml"]
+format.rules.table-keys-order.enabled = false
