@@ -1,4 +1,4 @@
-"""This module contains type aliases and protocols."""
+"""This module contains type aliases and protocols useful for type checking."""
 
 from __future__ import annotations
 
@@ -36,7 +36,8 @@ class ExtensionLike(Protocol):
     def extension_uri(self) -> str | None: ...
 
 
-# These protocols were added to the standard library in 3.14
+# These protocols are backports of types that were added to the standard library in 3.14.
+# Whenever we drop support for Python <3.14 we can replace these with the standard library equivalents.
 class Reader(Protocol[AnyStr]):  # pyrefly: ignore[variance-mismatch]
     """Object with a ``read`` method that returns string or bytes."""
 
