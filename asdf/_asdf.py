@@ -29,6 +29,7 @@ from .tags.core import AsdfObject, ExtensionMetadata, HistoryEntry, Software
 from .util import NOT_SET
 
 if TYPE_CHECKING:
+    from collections import dict_keys
     from collections.abc import Mapping, MutableMapping, Sequence
     from typing import Any
 
@@ -520,7 +521,7 @@ class AsdfFile:
         """
         return generic_io.resolve_uri(self.uri, uri)
 
-    def open_external(self, uri, **kwargs):
+    def open_external(self, uri: str, **kwargs) -> AsdfFile:
         """
         Open an external ASDF file, from the given (possibly relative)
         URI.  There is a cache (internal to this ASDF file) that ensures
@@ -568,19 +569,19 @@ class AsdfFile:
     def tree(self, tree: Mapping[TreeKey, Any]) -> None:
         self._tree = AsdfObject(tree)
 
-    def keys(self):
+    def keys(self) -> dict_keys[TreeKey, Any]:
         return self.tree.keys()
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: TreeKey) -> Any:
         return self.tree[key]
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: TreeKey, value: Any) -> None:
         self.tree[key] = value
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: TreeKey) -> None:
         del self.tree[key]
 
-    def __contains__(self, item):
+    def __contains__(self, item: TreeKey) -> bool:
         return item in self.tree
 
     @property
@@ -707,7 +708,7 @@ class AsdfFile:
         """
         return self._blocks._get_array_compression(arr)
 
-    def get_array_compression_kwargs(self, arr: NDArray):
+    def get_array_compression_kwargs(self, arr: NDArray) -> dict[str, Any] | None:
         """ """
         return self._blocks._get_array_compression_kwargs(arr)
 
