@@ -1,15 +1,10 @@
 from collections.abc import Mapping, MutableMapping, Sequence
 from urllib.parse import urlsplit
+from importlib import resources
+
 import itertools
 import json
 import re
-import sys
-
-# The files() API was added in Python 3.9.
-if sys.version_info >= (3, 9):  # pragma: no cover
-    from importlib import resources
-else:  # pragma: no cover
-    import importlib_resources as resources  # type: ignore
 
 
 class URIDict(MutableMapping):

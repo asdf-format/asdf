@@ -117,6 +117,8 @@ def test_all_array_storage():
         config.all_array_storage = None
         assert get_config().all_array_storage is None
         with pytest.raises(ValueError, match=r"Invalid value for all_array_storage"):
+            # Intentionally incorrect argument type
+            # pyrefly: ignore[bad-argument-type]
             config.all_array_storage = "foo"
 
 
@@ -139,6 +141,8 @@ def test_all_array_compression_kwargs():
         config.all_array_compression_kwargs = None
         assert get_config().all_array_compression_kwargs is None
         with pytest.raises(ValueError, match=r"Invalid value for all_array_compression_kwargs"):
+            # Intentionally incorrect argument type
+            # pyrefly: ignore[bad-argument-type]
             config.all_array_compression_kwargs = "foo"
 
 

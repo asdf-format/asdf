@@ -1,0 +1,3 @@
+Added type hints to `AsdfFile` and `asdf.config.AsdfConfig`.
+Added `asdf.typing` module containing new type aliases.
+Renamed ``NotSet`` to `asdf.util.NOT_SET`.

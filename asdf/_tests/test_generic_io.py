@@ -4,6 +4,7 @@ import re
 import stat
 import sys
 import urllib.request as urllib_request
+from typing import Any
 
 import numpy as np
 import pytest
@@ -15,7 +16,7 @@ from asdf.config import config_context
 from . import _helpers as helpers
 
 
-def _roundtrip(tree, get_write_fd, get_read_fd, write_options=None, read_options=None):
+def _roundtrip(tree, get_write_fd, get_read_fd, write_options: dict[str, Any] | None = None, read_options=None):
     write_options = {} if write_options is None else write_options
     read_options = {} if read_options is None else read_options
 
@@ -43,7 +44,7 @@ def test_mode_fail(tmp_path):
     path = os.path.join(str(tmp_path), "test.asdf")
 
     with pytest.raises(ValueError, match=r"mode must be 'r', 'w' or 'rw'"):
-        generic_io.get_file(path, mode="r+")
+        generic_io.get_file(path, mode="r+")  # pyrefly: ignore[bad-argument-type]
 
 
 @pytest.mark.parametrize("mode", ["r", "w", "rw"])
@@ -365,12 +366,15 @@ def test_unicode_open(tmp_path, small_tree):
 
 def test_open_stdout():
     """Test ability to open/write stdout as an output stream"""
+    assert sys.__stdout__ is not None, "stdout unexpectedly missing"
     with generic_io.get_file(sys.__stdout__, "w", close=True):
         pass
 
 
 def test_invalid_obj(tmp_path):
     with pytest.raises(ValueError, match=r"Can't handle .* as a file for mode 'r'"):
+        # Intentionally incorrect file type
+        # pyrefly: ignore[bad-argument-type]
         generic_io.get_file(42)
 
     path = os.path.join(str(tmp_path), "test.asdf")

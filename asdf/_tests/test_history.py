@@ -291,5 +291,6 @@ def test_history_validate():
     assert af.get_history_entries()[0]["description"] == "test"
 
     with pytest.raises(ValidationError):
-        af.add_history_entry(1)
+        # Intentionally incorrect entry type
+        af.add_history_entry(1)  # pyrefly: ignore[bad-argument-type]
     assert len(af.get_history_entries()) == 1
