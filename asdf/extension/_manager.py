@@ -1,10 +1,22 @@
+from __future__ import annotations
+
 import sys
+from dataclasses import dataclass
 from functools import lru_cache
+from typing import TYPE_CHECKING
 
 from asdf.tagged import Tagged
 from asdf.util import get_class_name, uri_match
 
 from ._extension import ExtensionProxy
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator, Mapping
+    from typing import Any
+
+    from asdf.exceptions import ValidationError
+    from asdf.extension import Validator
+    from asdf.typing import TreeKey
 
 
 def _resolve_type(path):
@@ -317,7 +329,7 @@ def _get_cached_extension_manager(extensions):
 
 class ValidatorManager:
     """
-    Wraps a list of custom validators and indexes them by schema property.
+    Wraps a list of custom validators and binds them to their associated schemas.
 
     Parameters
     ----------
@@ -325,62 +337,43 @@ class ValidatorManager:
         List of validators to manage.
     """
 
-    def __init__(self, validators):
-        self._validators = list(validators)
+    def __init__(self, validators: Iterable[Validator]):
+        by_schema_property = {}
+        for validator in validators:
+            if validator.schema_property not in by_schema_property:
+                by_schema_property[validator.schema_property] = set()
 
-        self._validators_by_schema_property = {}
-        for validator in self._validators:
-            if validator.schema_property not in self._validators_by_schema_property:
-                self._validators_by_schema_property[validator.schema_property] = set()
-            self._validators_by_schema_property[validator.schema_property].add(validator)
+            by_schema_property[validator.schema_property].add(validator)
 
-        self._jsonschema_validators_by_schema_property = {}
-        for schema_property in self._validators_by_schema_property:
-            self._jsonschema_validators_by_schema_property[schema_property] = self._get_jsonschema_validator(
+        self._validators = {
+            schema_property: BoundValidators(
                 schema_property,
+                frozenset(validators),
             )
+            for schema_property, validators in by_schema_property.items()
+        }
 
-    def validate(self, schema_property, schema_property_value, node, schema):
-        """
-        Validate an ASDF tree node against custom validators for a schema property.
+    def validators(self) -> dict[str, BoundValidators]:
+        """Get a dictionary mapping schema names to callable validator functions."""
+        return self._validators
 
-        Parameters
-        ----------
-        schema_property : str
-            Name of the schema property (identifies the validator(s) to use).
-        schema_property_value : object
-            Value of the schema property.
-        node : asdf.tagged.Tagged
-            The ASDF node to validate.
-        schema : dict
-            The schema object that contains the property that triggered
-            the validation.
 
-        Yields
-        ------
-        asdf.exceptions.ValidationError
-        """
-        if schema_property in self._validators_by_schema_property:
-            for validator in self._validators_by_schema_property[schema_property]:
-                if _validator_matches(validator, node):
-                    yield from validator.validate(schema_property_value, node, schema)
+@dataclass(frozen=True, slots=True)
+class BoundValidators:
+    """Callable that wraps the `Validator.validate` methods of a set of `Validator` objects.
 
-    def get_jsonschema_validators(self):
-        """
-        Get a dictionary of validator methods suitable for use
-        with the jsonschema library.
+    Each validator is always passed `schema_property` as its first argument regardless of the actual input schema.
+    """
 
-        Returns
-        -------
-        dict of str: callable
-        """
-        return dict(self._jsonschema_validators_by_schema_property)
+    schema_property: str
+    validators: frozenset[Validator]
 
-    def _get_jsonschema_validator(self, schema_property):
-        def _validator(_, schema_property_value, node, schema):
-            return self.validate(schema_property, schema_property_value, node, schema)
-
-        return _validator
+    def __call__(
+        self, _schema_property: Any, schema_property_value: Any, node: Tagged, schema: Mapping[TreeKey, Any]
+    ) -> Iterator[ValidationError]:
+        for validator in self.validators:
+            if _validator_matches(validator, node):
+                yield from validator.validate(schema_property_value, node, schema)
 
 
 def _validator_matches(validator, node):
