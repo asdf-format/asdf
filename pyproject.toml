@@ -139,9 +139,7 @@ omit = [
 ]
 
 [tool.coverage.report]
-exclude_lines = [
-  # Have to re-enable the standard pragma
-  "pragma: no cover",
+exclude_also = [
   # Don't complain about packages we have installed
   "except ImportError",
   # Don't complain if tests don't hit assertions
@@ -151,8 +149,6 @@ exclude_lines = [
   'def main\(.*\):',
   # Ignore branches that don't pertain to this version of Python
   "pragma: py{ ignore_python_version }",
-  # Ignore type-checking imports
-  "if TYPE_CHECKING:",
 ]
 
 [tool.ruff]
