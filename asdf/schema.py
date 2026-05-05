@@ -552,7 +552,7 @@ def get_validator(
 
     if validators is None:
         validators = util.HashableDict(YAML_VALIDATORS.copy())
-        validators.update(ctx._extension_manager.validator_manager.validators())
+        validators.update(ctx._extension_manager.validator_manager.validators)
 
     kwargs["resolver"] = _make_jsonschema_refresolver()
 

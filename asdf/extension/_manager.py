@@ -353,8 +353,9 @@ class ValidatorManager:
             for schema_property, validators in by_schema_property.items()
         }
 
+    @property
     def validators(self) -> dict[str, BoundValidators]:
-        """Get a dictionary mapping schema names to callable validator functions."""
+        """Dictionary mapping schema names to callable validator functions."""
         return self._validators
 
 
