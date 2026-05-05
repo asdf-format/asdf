@@ -786,9 +786,7 @@ properties:
         properties:
             bar:
                 title: bar_title
-""".encode(
-        "ascii"
-    )
+""".encode("ascii")
 
     class MyExtension:
         extension_uri = "asdf://somewhere.org/extensions/foo-1.0.0"
