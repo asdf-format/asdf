@@ -354,8 +354,35 @@ class ValidatorManager:
         }
 
     @property
-    def validators(self) -> dict[str, BoundValidators]:
+    def bound_validators(self) -> dict[str, BoundValidators]:
         """Dictionary mapping schema names to callable validator functions."""
+        return self._validators
+
+    def validate(
+        self, schema_property: str, schema_property_value: Any, node: Tagged, schema: Mapping[TreeKey, Any]
+    ) -> Iterator[ValidationError]:
+        """Validate an ASDF tree node against custom validators for a schema property.
+
+        Parameters
+        ----------
+        schema_property : str
+            Name of the schema property (identifies the validator(s) to use).
+        schema_property_value : object
+            Value of the schema property.
+        node : asdf.tagged.Tagged
+            The ASDF node to validate.
+        schema : dict
+            The schema object that contains the property that triggered
+            the validation.
+
+        Yields
+        ------
+        asdf.exceptions.ValidationError
+        """
+        yield from self.bound_validators[schema_property](None, schema_property_value, node, schema)
+
+    def get_jsonschema_validators(self) -> dict[str, BoundValidators]:
+        """Get a dictionary mapping schema names to callable validator functions."""
         return self._validators
 
 
