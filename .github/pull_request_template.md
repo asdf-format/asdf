@@ -4,13 +4,13 @@ Thanks for contributing to asdf!
 Your PR should trigger the CI (after approval for first-time contributors)
 which will:
 
-- check your code for 'style' using pre-commit
+- check your code for 'style' using prek
 - run your PR against the asdf unit tests for various OSes, python versions, and dependency versions
 - perform a test build of your PR
 
 It is highly recommended that you run some of these tests locally by:
 
-- [installing pre-commit](https://pre-commit.com/#quick-start)
+- [installing prek](https://prek.j178.dev/quickstart/)
 - [running pytest](https://docs.pytest.org/en/7.1.x/getting-started.html)
 
 This will increase the chances your PR will pass the required CI tests.
@@ -27,7 +27,7 @@ If this PR fixes an issue, please add closing keywords (eg 'fixes #XXX')
 
 ## Tasks
 
-- [ ] [run `pre-commit` on your machine](https://pre-commit.com/#quick-start)
+- [ ] [run `prek` on your machine](https://prek.j178.dev/quickstart/)
 - [ ] run `pytest` on your machine
 - [ ] Does this PR add new features and / or change user-facing code / API? (if not, label with `no-changelog-entry-needed`)
     - [ ] write news fragment(s) in `changes/`: `echo "changed something" > changes/<PR#>.<changetype>.rst` (see below for change types)
