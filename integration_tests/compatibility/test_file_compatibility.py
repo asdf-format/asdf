@@ -199,7 +199,10 @@ def test_file_compatibility(asdf_version, env_path, tmp_path):
                 str(standard_version),
                 capture_output=True,
             ), f"asdf library version {asdf_version} failed to generate an ASDF Standard {standard_version} file"
-            assert_file_correct(old_file_path), (
-                f"asdf library version {asdf_version} produced an ASDF Standard {standard_version}"
-                "that this code failed to read"
+            (
+                assert_file_correct(old_file_path),
+                (
+                    f"asdf library version {asdf_version} produced an ASDF Standard {standard_version}"
+                    "that this code failed to read"
+                ),
             )

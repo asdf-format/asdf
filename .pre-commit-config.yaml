@@ -43,20 +43,11 @@ repos:
       exclude: "asdf/(extern||_jsonschema)/.*"
 
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: 'v0.13.0'
+  rev: 'v0.15.12'
   hooks:
-    - id: ruff
+    - id: ruff-check
       args: ["--fix"]
-
-- repo: https://github.com/psf/black
-  rev: 25.1.0
-  hooks:
-    - id: black
-
-- repo: https://github.com/asottile/blacken-docs
-  rev: '1.20.0'
-  hooks:
-    - id: blacken-docs
+    - id: ruff-format
 
 - repo: https://github.com/tombi-toml/tombi-pre-commit
   rev: v0.9.25
