@@ -1,0 +1,3 @@
+`AsdfFile` instances can now be pickled as long as they don't reference any open file descriptors.
+Currently that means that pickling is only supported for instances created from an in-memory dictionary with no blocks.
+Additional ``pickle`` support will be added in a future release.
