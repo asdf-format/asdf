@@ -174,7 +174,9 @@ def test_make_reference(tmp_path):
 
         ff.write_to(os.path.join(str(tmp_path), "source.asdf"))
 
-    with (asdf.open(os.path.join(str(tmp_path), "source.asdf")) as ff,):
+    with (
+        asdf.open(os.path.join(str(tmp_path), "source.asdf")) as ff,
+    ):
         ff.find_references()
         assert ff.tree["ref"]._uri == "external.asdf#f~0o~0o~1/a"
 
