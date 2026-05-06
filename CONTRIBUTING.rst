@@ -42,11 +42,9 @@ to the maintainers, who are glad to assist you.
     you run these tools regularly on your code to ensure that it is formatted
     correctly.
 
-    To make this easier, we have included `pre-commit <https://pre-commit.com/>`__
-    support for ASDF. We suggest that you install ``pre-commit``, so that your
-    code is automatically formatted before you commit. For those who do not run
-    these tools regularly, the ``pre-commit-ci`` bot will attempt to fix the issues
-    with your pull request when you submit it.
+    To make this easier, we have included `prek <https://prek.j178.dev/>`__
+    support for ASDF. We suggest that you install ``prek`` (or ``precommit``) so that your
+    code is automatically formatted before you commit.
 
 .. note::
     Backporting changes is done automatically using ``meeseeksdev``. If you are
