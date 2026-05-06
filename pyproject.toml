@@ -156,6 +156,10 @@ target-version = "py310"
 line-length = 120
 extend-exclude = ["asdf/_extern/*", "asdf/_jsonschema/*", "docs/*"]
 
+[tool.ruff.format]
+docstring-code-format = true
+docstring-code-line-length = 88
+
 [tool.ruff.lint]
 future-annotations = true
 select = [

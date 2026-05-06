@@ -33,9 +33,9 @@ class IntegerType:
     >>> # Store the large integer value to the tree using asdf.IntegerType
     >>> tree = dict(largeval=asdf.IntegerType(largeval))
     >>> with asdf.AsdfFile(tree) as af:
-    ...     af.write_to('largeval.asdf')
-    >>> with asdf.open('largeval.asdf') as aa:
-    ...     assert aa['largeval'] == largeval
+    ...     af.write_to("largeval.asdf")
+    >>> with asdf.open("largeval.asdf") as aa:
+    ...     assert aa["largeval"] == largeval
     """
 
     def __init__(self, value, storage_type="internal"):
