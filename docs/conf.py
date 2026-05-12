@@ -58,6 +58,7 @@ nitpick_ignore = [
     ("py:attr", "asdf.util._NOT_SET_TYPE.NOT_SET"),
     # Needed because sphinx breaks trying to process `asdf.typing.NDArray` for some reason
     ("py:class", "NDArray"),
+    ("py:class", "ByteArray1D"),
     # Needed because `dict_keys` isn't documented
     ("py:class", "dict_keys"),
 ]

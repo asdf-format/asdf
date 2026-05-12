@@ -39,18 +39,18 @@ if TYPE_CHECKING:
 
 __all__ = ["Tagged", "TaggedDict", "TaggedList", "TaggedString", "get_tag", "tag_object"]
 
-T = TypeVar("T")
-K = TypeVar("K")
-V = TypeVar("V")
+_T = TypeVar("_T")
+_KT = TypeVar("_KT")
+_VT = TypeVar("_VT")
 
 
-class Tagged(Generic[T]):
+class Tagged(Generic[_T]):
     """
     Base class of classes that wrap a given object and store a tag
     with it.
     """
 
-    _base_type: type[T]
+    _base_type: type[_T]
     _tag: str | None = None
 
     @property
@@ -60,7 +60,7 @@ class Tagged(Generic[T]):
         return self._base_type(self)  # pyrefly: ignore [bad-argument-count]
 
 
-class TaggedDict(Generic[K, V], Tagged[dict[K, V]], UserDict[K, V], dict[K, V]):
+class TaggedDict(Generic[_KT, _VT], Tagged[dict[_KT, _VT]], UserDict[_KT, _VT], dict[_KT, _VT]):
     """
     A Python dict with a tag attached.
     """
@@ -88,7 +88,7 @@ class TaggedDict(Generic[K, V], Tagged[dict[K, V]], UserDict[K, V], dict[K, V]):
         return TaggedDict(data_copy, self._tag)
 
 
-class TaggedList(Generic[T], Tagged[list[T]], UserList[T], list[T]):
+class TaggedList(Generic[_T], Tagged[list[_T]], UserList[_T], list[_T]):
     """
     A Python list with a tag attached.
     """

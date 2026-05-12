@@ -97,10 +97,10 @@ def read_comment_section(fd: GenericFile) -> list[bytes]:
 
 
 # Required for type narrowing in `find_asdf_version_in_comments``
-MaybeVer = TypeVar("MaybeVer", AsdfVersion, None)
+_MaybeVer = TypeVar("_MaybeVer", AsdfVersion, None)
 
 
-def find_asdf_version_in_comments(comments: list[bytes], default: MaybeVer = None) -> MaybeVer:
+def find_asdf_version_in_comments(comments: list[bytes], default: _MaybeVer = None) -> _MaybeVer:
     for comment in comments:
         parts = comment.split()
         if len(parts) == 2 and parts[0] == constants.ASDF_STANDARD_COMMENT:

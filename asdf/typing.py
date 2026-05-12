@@ -15,6 +15,8 @@ from asdf.versioning import AsdfVersion
 __all__ = [
     "ArrayStorage",
     "AsdfVersionLike",
+    "BlockDataCallback",
+    "ByteArray1D",
     "Compression",
     "ExtensionLike",
     "FileLike",
