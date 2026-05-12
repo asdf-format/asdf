@@ -7,7 +7,7 @@ import os
 import time
 import warnings
 import weakref
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, overload
 
 from packaging.version import Version
 
@@ -35,6 +35,7 @@ if TYPE_CHECKING:
 
     from asdf.extension import ExtensionManager, SerializationContext
     from asdf.generic_io import GenericFile
+    from asdf.tagged import Tagged
     from asdf.typing import (
         ArrayStorage,
         AsdfVersionLike,
@@ -501,7 +502,7 @@ class AsdfFile:
         """
         return self._blocks._uri
 
-    def resolve_uri(self, uri: str | None) -> str:
+    def resolve_uri(self, uri: str) -> str:
         """
         Resolve a (possibly relative) URI against the URI of this ASDF
         file.  May be overridden by base classes to change how URIs
@@ -591,7 +592,12 @@ class AsdfFile:
         """
         return self._comments
 
-    def _validate(self, tree: AsdfObject, reading: bool = False) -> None:
+    @overload
+    def _validate(self, tree: Tagged, reading: bool = True) -> None: ...
+    @overload
+    def _validate(self, tree: AsdfObject, reading: bool = False) -> None: ...
+
+    def _validate(self, tree, reading: bool = False) -> None:
         with self._blocks.options_context():
             # If we're validating on read then the tree
             # is already guaranteed to be in tagged form.

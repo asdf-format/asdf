@@ -6,6 +6,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any, AnyStr, Literal, Protocol, TypeAlias
 
+import numpy as np
 import numpy.typing as npt
 
 from asdf.generic_io import GenericFile
@@ -41,7 +42,7 @@ class ExtensionLike(Protocol):
 class Reader(Protocol[AnyStr]):  # pyrefly: ignore[variance-mismatch]
     """Object with a ``read`` method that returns string or bytes."""
 
-    def read(self, /) -> AnyStr: ...
+    def read(self, length: int = ..., /) -> AnyStr: ...
 
 
 class Writer(Protocol[AnyStr]):  # pyrefly: ignore[variance-mismatch]
@@ -81,3 +82,9 @@ FilterFn: TypeAlias = Callable[[Any], bool] | Callable[[Any, Any], bool]
 
 #: ASDF-compatible multi-dimensional array
 NDArray: TypeAlias = npt.NDArray[Any]
+
+#: A 1-D byte numpy array used to read and write block data
+ByteArray1D: TypeAlias = np.ndarray[tuple[int], np.dtype[np.uint8]]
+
+#: A callback that returns a `ByteArray1D`
+BlockDataCallback = Callable[[], ByteArray1D]

@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 import warnings
 from collections import OrderedDict
 from types import GeneratorType
+from typing import TYPE_CHECKING
 
 import numpy as np
 import yaml
@@ -12,6 +15,12 @@ from .exceptions import AsdfConversionWarning, AsdfSerializationError
 from .extension._serialization_context import BlockAccess
 from .tags.core import AsdfObject
 from .versioning import _YAML_VERSION, _yaml_base_loader
+
+if TYPE_CHECKING:
+    from typing import Any
+
+    from asdf.tagged import Tagged, TaggedDict
+    from asdf.typing import Reader, TreeKey
 
 __all__ = ["custom_tree_to_tagged_tree", "tagged_tree_to_custom_tree"]
 
@@ -234,7 +243,7 @@ AsdfLoader.add_constructor(None, AsdfLoader.construct_undefined)
 AsdfLoader.add_constructor(YAML_TAG_PREFIX + "omap", AsdfLoader.construct_yaml_omap)
 
 
-def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
+def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None) -> Tagged:
     """
     Convert a tree, possibly containing custom data types that aren't
     directly representable in YAML, to a tree of basic data types,
@@ -376,7 +385,7 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False, _serialization_
     )
 
 
-def load_tree(stream):
+def load_tree(stream: Reader) -> TaggedDict[TreeKey, Any]:
     """
     Load YAML, returning a tree of objects.
 

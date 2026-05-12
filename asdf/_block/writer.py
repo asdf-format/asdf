@@ -1,8 +1,19 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+
 import numpy as np
 
 from asdf import constants
 
 from . import io as bio
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from asdf._block.io import BlockHeader
+    from asdf.generic_io import GenericFile
+    from asdf.typing import BlockDataCallback, ByteArray1D
 
 
 class WriteBlock:
@@ -10,13 +21,20 @@ class WriteBlock:
     Data and compression options needed to write an ASDF block.
     """
 
-    def __init__(self, data, compression=None, compression_kwargs=None):
+    _uri: str | None = None
+
+    def __init__(
+        self,
+        data: ByteArray1D | BlockDataCallback | None,
+        compression: str | None = None,
+        compression_kwargs: dict[str, Any] | None = None,
+    ):
         self._data = data
         self.compression = compression
         self.compression_kwargs = compression_kwargs
 
     @property
-    def data(self):
+    def data(self) -> ByteArray1D | None:
         if callable(self._data):
             return self._data()
         return self._data
@@ -29,7 +47,14 @@ class WriteBlock:
         return np.ndarray(0, np.uint8)
 
 
-def write_blocks(fd, blocks, padding=False, streamed_block=None, write_index=True, write_checksums=True):
+def write_blocks(
+    fd: GenericFile,
+    blocks: Sequence[WriteBlock],
+    padding: bool | float | None = False,
+    streamed_block: WriteBlock | None = None,
+    write_index: bool = True,
+    write_checksums: bool = True,
+) -> tuple[list[int | None], list[BlockHeader]]:
     """
     Write a list of WriteBlocks to a file
 
@@ -86,13 +111,13 @@ def write_blocks(fd, blocks, padding=False, streamed_block=None, write_index=Tru
     # to enable writing a block index for all valid files
     # we will wrap tell to return None on an error
 
-    def tell():
+    def tell() -> int | None:
         try:
             return fd.tell()
         except OSError:
             return None
 
-    offsets = []
+    offsets: list[int | None] = []
     headers = []
     for blk in blocks:
         offsets.append(tell())

@@ -1,8 +1,13 @@
+from __future__ import annotations
+
 import collections
 import contextlib
 import copy
+from typing import TYPE_CHECKING, Any
 
 from asdf import config, constants, generic_io, util
+from asdf._block.reader import ReadBlock
+from asdf._block.writer import WriteBlock
 
 from . import external, reader, store, writer
 from . import io as bio
@@ -10,8 +15,14 @@ from .callback import DataCallback
 from .key import Key as BlockKey
 from .options import Options
 
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
-class ReadBlocks(collections.UserList):
+    from asdf.generic_io import GenericFile
+    from asdf.typing import ArrayStorage, BlockDataCallback, ByteArray1D, Compression, NDArray
+
+
+class ReadBlocks(collections.UserList[ReadBlock]):
     """
     A list of ReadBlock instances.
 
@@ -23,7 +34,7 @@ class ReadBlocks(collections.UserList):
     pass
 
 
-class WriteBlocks(collections.abc.Sequence):
+class WriteBlocks(collections.abc.Sequence[WriteBlock]):
     """
     A collection of ``WriteBlock`` instances that can be accessed by:
         - numerical index (see ``collections.abc.Sequence``)
@@ -35,7 +46,7 @@ class WriteBlocks(collections.abc.Sequence):
     a reference to the block data).
     """
 
-    def __init__(self, blocks=None):
+    def __init__(self, blocks: list[WriteBlock] | None = None):
         if blocks is None:
             blocks = []
         self._blocks = blocks
@@ -48,7 +59,7 @@ class WriteBlocks(collections.abc.Sequence):
     def __getitem__(self, index):
         return self._blocks.__getitem__(index)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self._blocks.__len__()
 
     def index_for_data(self, data):
@@ -60,7 +71,7 @@ class WriteBlocks(collections.abc.Sequence):
     def object_keys_for_index(self, index):
         yield from self._object_store.keys_for_value(index)
 
-    def append_block(self, blk, obj):
+    def append_block(self, blk: WriteBlock, obj: Any) -> int:
         """
         Append a ``WriteBlock`` instance to this collection
         assign an object, obj, to the block and return
@@ -148,7 +159,7 @@ class OptionsStore(store.Store):
                 return options
         return None
 
-    def get_options(self, array):
+    def get_options(self, array: NDArray) -> Options:
         """
         Get Options for some array using either previously defined
         options (as set by ``set_options``) or settings read from a
@@ -181,7 +192,7 @@ class OptionsStore(store.Store):
             self.set_options(base, options)
         return options
 
-    def set_options(self, array, options):
+    def set_options(self, array: NDArray, options: Options) -> None:
         """
         Set Options for an array.
 
@@ -280,7 +291,14 @@ class Manager:
     to reference the appropriate new ``ReadBlock``.
     """
 
-    def __init__(self, read_blocks=None, uri=None, lazy_load=False, memmap=False, validate_checksums=False):
+    def __init__(
+        self,
+        read_blocks: ReadBlocks | None = None,
+        uri: str | None = None,
+        lazy_load: bool = False,
+        memmap: bool = False,
+        validate_checksums: bool = False,
+    ):
         if read_blocks is None:
             read_blocks = ReadBlocks([])
         self.options = OptionsStore(read_blocks)
@@ -305,7 +323,7 @@ class Manager:
         self._memmap = memmap
         self._validate_checksums = validate_checksums
 
-    def close(self):
+    def close(self) -> None:
         self._external_block_cache.clear()
         self._clear_write()
         for blk in self.blocks:
@@ -313,7 +331,7 @@ class Manager:
         self.options = OptionsStore(self.blocks)
 
     @property
-    def blocks(self):
+    def blocks(self) -> ReadBlocks:
         """
         Get any ReadBlocks that were read from an ASDF file
 
@@ -326,7 +344,7 @@ class Manager:
         return self._blocks
 
     @blocks.setter
-    def blocks(self, new_blocks):
+    def blocks(self, new_blocks: Sequence[ReadBlock]) -> None:
         if not isinstance(new_blocks, ReadBlocks):
             new_blocks = ReadBlocks(new_blocks)
         self._blocks = new_blocks
@@ -334,7 +352,7 @@ class Manager:
         # options lookups can fallback to the new read blocks
         self.options._read_blocks = new_blocks
 
-    def read(self, fd, after_magic=False):
+    def read(self, fd: GenericFile, after_magic: bool = False) -> None:
         """
         Read blocks from an ASDF file and update the manager read_blocks.
 
@@ -351,20 +369,20 @@ class Manager:
             fd, self._memmap, self._lazy_load, self._validate_checksums, after_magic=after_magic
         )
 
-    def _load_external(self, uri):
+    def _load_external(self, uri: str) -> ByteArray1D:
         value = self._external_block_cache.load(self._uri, uri, self._memmap, self._validate_checksums)
-        if value is external.UseInternal:
+        if value is external.USE_INTERNAL:
             return self.blocks[0].data
         return value
 
-    def _clear_write(self):
+    def _clear_write(self) -> None:
         self._write_blocks = WriteBlocks()
         self._external_write_blocks = []
         self._streamed_write_block = None
         self._streamed_obj_keys = set()
         self._write_fd = None
 
-    def _write_external_blocks(self, write_checksums):
+    def _write_external_blocks(self, write_checksums: bool) -> None:
         from asdf import AsdfFile
 
         if self._write_fd is None or self._write_fd.uri is None:
@@ -378,7 +396,7 @@ class Manager:
                 af.write_to(f, include_block_index=False)
                 writer.write_blocks(f, [blk], write_checksums=write_checksums)
 
-    def make_write_block(self, data, options, obj):
+    def make_write_block(self, data: ByteArray1D | BlockDataCallback, options: Options | None, obj: Any) -> int | str:
         """
         Make a WriteBlock with data and options and
         associate it with an object (obj).
@@ -441,7 +459,7 @@ class Manager:
         index = self._write_blocks.append_block(blk, obj)
         return index
 
-    def set_streamed_write_block(self, data, obj):
+    def set_streamed_write_block(self, data: ByteArray1D | BlockDataCallback, obj: Any) -> None:
         """
         Create a WriteBlock that will be written as an ASDF
         streamed block.
@@ -465,18 +483,18 @@ class Manager:
             self._streamed_write_block = writer.WriteBlock(data)
         self._streamed_obj_keys.add(BlockKey(obj))
 
-    def _get_data_callback(self, index):
+    def _get_data_callback(self, index: int) -> DataCallback:
         return DataCallback(index, self.blocks)
 
-    def _set_array_storage(self, data, storage):
+    def _set_array_storage(self, data: NDArray, storage: ArrayStorage) -> None:
         options = self.options.get_options(data)
         options.storage_type = storage
         self.options.set_options(data, options)
 
-    def _get_array_storage(self, data):
+    def _get_array_storage(self, data: NDArray) -> ArrayStorage:
         return self.options.get_options(data).storage_type
 
-    def _set_array_compression(self, arr, compression, **compression_kwargs):
+    def _set_array_compression(self, arr: NDArray, compression: Compression, **compression_kwargs) -> None:
         # if this is input compression but we already have defined options
         # we need to re-lookup the options based off the block
         if compression == "input" and self.options.has_options(arr):
@@ -541,7 +559,7 @@ class Manager:
             yield
         self._clear_write()
 
-    def write(self, pad_blocks, include_block_index, write_checksums):
+    def write(self, pad_blocks: bool | float | None, include_block_index: bool, write_checksums: bool) -> None:
         """
         Write blocks that were set up during the current
         `write_context`.
@@ -582,7 +600,9 @@ class Manager:
         if len(self._external_write_blocks):
             self._write_external_blocks(write_checksums=write_checksums)
 
-    def update(self, new_tree_size, pad_blocks, include_block_index, write_checksums):
+    def update(
+        self, new_tree_size: int, pad_blocks: bool | float | None, include_block_index: bool, write_checksums: bool
+    ) -> None:
         """
         Perform an update-in-place of ASDF blocks set up during
         a `write_context`.
@@ -625,6 +645,9 @@ class Manager:
             break
         if last_block is None:
             new_block_start = new_tree_size
+        elif last_block.data_offset is None:
+            msg = "Unable to update ASDF file because source file is not seekable"
+            raise RuntimeError(msg)
         else:
             new_block_start = max(
                 last_block.data_offset + last_block.header["allocated_size"],
@@ -661,8 +684,15 @@ class Manager:
                 src += n
                 dst += n
 
+            def update_offset(offset: int | None) -> int:
+                if offset is None:
+                    msg = "Unable to update ASDF file because source file is not seekable"
+                    raise RuntimeError(msg)
+
+                return offset - (new_block_start - new_tree_size)
+
             # update offset to point at correct locations
-            offsets = [o - (new_block_start - new_tree_size) for o in offsets]
+            offsets = [update_offset(o) for o in offsets]
 
             # write index if no streamed block
             if include_block_index and self._streamed_write_block is None:

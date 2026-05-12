@@ -3,19 +3,38 @@ Low-level functions for reading and writing ASDF blocks
 and other block related file contents (like the block index).
 """
 
+from __future__ import annotations
+
 import hashlib
 import io
 import os
 import struct
+import typing
 import weakref
+from typing import TYPE_CHECKING, Any, TypedDict
 
 import yaml
+from typing_extensions import Unpack
 
 from asdf import _compression as mcompression
 from asdf import constants, generic_io, util
 from asdf.versioning import _yaml_base_loader as BaseLoader
 
 from .exceptions import BlockIndexError
+
+if TYPE_CHECKING:
+    from asdf.generic_io import GenericFile
+    from asdf.typing import BlockDataCallback, ByteArray1D
+
+
+class BlockHeader(TypedDict, total=False):
+    flags: int
+    compression: bytes
+    allocated_size: int
+    used_size: int
+    data_size: int
+    checksum: bytes
+
 
 BLOCK_HEADER = util._BinaryStruct(
     [
@@ -37,7 +56,7 @@ def calculate_block_checksum(data):
     return m.digest()
 
 
-def validate_block_header(header):
+def validate_block_header(header: BlockHeader) -> BlockHeader:
     """
     Check that they key value pairs in header contain consistent
     information about the ASDF block ``compression``, ``flags``,
@@ -65,7 +84,7 @@ def validate_block_header(header):
     return header
 
 
-def read_block_header(fd, offset=None):
+def read_block_header(fd: GenericFile, offset: int | None = None) -> BlockHeader:
     """
     Read an ASDF block header
 
@@ -100,11 +119,12 @@ def read_block_header(fd, offset=None):
         msg = f"Header size must be >= {BLOCK_HEADER.size}"
         raise ValueError(msg)
 
-    header = BLOCK_HEADER.unpack(fd.read(header_size))
-    return validate_block_header(header)
+    return typing.cast("BlockHeader", BLOCK_HEADER.unpack(fd.read(header_size)))
 
 
-def read_block_data(fd, header, validate_checksum, offset=None, memmap=False):
+def read_block_data(
+    fd: GenericFile, header, validate_checksum: bool, offset: int | None = None, memmap: bool = False
+) -> ByteArray1D:
     """
     Read (or memory map) data for an ASDF block.
 
@@ -179,7 +199,7 @@ def read_block_data(fd, header, validate_checksum, offset=None, memmap=False):
             data = mcompression.decompress(fd, used_size, header["data_size"], compression)
             fd.fast_forward(header["allocated_size"] - header["used_size"])
     else:
-        if memmap and fd.can_memmap():
+        if memmap and fd.can_memmap() and offset is not None:
             data = fd.memmap_array(offset, used_size)
             ff_bytes = header["allocated_size"]
         else:
@@ -198,7 +218,9 @@ def read_block_data(fd, header, validate_checksum, offset=None, memmap=False):
     return data
 
 
-def read_block(fd, validate_checksum, offset=None, memmap=False, lazy_load=False):
+def read_block(
+    fd: GenericFile, validate_checksum: bool, offset: int | None = None, memmap: bool = False, lazy_load: bool = False
+) -> tuple[int | None, BlockHeader, int | None, ByteArray1D | BlockDataCallback]:
     """
     Read a block (header and data) from an ASDF file.
 
@@ -255,7 +277,7 @@ def read_block(fd, validate_checksum, offset=None, memmap=False, lazy_load=False
         # setup a callback to later load the data
         fd_ref = weakref.ref(fd)
 
-        def callback():
+        def callback() -> ByteArray1D:
             fd = fd_ref()
             if fd is None or fd.is_closed():
                 msg = "ASDF file has already been closed. Can not get the data."
@@ -276,8 +298,14 @@ def read_block(fd, validate_checksum, offset=None, memmap=False, lazy_load=False
 
 
 def generate_write_header(
-    data, stream=False, compression_kwargs=None, padding=False, fs_block_size=1, write_checksum=True, **header_kwargs
-):
+    data: ByteArray1D,
+    stream: bool = False,
+    compression_kwargs: dict[str, Any] | None = None,
+    padding: bool | float = False,
+    fs_block_size: int = 1,
+    write_checksum: bool = True,
+    **header_kwargs: Unpack[BlockHeader],
+) -> tuple[BlockHeader, io.BytesIO | None, int]:
     """
     Generate a dict representation of a ASDF block header that can be
     used for writing a block.
@@ -446,7 +474,7 @@ def _candidate_offsets(min_offset, max_offset, block_size):
         yield min_offset
 
 
-def find_block_index(fd, min_offset=None, max_offset=None):
+def find_block_index(fd: GenericFile, min_offset: int | None = None, max_offset: int | None = None) -> int | None:
     """
     Find the location of an ASDF block index within a seekable file.
 
