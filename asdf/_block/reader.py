@@ -252,18 +252,19 @@ def read_blocks(
     # skip magic for each block
     magic_len = len(constants.BLOCK_MAGIC)
     blocks = [ReadBlock(offset + magic_len, fd, memmap, lazy_load, validate_checksums) for offset in block_index]
-    try:
-        # load first and last blocks to check if the index looks correct
-        for index in (0, -1):
+
+    # load first and last blocks to check if the index looks correct
+    for index in (0, -1):
+        try:
             fd.seek(block_index[index])
             buff = fd.read(magic_len)
             if buff != constants.BLOCK_MAGIC:
                 msg = "Invalid block magic"
                 raise OSError(msg)
             blocks[index].load()
-    except (OSError, ValueError) as e:
-        msg = f"Invalid block index contents for block {index}, falling back to serial reading: {e!s}"
-        warnings.warn(msg, AsdfBlockIndexWarning)
-        fd.seek(starting_offset)
-        return _read_blocks_serially(fd, memmap, lazy_load, after_magic)
+        except (OSError, ValueError) as e:
+            msg = f"Invalid block index contents for block {index}, falling back to serial reading: {e!s}"
+            warnings.warn(msg, AsdfBlockIndexWarning)
+            fd.seek(starting_offset)
+            return _read_blocks_serially(fd, memmap, lazy_load, after_magic)
     return blocks

@@ -27,6 +27,7 @@ are private.
 """
 
 import weakref
+from typing import Any
 
 
 class Key:
@@ -38,15 +39,15 @@ class Key:
         cls._next += 1
         return key
 
-    def __init__(self, obj=None, _key=None):
+    def __init__(self, obj: Any | None = None, _key: int | None = None):
         if _key is None:
             _key = Key._next_key()
         self._key = _key
-        self._ref = None
+        self._ref: Any | None = None
         if obj is not None:
             self._assign_object(obj)
 
-    def _is_valid(self):
+    def _is_valid(self) -> bool:
         if self._ref is None:
             return False
         r = self._ref()
@@ -54,10 +55,10 @@ class Key:
             return False
         return True
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return self._key
 
-    def _assign_object(self, obj):
+    def _assign_object(self, obj: Any) -> None:
         self._ref = weakref.ref(obj)
 
     def _matches_object(self, obj):
@@ -68,14 +69,14 @@ class Key:
             return False
         return r is obj
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if not isinstance(other, Key):
             return NotImplemented
         if self._key != other._key:
             return False
         if not self._is_valid():
             return False
-        return other._matches_object(self._ref())
+        return other._matches_object(self._ref())  # pyrefly: ignore [not-callable]
 
     def __copy__(self):
         obj = self._ref if self._ref is None else self._ref()

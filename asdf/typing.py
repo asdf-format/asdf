@@ -73,7 +73,7 @@ FileMode: TypeAlias = Literal["r", "w", "rw"]
 
 # TODO: find a way to represent this where it will accept arbitrary strings but still suggest the set of literals
 #: Supported compression types
-Compression: TypeAlias = Literal["zlib", "bzp2", "lz4", "input", ""] | str | None
+Compression: TypeAlias = Literal["zlib", "bzp2", "lz4", "input", ""] | str | bytes | None
 #: Supported array storage modes
 ArrayStorage: TypeAlias = Literal["internal", "external", "inline", "streamed"] | None
 

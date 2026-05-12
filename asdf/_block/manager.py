@@ -16,7 +16,7 @@ from .key import Key as BlockKey
 from .options import Options
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Generator, Sequence
 
     from asdf.generic_io import GenericFile
     from asdf.typing import ArrayStorage, BlockDataCallback, ByteArray1D, Compression, NDArray
@@ -101,7 +101,7 @@ class OptionsStore(store.Store):
     ``ReadBlock`` to determine default Options.
     """
 
-    def __init__(self, read_blocks):
+    def __init__(self, read_blocks: Sequence[ReadBlock]):
         super().__init__()
         # ReadBlocks are needed to look up default options
         self._read_blocks = read_blocks
@@ -126,7 +126,7 @@ class OptionsStore(store.Store):
         base = util.get_array_base(array)
         return self.lookup_by_object(base) is not None
 
-    def get_options_from_block(self, array):
+    def get_options_from_block(self, array: NDArray) -> Options | None:
         """
         Get Options for some array using only settings read from a
         corresponding ReadBlock (one that shares the same base array).
@@ -223,7 +223,7 @@ class OptionsStore(store.Store):
         base = util.get_array_base(array)
         self.assign_object(base, options)
 
-    def get_output_compressions(self):
+    def get_output_compressions(self) -> set[Compression]:
         """
         Get all output compression types used for this Store of
         Options.
@@ -233,7 +233,7 @@ class OptionsStore(store.Store):
         compressions : list of bytes
             List of 4 byte compression labels used for this OptionsStore.
         """
-        compressions = set()
+        compressions: set[Compression] = set()
         cfg = config.get_config()
         if cfg.all_array_compression == "input":
             for blk in self._read_blocks:
@@ -311,7 +311,7 @@ class Manager:
         self._external_write_blocks = []
         self._streamed_write_block = None
         self._streamed_obj_keys = set()
-        self._write_fd = None
+        self._write_fd: GenericFile | None = None
 
         # store the uri of the ASDF file here so that the Manager can
         # resolve and load external blocks without requiring a reference
@@ -523,7 +523,7 @@ class Manager:
         return self.options.get_options(data).save_base
 
     @contextlib.contextmanager
-    def options_context(self):
+    def options_context(self) -> Generator[None]:
         """
         Context manager that copies block options on
         entrance and restores the options when exited.
@@ -534,7 +534,7 @@ class Manager:
         self.options._read_blocks = self.blocks
 
     @contextlib.contextmanager
-    def write_context(self, fd, copy_options=True):
+    def write_context(self, fd: GenericFile, copy_options: bool = True) -> Generator[None]:
         """
         Context manager that copies block options on
         entrance and restores the options when exited.

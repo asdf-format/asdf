@@ -48,7 +48,7 @@ BLOCK_HEADER = util._BinaryStruct(
 )
 
 
-def calculate_block_checksum(data):
+def calculate_block_checksum(data) -> bytes:
     # The following line is safe because we're only using
     # the MD5 as a checksum.
     m = hashlib.new("md5", usedforsecurity=False)
