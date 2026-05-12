@@ -728,6 +728,7 @@ def test_invalid_block_index_values():
     ff.write_to(buff, include_block_index=True)
     buff.seek(0)
     offset = bio.find_block_index(buff)
+    assert offset is not None, "Failed to find block index"
     buff.seek(offset)
     block_index = bio.read_block_index(buff)
     block_index.append(123456789)
@@ -804,6 +805,7 @@ def test_unordered_block_index():
     ff.write_to(buff, include_block_index=True)
     buff.seek(0)
     offset = bio.find_block_index(buff)
+    assert offset is not None, "Failed to find block index"
     buff.seek(offset)
     block_index = bio.read_block_index(buff)
     buff.seek(offset)

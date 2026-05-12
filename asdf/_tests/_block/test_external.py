@@ -15,8 +15,8 @@ def test_cache(tmp_path):
     data = cache.load(base_uri, "test.asdf")
     np.testing.assert_array_equal(data, arr)
     assert cache.load(base_uri, "test.asdf") is data
-    assert cache.load(base_uri, "#") is external.UseInternal
-    assert cache.load(base_uri, "") is external.UseInternal
+    assert cache.load(base_uri, "#") is external.USE_INTERNAL
+    assert cache.load(base_uri, "") is external.USE_INTERNAL
 
 
 @pytest.mark.parametrize("uri", ["test.asdf", "foo/test.asdf"])
