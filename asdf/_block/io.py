@@ -14,7 +14,6 @@ import weakref
 from typing import TYPE_CHECKING, Any, TypedDict
 
 import yaml
-from typing_extensions import Unpack
 
 from asdf import _compression as mcompression
 from asdf import constants, generic_io, util
@@ -23,20 +22,24 @@ from asdf.versioning import _yaml_base_loader as BaseLoader
 from .exceptions import BlockIndexError
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator, Sequence
+
+    from typing_extensions import Buffer, Unpack
+
     from asdf.generic_io import GenericFile
-    from asdf.typing import BlockDataCallback, ByteArray1D
+    from asdf.typing import BlockDataCallback, ByteArray1D, Compression
 
 
 class BlockHeader(TypedDict, total=False):
     flags: int
-    compression: bytes
+    compression: Compression
     allocated_size: int
     used_size: int
     data_size: int
     checksum: bytes
 
 
-BLOCK_HEADER = util._BinaryStruct(
+BLOCK_HEADER: util._BinaryStruct = util._BinaryStruct(
     [
         ("flags", "I"),
         ("compression", "4s"),
@@ -48,7 +51,7 @@ BLOCK_HEADER = util._BinaryStruct(
 )
 
 
-def calculate_block_checksum(data) -> bytes:
+def calculate_block_checksum(data: Buffer) -> bytes:
     # The following line is safe because we're only using
     # the MD5 as a checksum.
     m = hashlib.new("md5", usedforsecurity=False)
@@ -123,7 +126,7 @@ def read_block_header(fd: GenericFile, offset: int | None = None) -> BlockHeader
 
 
 def read_block_data(
-    fd: GenericFile, header, validate_checksum: bool, offset: int | None = None, memmap: bool = False
+    fd: GenericFile, header: BlockHeader, validate_checksum: bool, offset: int | None = None, memmap: bool = False
 ) -> ByteArray1D:
     """
     Read (or memory map) data for an ASDF block.
@@ -211,7 +214,7 @@ def read_block_data(
             fd.fast_forward(ff_bytes)
 
         if validate_checksum and has_checksum:
-            checksum = calculate_block_checksum(data)
+            checksum = calculate_block_checksum(data)  # pyrefly: ignore [bad-argument-type]
             if header["checksum"] != checksum:
                 msg = f"Block at {offset} does not match given checksum"
                 raise ValueError(msg)
@@ -301,7 +304,7 @@ def generate_write_header(
     data: ByteArray1D,
     stream: bool = False,
     compression_kwargs: dict[str, Any] | None = None,
-    padding: bool | float = False,
+    padding: bool | float | None = False,
     fs_block_size: int = 1,
     write_checksum: bool = True,
     **header_kwargs: Unpack[BlockHeader],
@@ -405,8 +408,15 @@ def generate_write_header(
 
 
 def write_block(
-    fd, data, offset=None, stream=False, compression_kwargs=None, padding=False, write_checksum=True, **header_kwargs
-):
+    fd: GenericFile,
+    data: ByteArray1D,
+    offset: int | None = None,
+    stream: bool = False,
+    compression_kwargs: dict[str, Any] | None = None,
+    padding: bool | float | None = False,
+    write_checksum: bool = True,
+    **header_kwargs: Unpack[BlockHeader],
+) -> BlockHeader:
     """
     Write an ASDF block.
 
@@ -463,7 +473,7 @@ def write_block(
     return header_dict
 
 
-def _candidate_offsets(min_offset, max_offset, block_size):
+def _candidate_offsets(min_offset: int, max_offset: int, block_size: int) -> Iterator[int]:
     offset = (max_offset // block_size) * block_size
     if offset == max_offset:
         offset -= block_size
@@ -526,7 +536,7 @@ def find_block_index(fd: GenericFile, min_offset: int | None = None, max_offset:
     return block_index_offset
 
 
-def read_block_index(fd, offset=None):
+def read_block_index(fd: GenericFile, offset: int | None = None) -> list[int | None]:
     """
     Read an ASDF block index from a file.
 
@@ -578,7 +588,12 @@ def read_block_index(fd, offset=None):
     return block_index
 
 
-def write_block_index(fd, offsets, offset=None, yaml_version=None):
+def write_block_index(
+    fd: GenericFile,
+    offsets: Sequence[int | None],
+    offset: int | None = None,
+    yaml_version: tuple[int, int] | None = None,
+) -> None:
     """
     Write a list of ASDF block offsets to a file in the form
     of an ASDF block index.

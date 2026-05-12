@@ -30,8 +30,8 @@ class WriteBlock:
         compression_kwargs: dict[str, Any] | None = None,
     ):
         self._data = data
-        self.compression = compression
-        self.compression_kwargs = compression_kwargs
+        self.compression: Compression = compression
+        self.compression_kwargs: dict[str, Any] | None = compression_kwargs
 
     @property
     def data(self) -> ByteArray1D | None:
@@ -40,7 +40,7 @@ class WriteBlock:
         return self._data
 
     @property
-    def data_bytes(self):
+    def data_bytes(self) -> ByteArray1D:
         data = self.data
         if data is not None:
             return np.ndarray(-1, np.uint8, data.ravel(order="K").data)

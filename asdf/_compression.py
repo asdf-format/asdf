@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from io import IOBase
 
     from asdf.generic_io import GenericFile
-    from asdf.typing import ByteArray1D
+    from asdf.typing import ByteArray1D, Compression
 
 
 def validate(compression: str | bytes | None) -> str | None:
@@ -234,7 +234,7 @@ def _get_compressor(label: str) -> Any:
     return comp
 
 
-def to_compression_header(compression):
+def to_compression_header(compression: Compression) -> bytes:
     """
     Converts a compression string to the four byte field in a block
     header.

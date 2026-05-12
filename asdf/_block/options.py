@@ -88,5 +88,5 @@ class Options:
             raise ValueError(msg)
         self._save_base = save_base
 
-    def __copy__(self):
+    def __copy__(self) -> Options:
         return type(self)(self._storage_type, self._compression, self._compression_kwargs)

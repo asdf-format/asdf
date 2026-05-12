@@ -5,6 +5,7 @@ import datetime
 import io
 import os
 import time
+import typing
 import warnings
 import weakref
 from typing import TYPE_CHECKING, overload
@@ -1258,7 +1259,11 @@ class AsdfFile:
                 if block.header["compression"] == b"\0\0\0\0":
                     compression = "None"
                 else:
-                    compression = block.header["compression"].rstrip(b"\0").decode("ascii", errors="backslashreplace")
+                    compression = (
+                        typing.cast("bytes", block.header["compression"])
+                        .rstrip(b"\0")
+                        .decode("ascii", errors="backslashreplace")
+                    )
                     compression = f'"{compression}"'
 
                 items = [

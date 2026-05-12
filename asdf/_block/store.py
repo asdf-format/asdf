@@ -1,4 +1,11 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+
 from .key import Key
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 
 class Store:
@@ -12,12 +19,12 @@ class Store:
 
     def __init__(self):
         # store contains 2 layers of lookup: id(obj), Key
-        self._by_id = {}
+        self._by_id: dict[int, dict[Key, Any]] = {}
 
-    def lookup_by_object(self, obj, default=None):
+    def lookup_by_object(self, obj: Any, default: Any | None = None) -> Any | None:
         if isinstance(obj, Key):
             # if obj is a Key, look up the object
-            obj_id = id(obj._ref())
+            obj_id = id(obj._ref())  # pyrefly: ignore [not-callable]
             # and use the Key
             obj_key = obj
         else:
@@ -46,12 +53,12 @@ class Store:
         # no match, return default
         return default
 
-    def assign_object(self, obj, value):
+    def assign_object(self, obj: Any, value: Any) -> None:
         if isinstance(obj, Key):
             if not obj._is_valid():
                 msg = "Invalid key used for assign_object"
                 raise ValueError(msg)
-            obj_id = id(obj._ref())
+            obj_id = id(obj._ref())  # pyrefly: ignore [not-callable]
             obj_key = obj
         else:
             obj_id = id(obj)
@@ -79,13 +86,13 @@ class Store:
         # if no match was found, add using the key
         self._by_id[obj_id][obj_key] = value
 
-    def keys_for_value(self, value):
+    def keys_for_value(self, value: Any) -> Iterator[Key]:
         for oid, by_key in self._by_id.items():
             for key, stored_value in by_key.items():
                 if stored_value == value and key._is_valid():
                     yield key
 
-    def _cleanup(self, object_id=None):
+    def _cleanup(self, object_id: int | None = None) -> None:
         if object_id is None:
             for oid in set(self._by_id):
                 self._cleanup(oid)

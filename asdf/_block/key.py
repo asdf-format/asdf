@@ -26,6 +26,8 @@ of these Key instances all methods and attributes
 are private.
 """
 
+from __future__ import annotations
+
 import weakref
 from typing import Any
 
@@ -69,7 +71,7 @@ class Key:
             return False
         return r is obj
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: Any) -> bool:
         if not isinstance(other, Key):
             return NotImplemented
         if self._key != other._key:
@@ -78,6 +80,6 @@ class Key:
             return False
         return other._matches_object(self._ref())  # pyrefly: ignore [not-callable]
 
-    def __copy__(self):
+    def __copy__(self) -> Key:
         obj = self._ref if self._ref is None else self._ref()
         return type(self)(obj, self._key)

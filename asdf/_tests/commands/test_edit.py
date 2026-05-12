@@ -7,6 +7,8 @@ import pytest
 from numpy.testing import assert_array_equal
 
 import asdf
+import asdf.generic_io
+import asdf.versioning
 from asdf import constants
 from asdf._block import io as bio
 from asdf._commands import main
@@ -163,6 +165,7 @@ def confirm_valid_block_index(file_path):
         assert block_index_offset is not None
         block_index = bio.read_block_index(f, block_index_offset)
         for block_offset in block_index:
+            assert block_offset is not None
             f.seek(block_offset)
             assert f.read(len(constants.BLOCK_MAGIC)) == constants.BLOCK_MAGIC
 

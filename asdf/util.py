@@ -128,7 +128,7 @@ def _iter_subclasses(cls):
         yield from _iter_subclasses(x)
 
 
-def calculate_padding(content_size, pad_blocks, block_size):
+def calculate_padding(content_size: int, pad_blocks: float | bool | None, block_size: int) -> int:
     """
     Calculates the amount of extra space to add to a block given the
     user's request for the amount of extra space.  Care is given so

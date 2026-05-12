@@ -33,15 +33,15 @@ class ReadBlock:
         data_offset: int | None = None,
         data: ByteArray1D | BlockDataCallback | None = None,
     ):
-        self.offset = offset  # after block magic bytes
+        self.offset: int | None = offset  # after block magic bytes
         self._fd = weakref.ref(fd)
         self._header = header
-        self.data_offset = data_offset
+        self.data_offset: int | None = data_offset
         self._data = data
         self._cached_data = None
-        self.memmap = memmap
-        self.lazy_load = lazy_load
-        self.validate_checksum = validate_checksum
+        self.memmap: bool = memmap
+        self.lazy_load: bool = lazy_load
+        self.validate_checksum: bool = validate_checksum
         if not lazy_load:
             self.load()
 
@@ -251,12 +251,15 @@ def read_blocks(
         return _read_blocks_serially(fd, memmap, lazy_load, validate_checksums, after_magic)
     # skip magic for each block
     magic_len = len(constants.BLOCK_MAGIC)
-    blocks = [ReadBlock(offset + magic_len, fd, memmap, lazy_load, validate_checksums) for offset in block_index]
+    blocks = [
+        ReadBlock(offset + magic_len if offset is not None else None, fd, memmap, lazy_load, validate_checksums)
+        for offset in block_index
+    ]
 
     # load first and last blocks to check if the index looks correct
     for index in (0, -1):
         try:
-            fd.seek(block_index[index])
+            fd.seek(typing.cast("int", block_index[index]))
             buff = fd.read(magic_len)
             if buff != constants.BLOCK_MAGIC:
                 msg = "Invalid block magic"

@@ -3,7 +3,7 @@ from __future__ import annotations
 import collections
 import contextlib
 import copy
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, overload
 
 from asdf import config, constants, generic_io, util
 from asdf._block.reader import ReadBlock
@@ -16,8 +16,9 @@ from .key import Key as BlockKey
 from .options import Options
 
 if TYPE_CHECKING:
-    from collections.abc import Generator, Sequence
+    from collections.abc import Generator, Iterator, Sequence
 
+    from asdf._block.key import Key
     from asdf.generic_io import GenericFile
     from asdf.typing import ArrayStorage, BlockDataCallback, ByteArray1D, Compression, NDArray
 
@@ -56,19 +57,24 @@ class WriteBlocks(collections.abc.Sequence[WriteBlock]):
         self._data_store = store.Store()
         self._object_store = store.Store()
 
+    @overload
+    def __getitem__(self, index: int) -> WriteBlock: ...
+    @overload
+    def __getitem__(self, index: slice[int | None]) -> Sequence[WriteBlock]: ...
+
     def __getitem__(self, index):
         return self._blocks.__getitem__(index)
 
     def __len__(self) -> int:
         return self._blocks.__len__()
 
-    def index_for_data(self, data):
+    def index_for_data(self, data: Any) -> Any | None:
         return self._data_store.lookup_by_object(data)
 
-    def assign_object_to_index(self, obj, index):
+    def assign_object_to_index(self, obj: Any, index: int) -> None:
         self._object_store.assign_object(obj, index)
 
-    def object_keys_for_index(self, index):
+    def object_keys_for_index(self, index: int) -> Iterator[Key]:
         yield from self._object_store.keys_for_value(index)
 
     def append_block(self, blk: WriteBlock, obj: Any) -> int:
@@ -106,7 +112,7 @@ class OptionsStore(store.Store):
         # ReadBlocks are needed to look up default options
         self._read_blocks = read_blocks
 
-    def has_options(self, array):
+    def has_options(self, array: NDArray) -> bool:
         """
         Check of Options have been defined for this array
         without falling back to generating Options from
@@ -301,7 +307,7 @@ class Manager:
     ):
         if read_blocks is None:
             read_blocks = ReadBlocks([])
-        self.options = OptionsStore(read_blocks)
+        self.options: OptionsStore = OptionsStore(read_blocks)
 
         self._blocks = read_blocks
         self._external_block_cache = external.ExternalBlockCache()
@@ -511,7 +517,7 @@ class Manager:
     def _get_array_compression_kwargs(self, arr):
         return self.options.get_options(arr).compression_kwargs
 
-    def get_output_compressions(self):
+    def get_output_compressions(self) -> set[Compression]:
         return self.options.get_output_compressions()
 
     def _set_array_save_base(self, data, save_base):
@@ -715,7 +721,7 @@ class Manager:
 
                 # update all callbacks
                 for obj_key in obj_keys:
-                    obj = obj_key._ref()
+                    obj = obj_key._ref()  # pyrefly: ignore [not-callable]
                     if obj is None:
                         # this object no longer exists so don't both assigning it
                         continue

@@ -12,7 +12,9 @@ from asdf._block.exceptions import BlockIndexError
 def test_checksum(tmp_path):
     my_array = np.arange(0, 64, dtype="<i8")
     target_checksum = b"\xcaM\\\xb8t_L|\x00\n+\x01\xf1\xcfP1"
+    # pyrefly: ignore [bad-argument-type]
     assert bio.calculate_block_checksum(my_array) == target_checksum
+    # pyrefly: ignore [bad-argument-type]
     assert bio.calculate_block_checksum(my_array.reshape((8, 8))) == target_checksum
 
     # check that when written, a block generates the correct checksum
@@ -144,9 +146,10 @@ def test_write_block(tmp_path):
     )
 
     # first write out a file with a block
-    my_array = np.array([], dtype="uint8")
+    my_array = np.array([], dtype=np.uint8)
     path = tmp_path / "test"
     with generic_io.get_file(path, mode="w") as fd:
+        # pyrefly: ignore [bad-argument-type]
         bio.write_block(fd, my_array)
 
     with generic_io.get_file(path, mode="r") as fd:
