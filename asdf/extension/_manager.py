@@ -5,8 +5,6 @@ from dataclasses import dataclass
 from functools import lru_cache
 from typing import TYPE_CHECKING
 
-from typing_extensions import deprecated
-
 from asdf.tagged import Tagged
 from asdf.util import get_class_name, uri_match
 
@@ -340,25 +338,12 @@ class ValidatorManager:
     """
 
     def __init__(self, validators: Iterable[Validator]):
-        by_schema_property = {}
+        self._validators = {}
         for validator in validators:
-            if validator.schema_property not in by_schema_property:
-                by_schema_property[validator.schema_property] = set()
+            if validator.schema_property not in self._validators:
+                self._validators[validator.schema_property] = set()
 
-            by_schema_property[validator.schema_property].add(validator)
-
-        self._validators = {
-            schema_property: BoundValidators(
-                schema_property,
-                frozenset(validators),
-            )
-            for schema_property, validators in by_schema_property.items()
-        }
-
-    @property
-    def bound_validators(self) -> dict[str, BoundValidators]:
-        """Dictionary mapping schema names to callable validator functions."""
-        return self._validators
+            self._validators[validator.schema_property].add(validator)
 
     def validate(
         self, schema_property: str, schema_property_value: Any, node: Tagged, schema: Mapping[TreeKey, Any]
@@ -381,17 +366,21 @@ class ValidatorManager:
         ------
         asdf.exceptions.ValidationError
         """
-        yield from self.bound_validators[schema_property](None, schema_property_value, node, schema)
+        for validator in self._validators[schema_property]:
+            if _validator_matches(validator, node):
+                yield from validator.validate(schema_property_value, node, schema)
 
-    @deprecated("use bound_validators instead")
-    def get_jsonschema_validators(self) -> dict[str, BoundValidators]:
-        """Get a dictionary mapping schema names to callable validator functions."""
-        return self._validators
+    def get_jsonschema_validators(self) -> dict[str, JsonSchemaValidators]:
+        """Get a dictionary mapping schema names to ``jsonschema``-compatible validator functions."""
+        return {
+            schema_property: JsonSchemaValidators(schema_property, frozenset(validators))
+            for schema_property, validators in self._validators.items()
+        }
 
 
 @dataclass(frozen=True, slots=True)
-class BoundValidators:
-    """Callable that wraps the `Validator.validate` methods of a set of `Validator` objects.
+class JsonSchemaValidators:
+    """Callable that wraps a set of `Validator` objects to make them compatible with `jsonschema`.
 
     Each validator is always passed `schema_property` as its first argument regardless of the actual input schema.
     """
