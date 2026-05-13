@@ -1,0 +1,1 @@
+Fix bug where ``add_history_entry`` incorrectly used a custom schema if available.

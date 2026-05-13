@@ -73,4 +73,5 @@ jobs:
         - linux: weldx
         - linux: sunpy
         - linux: dkist
+        - linux: dkist-inventory
         - linux: abacusutils

@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any, AnyStr, Literal, Protocol, TypeAlias
+from typing import Any, Literal, Protocol, TypeAlias
 
 import numpy.typing as npt
+from typing_extensions import Reader, Writer
 
 from asdf.generic_io import GenericFile
 from asdf.versioning import AsdfVersion
@@ -34,20 +35,6 @@ class ExtensionLike(Protocol):
 
     @property
     def extension_uri(self) -> str | None: ...
-
-
-# These protocols are backports of types that were added to the standard library in 3.14.
-# Whenever we drop support for Python <3.14 we can replace these with the standard library equivalents.
-class Reader(Protocol[AnyStr]):  # pyrefly: ignore[variance-mismatch]
-    """Object with a ``read`` method that returns string or bytes."""
-
-    def read(self, /) -> AnyStr: ...
-
-
-class Writer(Protocol[AnyStr]):  # pyrefly: ignore[variance-mismatch]
-    """Object with a ``write`` method that accepts string or bytes."""
-
-    def write(self, data: AnyStr, /) -> None: ...
 
 
 # Ideally this would be `str | int | bool`
