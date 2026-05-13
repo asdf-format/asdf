@@ -20,7 +20,8 @@ from asdf.extension import (
     Validator,
     get_cached_extension_manager,
 )
-from asdf.extension._manager import _resolve_type
+from asdf.extension._manager import ValidatorManager, _resolve_type
+from asdf.tagged import TaggedList
 from asdf.testing.helpers import roundtrip_object
 
 
@@ -732,6 +733,31 @@ def test_validator():
             af["foo"] = "bar"
             with pytest.raises(ValidationError, match=r"Node was doomed to fail"):
                 af.validate()
+
+
+class ValidatorFailOn(Validator):
+    schema_property = "fail"
+    tags = ["fail"]
+
+    def __init__(self, fail_on):
+        self.fail_on = fail_on
+
+    def validate(self, schema_property_value, node, schema):
+        if schema_property_value == self.fail_on:
+            yield ValidationError("Node was doomed to fail")
+
+
+def test_validator_manager():
+    validator = ValidatorManager([ValidatorFailOn("bar")])
+    errs = list(validator.validate("fail", "foo", TaggedList([], "fail"), {}))
+    assert len(errs) == 0
+
+    errs = list(validator.validate("fail", "bar", TaggedList([], "other"), {}))
+    assert len(errs) == 0
+
+    errs = list(validator.validate("fail", "bar", TaggedList([], "fail"), {}))
+    assert len(errs) == 1
+    assert isinstance(errs[0], ValidationError)
 
 
 def test_converter_deferral():
