@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from functools import lru_cache
 from typing import TYPE_CHECKING
 
+from typing_extensions import deprecated
+
 from asdf.tagged import Tagged
 from asdf.util import get_class_name, uri_match
 
@@ -381,6 +383,7 @@ class ValidatorManager:
         """
         yield from self.bound_validators[schema_property](None, schema_property_value, node, schema)
 
+    @deprecated("use bound_validators instead")
     def get_jsonschema_validators(self) -> dict[str, BoundValidators]:
         """Get a dictionary mapping schema names to callable validator functions."""
         return self._validators
