@@ -1,5 +1,7 @@
 import os
+import pickle
 
+import numpy as np
 import pytest
 
 from asdf import config_context
@@ -379,3 +381,12 @@ def test_fsspec_http(httpserver):
     with fsspec.open(fn) as f:
         af = open_asdf(f)
         assert_tree_match(tree, af.tree)
+
+
+def test_asdf_file_pickle_from_dict():
+    """Verify that an AsdfFile created from a dict (with no file descriptor) can be pickled"""
+    tree = {"a": 1, "b": {"c": 2, "d": np.ones((10, 10))}}
+    af = AsdfFile(tree)
+    pkl = pickle.dumps(af)
+    loaded = pickle.loads(pkl)  # noqa: S301
+    assert_tree_match(af.tree, loaded.tree)

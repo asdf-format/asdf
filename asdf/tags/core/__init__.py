@@ -24,7 +24,10 @@ __all__ = [
 # to pass an isinstance(..., dict) check and to allow it to be "lazy"
 # loaded when "lazy_tree=True".
 class AsdfObject(collections.UserDict, dict):
-    pass
+    def __reduce__(self):
+        # Necessary for correct pickling/unpickling
+        # Otherwise pickle will use dict's reduce method which causes UserDict to fail to unpickle
+        return super(collections.UserDict, self).__reduce__()
 
 
 class Software(dict):
