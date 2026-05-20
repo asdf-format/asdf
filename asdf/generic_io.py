@@ -22,7 +22,6 @@ from urllib.request import url2pathname
 
 import numpy as np
 
-from . import util
 from ._extern import atomicfile
 from .exceptions import DelimiterNotFoundError
 from .util import _patched_urllib_parse
@@ -197,7 +196,7 @@ class _TruncatedReader:
         return content
 
 
-class GenericFile(metaclass=util._InheritDocstrings):
+class GenericFile:
     """
     Base class for an abstraction layer around a number of different
     file-like types.  Each of its subclasses handles a particular kind
@@ -323,15 +322,14 @@ class GenericFile(metaclass=util._InheritDocstrings):
             yield self.read(thissize)
 
     def write(self, content: bytes | bytearray | memoryview) -> None:
+        """
+        Write a string to the file. There is no return value. Due to
+        buffering, the string may not actually show up in the file
+        until the flush() or close() method is called.
+
+        Only available if `writable` returns `True`.
+        """
         self._fd.write(content)
-
-    write.__doc__ = """
-    Write a string to the file. There is no return value. Due to
-    buffering, the string may not actually show up in the file
-    until the flush() or close() method is called.
-
-    Only available if `writable` returns `True`.
-    """
 
     def write_array(self, array: ByteArray1D) -> None:
         """

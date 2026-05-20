@@ -1,4 +1,14 @@
+from __future__ import annotations
+
 import abc
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator, Mapping
+
+    from asdf.exceptions import ValidationError
+    from asdf.tagged import Tagged
+    from asdf.typing import TreeKey
 
 
 class Validator(abc.ABC):
@@ -8,13 +18,14 @@ class Validator(abc.ABC):
     """
 
     @abc.abstractproperty
-    def schema_property(self):
+    def schema_property(self) -> str:
         """
         Name of the schema property used to invoke this validator.
         """
+        ...
 
     @abc.abstractproperty
-    def tags(self):
+    def tags(self) -> Iterable[str]:
         """
         Get the YAML tags that are appropriate to this validator.
         URI patterns are permitted, see `asdf.util.uri_match` for details.
@@ -24,9 +35,12 @@ class Validator(abc.ABC):
         iterable of str
             Tag URIs or URI patterns.
         """
+        ...
 
     @abc.abstractmethod
-    def validate(self, schema_property_value, node, schema):
+    def validate(
+        self, schema_property_value: Any, node: Tagged, schema: Mapping[TreeKey, Any]
+    ) -> Iterator[ValidationError]:
         """
         Validate the given node from the ASDF tree.
 
@@ -54,3 +68,4 @@ class Validator(abc.ABC):
         asdf.exceptions.ValidationError
             Yield an instance of ValidationError for each error present in the node.
         """
+        ...
