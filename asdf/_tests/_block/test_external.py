@@ -24,3 +24,7 @@ def test_cache(tmp_path):
 def test_relative_uri_for_index(uri, index):
     match = f"test{index:04d}.asdf"
     assert external.relative_uri_for_index(uri, index) == match
+
+
+def test_use_internal():
+    assert repr(external.USE_INTERNAL) == "UseInternal"
