@@ -47,7 +47,9 @@ def test_write_blocks(tmp_path, lazy, index, padding, compression, stream, seeka
                 assert r.header["compression"] == compression
             if padding:
                 assert r.header["allocated_size"] > r.header["used_size"]
-        if streamed_block is not None:
+        if stream:
+            assert streamed_block is not None
+
             read_stream_block = read_blocks[-1]
             np.testing.assert_array_equal(read_stream_block.data, streamed_block.data)
             assert read_stream_block.header["flags"] & constants.BLOCK_FLAG_STREAMED
