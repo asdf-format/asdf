@@ -232,7 +232,7 @@ def read_blocks(
         # load all blocks serially
         return _read_blocks_serially(fd, memmap, lazy_load, validate_checksums, after_magic)
 
-    # storet starting offset
+    # store starting offset
     starting_offset = fd.tell()
     magic_len = len(constants.BLOCK_MAGIC)
 
