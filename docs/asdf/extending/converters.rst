@@ -456,8 +456,6 @@ A simple example of a Converter using block storage to store the ``payload`` for
         ff = asdf.AsdfFile({"example": BlockData(b"abcdefg")})
         ff.write_to("block_converter_example.asdf")
 
-.. asdf:: block_converter_example.asdf
-
 During read, `Converter.from_yaml_tree` will be called. Within this method
 the Converter can prepare to access a block by calling
 ``SerializationContext.get_block_data_callback``. This will return a function
@@ -529,8 +527,6 @@ when writing an object that was read from an ASDF file.
         obj = MultiBlockData([np.arange(3, dtype="uint8") + i for i in range(3)])
         ff = asdf.AsdfFile({"example": obj})
         ff.write_to("multi_block_converter_example.asdf")
-
-.. asdf:: multi_block_converter_example.asdf
 
 .. _extending_converters_performance:
 
