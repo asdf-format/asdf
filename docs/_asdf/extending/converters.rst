@@ -419,42 +419,42 @@ accessed block during `Converter.from_yaml_tree` and `Converter.to_yaml_tree`.
 A simple example of a Converter using block storage to store the ``payload`` for
 ``BlockData`` object instances is as follows:
 
-.. runcode::
+.. code:: python
 
-    import asdf
-    import numpy as np
-    from asdf.extension import Converter, Extension
+   >>> import asdf
+   >>> import numpy as np
+   >>> from asdf.extension import Converter, Extension
 
-    class BlockData:
-        def __init__(self, payload):
-            self.payload = payload
+   >>> class BlockData:
+   ...     def __init__(self, payload):
+   ...         self.payload = payload
 
 
-    class BlockConverter(Converter):
-        tags = ["asdf://somewhere.org/tags/block_data-1.0.0"]
-        types = [BlockData]
+    >>> class BlockConverter(Converter):
+    ...    tags = ["asdf://somewhere.org/tags/block_data-1.0.0"]
+    ...    types = [BlockData]
+    ...
+    ...    def to_yaml_tree(self, obj, tag, ctx):
+    ...        block_index = ctx.find_available_block_index(
+    ...            lambda: np.ndarray(len(obj.payload), dtype="uint8", buffer=obj.payload),
+    ...        )
+    ...        return {"block_index": block_index}
+    ...
+    ...    def from_yaml_tree(self, node, tag, ctx):
+    ...        block_index = node["block_index"]
+    ...        data_callback = ctx.get_block_data_callback(block_index)
+    ...        obj = BlockData(data_callback())
+    ...        return obj
 
-        def to_yaml_tree(self, obj, tag, ctx):
-            block_index = ctx.find_available_block_index(
-                lambda: np.ndarray(len(obj.payload), dtype="uint8", buffer=obj.payload),
-            )
-            return {"block_index": block_index}
+    >>> class BlockExtension(Extension):
+    ...    tags = ["asdf://somewhere.org/tags/block_data-1.0.0"]
+    ...    converters = [BlockConverter()]
+    ...    extension_uri = "asdf://somewhere.org/extensions/block_data-1.0.0"
 
-        def from_yaml_tree(self, node, tag, ctx):
-            block_index = node["block_index"]
-            data_callback = ctx.get_block_data_callback(block_index)
-            obj = BlockData(data_callback())
-            return obj
-
-    class BlockExtension(Extension):
-        tags = ["asdf://somewhere.org/tags/block_data-1.0.0"]
-        converters = [BlockConverter()]
-        extension_uri = "asdf://somewhere.org/extensions/block_data-1.0.0"
-
-    with asdf.config_context() as cfg:
-        cfg.add_extension(BlockExtension())
-        ff = asdf.AsdfFile({"example": BlockData(b"abcdefg")})
-        ff.write_to("block_converter_example.asdf")
+    >>> with asdf.config_context() as cfg:
+    ...    cfg.add_extension(BlockExtension())
+    ...    ff = asdf.AsdfFile({"example": BlockData(b"abcdefg")})
+    ...    ff.write_to("block_converter_example.asdf")
 
 During read, `Converter.from_yaml_tree` will be called. Within this method
 the Converter can prepare to access a block by calling
@@ -484,49 +484,49 @@ block it uses. These keys are generated using ``SerializationContext.generate_bl
 and must be stored by the extension code. These keys must be resupplied to the converter
 when writing an object that was read from an ASDF file.
 
-.. runcode::
+.. code:: python
 
-    import asdf
-    import numpy as np
-    from asdf.extension import Converter, Extension
+   >>> import asdf
+   >>> import numpy as np
+   >>> from asdf.extension import Converter, Extension
 
-    class MultiBlockData:
-        def __init__(self, data):
-            self.data = data
-            self.keys = []
-
-
-    class MultiBlockConverter(Converter):
-        tags = ["asdf://somewhere.org/tags/multi_block_data-1.0.0"]
-        types = [MultiBlockData]
-
-        def to_yaml_tree(self, obj, tag, ctx):
-            if not len(obj.keys):
-                obj.keys = [ctx.generate_block_key() for _ in obj.data]
-            indices = [ctx.find_available_block_index(d, k) for d, k in zip(obj.data, obj.keys)]
-            return {
-                "indices": indices,
-            }
-
-        def from_yaml_tree(self, node, tag, ctx):
-            indices = node["indices"]
-            keys = [ctx.generate_block_key() for _ in indices]
-            cbs = [ctx.get_block_data_callback(i, k) for i, k in zip(indices, keys)]
-            obj = MultiBlockData([cb() for cb in cbs])
-            obj.keys = keys
-            return obj
+   >>> class MultiBlockData:
+   ...     def __init__(self, data):
+   ...         self.data = data
+   ...         self.keys = []
 
 
-    class MultiBlockExtension(Extension):
-        tags = ["asdf://somewhere.org/tags/multi_block_data-1.0.0"]
-        converters = [MultiBlockConverter()]
-        extension_uri = "asdf://somewhere.org/extensions/multi_block_data-1.0.0"
+   >>> class MultiBlockConverter(Converter):
+   ...     tags = ["asdf://somewhere.org/tags/multi_block_data-1.0.0"]
+   ...     types = [MultiBlockData]
+   ...
+   ...     def to_yaml_tree(self, obj, tag, ctx):
+   ...         if not len(obj.keys):
+   ...             obj.keys = [ctx.generate_block_key() for _ in obj.data]
+   ...         indices = [ctx.find_available_block_index(d, k) for d, k in zip(obj.data, obj.keys)]
+   ...         return {
+   ...             "indices": indices,
+   ...         }
+   ...
+   ...     def from_yaml_tree(self, node, tag, ctx):
+   ...         indices = node["indices"]
+   ...         keys = [ctx.generate_block_key() for _ in indices]
+   ...         cbs = [ctx.get_block_data_callback(i, k) for i, k in zip(indices, keys)]
+   ...         obj = MultiBlockData([cb() for cb in cbs])
+   ...         obj.keys = keys
+   ...         return obj
 
-    with asdf.config_context() as cfg:
-        cfg.add_extension(MultiBlockExtension())
-        obj = MultiBlockData([np.arange(3, dtype="uint8") + i for i in range(3)])
-        ff = asdf.AsdfFile({"example": obj})
-        ff.write_to("multi_block_converter_example.asdf")
+
+   >>> class MultiBlockExtension(Extension):
+   ...     tags = ["asdf://somewhere.org/tags/multi_block_data-1.0.0"]
+   ...     converters = [MultiBlockConverter()]
+   ...     extension_uri = "asdf://somewhere.org/extensions/multi_block_data-1.0.0"
+
+   >>> with asdf.config_context() as cfg:
+   ...     cfg.add_extension(MultiBlockExtension())
+   ...     obj = MultiBlockData([np.arange(3, dtype="uint8") + i for i in range(3)])
+   ...     ff = asdf.AsdfFile({"example": obj})
+   ...     ff.write_to("multi_block_converter_example.asdf")
 
 .. _extending_converters_performance:
 

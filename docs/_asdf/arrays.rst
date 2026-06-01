@@ -15,14 +15,14 @@ floating-point numbers (using `numpy.random.rand`).  Note that the resulting
 YAML output contains information about the structure (size and data type) of
 the array, but the actual array content is in a binary block.
 
-.. runcode::
+.. code:: python
 
-   from asdf import AsdfFile
-   import numpy as np
+   >>> from asdf import AsdfFile
+   >>> import numpy as np
 
-   tree = {'my_array': np.random.rand(8, 8)}
-   ff = AsdfFile(tree)
-   ff.write_to("array.asdf")
+   >>> tree = {'my_array': np.random.rand(8, 8)}
+   >>> ff = AsdfFile(tree)
+   >>> ff.write_to("array.asdf")
 
 .. note::
 
@@ -64,19 +64,19 @@ data in the file.  In this example an array and a subview on that same
 array are saved to the same file, resulting in only a single block of
 data being saved.
 
-.. runcode::
+.. code:: python
 
-   from asdf import AsdfFile
-   import numpy as np
+   >>> from asdf import AsdfFile
+   >>> import numpy as np
 
-   my_array = np.random.rand(8, 8)
-   subset = my_array[2:4,3:6]
-   tree = {
-       'my_array': my_array,
-       'subset':   subset
-   }
-   ff = AsdfFile(tree)
-   ff.write_to("array_with_subset.asdf")
+   >>> my_array = np.random.rand(8, 8)
+   >>> subset = my_array[2:4,3:6]
+   >>> tree = {
+   ...     'my_array': my_array,
+   ...     'subset':   subset
+   ... }
+   >>> ff = AsdfFile(tree)
+   >>> ff.write_to("array_with_subset.asdf")
 
 For circumstances where this is undesirable (such as saving
 a small view of a large array) this can be disabled by setting
@@ -131,16 +131,16 @@ storage type of the associated data. The allowed values are ``internal``,
 
 - ``inline``: Store the data as YAML inline in the tree.
 
-.. runcode::
+.. code:: python
 
-   from asdf import AsdfFile
-   import numpy as np
+   >>> from asdf import AsdfFile
+   >>> import numpy as np
 
-   my_array = np.random.rand(8, 8)
-   tree = {'my_array': my_array}
-   ff = AsdfFile(tree)
-   ff.set_array_storage(my_array, 'inline')
-   ff.write_to("inline_array.asdf")
+   >>> my_array = np.random.rand(8, 8)
+   >>> tree = {'my_array': my_array}
+   >>> ff = AsdfFile(tree)
+   >>> ff.set_array_storage(my_array, 'inline')
+   >>> ff.write_to("inline_array.asdf")
 
 .. code:: yaml
 
@@ -222,21 +222,21 @@ Exploded form is useful in the following scenarios:
 To save a block in an external file, set its block type to
 ``'external'``.
 
-.. runcode::
+.. code:: python
 
-   from asdf import AsdfFile
-   import numpy as np
+   >>> from asdf import AsdfFile
+   >>> import numpy as np
 
-   my_array = np.random.rand(8, 8)
-   tree = {'my_array': my_array}
-   ff = AsdfFile(tree)
+   >>> my_array = np.random.rand(8, 8)
+   >>> tree = {'my_array': my_array}
+   >>> ff = AsdfFile(tree)
 
-   # On an individual block basis:
-   ff.set_array_storage(my_array, 'external')
-   ff.write_to("external.asdf")
+   >>> # On an individual block basis:
+   >>> ff.set_array_storage(my_array, 'external')
+   >>> ff.write_to("external.asdf")
 
-   # Or for every block:
-   ff.write_to("external.asdf", all_array_storage='external')
+   >>> # Or for every block:
+   >>> ff.write_to("external.asdf", all_array_storage='external')
 
 .. code:: yaml
 
@@ -279,25 +279,25 @@ of the streamed data, but will not write out the actual content.  The
 file handle's ``write`` method is then used to manually write out the
 binary data.
 
-.. runcode::
+.. code:: python
 
-   from asdf import AsdfFile
-   from asdf.tags.core import Stream
-   import numpy as np
+   >>> from asdf import AsdfFile
+   >>> from asdf.tags.core import Stream
+   >>> import numpy as np
 
-   tree = {
-       # Each "row" of data will have 128 entries.
-       'my_stream': Stream([128], np.float64)
-   }
+   >>> tree = {
+   ...     # Each "row" of data will have 128 entries.
+   ...     'my_stream': Stream([128], np.float64)
+   ... }
 
-   ff = AsdfFile(tree)
-   with open('stream.asdf', 'wb') as fd:
-       ff.write_to(fd)
-       # Write 100 rows of data, one row at a time.  ``write``
-       # expects the raw binary bytes, not an array, so we use
-       # ``tobytes()``.
-       for i in range(100):
-           fd.write(np.array([i] * 128, np.float64).tobytes())
+   >>> ff = AsdfFile(tree)
+   >>> with open('stream.asdf', 'wb') as fd:  # doctest: +SKIP
+   ...     ff.write_to(fd)
+   ...     # Write 100 rows of data, one row at a time.  ``write``
+   ...     # expects the raw binary bytes, not an array, so we use
+   ...     # ``tobytes()``.
+   ...     for i in range(100):
+   ...         fd.write(np.array([i] * 128, np.float64).tobytes())
 
 .. code:: yaml
 
@@ -380,19 +380,19 @@ are included in every asdf install. Passing one of these 4 character
 codes as ``all_array_compression`` to `asdf.AsdfFile.write_to` will
 compress all blocks with the corresponding algorithm:
 
-.. runcode::
+.. code:: python
 
-   from asdf import AsdfFile
-   import numpy as np
+   >>> from asdf import AsdfFile
+   >>> import numpy as np
 
-   tree = {
-       'a': np.random.rand(32, 32),
-       'b': np.random.rand(64, 64)
-   }
+   >>> tree = {
+   ...     'a': np.random.rand(32, 32),
+   ...     'b': np.random.rand(64, 64)
+   ... }
 
-   target = AsdfFile(tree)
-   target.write_to('target.asdf', all_array_compression='zlib')
-   target.write_to('target.asdf', all_array_compression='bzp2')
+   >>> target = AsdfFile(tree)
+   >>> target.write_to('target.asdf', all_array_compression='zlib')
+   >>> target.write_to('target.asdf', all_array_compression='bzp2')
 
 .. code:: yaml
 

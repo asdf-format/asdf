@@ -19,19 +19,19 @@ Hello World
 At its core, ASDF is a way of saving nested data structures to YAML.  Here we
 save a :class:`dict` with the key/value pair ``'hello': 'world'``.
 
-.. runcode::
+.. code:: python
 
-   from asdf import AsdfFile
+   >>> from asdf import AsdfFile
 
-   # Make the tree structure, and create a AsdfFile from it.
-   tree = {'hello': 'world'}
-   ff = AsdfFile(tree)
-   ff.write_to("test.asdf")
+   >>> # Make the tree structure, and create a AsdfFile from it.
+   >>> tree = {'hello': 'world'}
+   >>> ff = AsdfFile(tree)
+   >>> ff.write_to("test.asdf")
 
-   # You can also make the AsdfFile first, and modify its tree directly:
-   ff = AsdfFile()
-   ff.tree['hello'] = 'world'
-   ff.write_to("test.asdf")
+   >>> # You can also make the AsdfFile first, and modify its tree directly:
+   >>> ff = AsdfFile()
+   >>> ff.tree['hello'] = 'world'
+   >>> ff.write_to("test.asdf")
 
 .. code:: yaml
 
@@ -54,31 +54,6 @@ save a :class:`dict` with the key/value pair ``'hello': 'world'``.
 
 Creating Files
 ==============
-
-.. runcode:: hidden
-
-    import asdf
-    import numpy as np
-
-    # Create some data
-    sequence = np.arange(100)
-    squares  = sequence**2
-    random = np.random.random(100)
-
-    # Store the data in an arbitrarily nested dictionary
-    tree = {
-        'foo': 42,
-        'name': 'Monty',
-        'sequence': sequence,
-        'powers': { 'squares' : squares },
-        'random': random
-    }
-
-    # Create the ASDF file object from our data tree
-    af = asdf.AsdfFile(tree)
-
-    # Write the data to a new file
-    af.write_to('example.asdf')
 
 .. include:: ../../README.rst
     :start-after: begin-create-file-text:
