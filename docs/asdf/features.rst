@@ -472,7 +472,7 @@ about:
     af = asdf.AsdfFile(tree)
     af.write_to('external_array.asdf')
 
-.. code:: asdf
+.. code:: yaml
 
    #ASDF 1.0.0
    #ASDF_STANDARD 1.6.0
