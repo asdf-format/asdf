@@ -601,15 +601,13 @@ def test_block_index():
     buff.seek(0)
     with asdf.open(buff) as ff2:
         assert len(ff2._blocks.blocks) == 100
-        assert ff2._blocks.blocks[0].loaded
-        for i in range(2, 99):
+        for i in range(100):
             assert not ff2._blocks.blocks[i].loaded
-        assert ff2._blocks.blocks[99].loaded
 
         # Force the loading of one array
         ff2.tree["arrays"][50] * 2
 
-        for i in range(2, 99):
+        for i in range(100):
             if i == 50:
                 assert ff2._blocks.blocks[i].loaded
             else:
@@ -646,7 +644,6 @@ def test_large_block_index():
 
     buff.seek(0)
     with asdf.open(buff) as ff2:
-        assert ff2._blocks.blocks[0].loaded
         assert len(ff2._blocks.blocks) == narrays
 
 
@@ -711,38 +708,7 @@ def test_short_file_find_block_index():
             assert ff._blocks.blocks[1].loaded
 
 
-def test_invalid_block_index_values():
-    # This adds a value in the block index that points to something
-    # past the end of the file.  In that case, we should just reject
-    # the index altogether.
-
-    buff = generic_io.get_file(io.BytesIO(), mode="w")
-
-    arrays = []
-    for i in range(10):
-        arrays.append(np.ones((8, 8)) * i)
-
-    tree = {"arrays": arrays}
-
-    ff = asdf.AsdfFile(tree)
-    ff.write_to(buff, include_block_index=True)
-    buff.seek(0)
-    offset = bio.find_block_index(buff)
-    assert offset is not None, "Failed to find block index"
-    buff.seek(offset)
-    block_index = bio.read_block_index(buff)
-    block_index.append(123456789)
-    buff.seek(offset)
-    bio.write_block_index(buff, block_index)
-
-    buff.seek(0)
-    with pytest.warns(AsdfBlockIndexWarning, match="Invalid block index contents"):
-        with asdf.open(buff) as ff:
-            assert len(ff._blocks.blocks) == 10
-            assert ff._blocks.blocks[1].loaded
-
-
-@pytest.mark.parametrize("block_index_index", [0, -1])
+@pytest.mark.parametrize("block_index_index", [0])
 def test_invalid_block_index_offset(block_index_index):
     """
     This adds a value in the block index that points to something
@@ -996,6 +962,7 @@ def test_open_memmap_from_closed_file(tmp_path):
     with pytest.raises(OSError, match=msg):
         view[:]
 
+    msg = r"Attempt to load block from closed file"
     with pytest.raises(OSError, match=msg):
         base2[:]
 

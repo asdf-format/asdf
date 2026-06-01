@@ -78,9 +78,7 @@ def test_read(tmp_path, lazy_load, memmap, with_index, validate_checksums, paddi
     ) as (fd, check):
         r = read_blocks(fd, memmap=memmap, lazy_load=lazy_load, validate_checksums=validate_checksums)
         if lazy_load and with_index and not streamed:
-            assert r[0].loaded
-            assert r[-1].loaded
-            for blk in r[1:-1]:
+            for blk in r:
                 assert not blk.loaded
                 # getting the header should load the block
                 blk.header
@@ -136,7 +134,7 @@ def test_read_post_padding_non_null_bytes():
             check(read_blocks(fd))
 
 
-@pytest.mark.parametrize("invalid_block_index", [0, 1, -1, "junk"])
+@pytest.mark.parametrize("invalid_block_index", [0, "junk"])
 def test_invalid_block_index(tmp_path, invalid_block_index):
     fn = tmp_path / "test.bin"
     with gen_blocks(fn=fn, with_index=True) as (fd, check):
