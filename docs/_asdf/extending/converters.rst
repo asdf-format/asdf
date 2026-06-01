@@ -429,32 +429,31 @@ A simple example of a Converter using block storage to store the ``payload`` for
    ...     def __init__(self, payload):
    ...         self.payload = payload
 
+   >>> class BlockConverter(Converter):
+   ...    tags = ["asdf://somewhere.org/tags/block_data-1.0.0"]
+   ...    types = [BlockData]
+   ...
+   ...    def to_yaml_tree(self, obj, tag, ctx):
+   ...        block_index = ctx.find_available_block_index(
+   ...            lambda: np.ndarray(len(obj.payload), dtype="uint8", buffer=obj.payload),
+   ...        )
+   ...        return {"block_index": block_index}
+   ...
+   ...    def from_yaml_tree(self, node, tag, ctx):
+   ...        block_index = node["block_index"]
+   ...        data_callback = ctx.get_block_data_callback(block_index)
+   ...        obj = BlockData(data_callback())
+   ...        return obj
 
-    >>> class BlockConverter(Converter):
-    ...    tags = ["asdf://somewhere.org/tags/block_data-1.0.0"]
-    ...    types = [BlockData]
-    ...
-    ...    def to_yaml_tree(self, obj, tag, ctx):
-    ...        block_index = ctx.find_available_block_index(
-    ...            lambda: np.ndarray(len(obj.payload), dtype="uint8", buffer=obj.payload),
-    ...        )
-    ...        return {"block_index": block_index}
-    ...
-    ...    def from_yaml_tree(self, node, tag, ctx):
-    ...        block_index = node["block_index"]
-    ...        data_callback = ctx.get_block_data_callback(block_index)
-    ...        obj = BlockData(data_callback())
-    ...        return obj
+   >>> class BlockExtension(Extension):
+   ...    tags = ["asdf://somewhere.org/tags/block_data-1.0.0"]
+   ...    converters = [BlockConverter()]
+   ...    extension_uri = "asdf://somewhere.org/extensions/block_data-1.0.0"
 
-    >>> class BlockExtension(Extension):
-    ...    tags = ["asdf://somewhere.org/tags/block_data-1.0.0"]
-    ...    converters = [BlockConverter()]
-    ...    extension_uri = "asdf://somewhere.org/extensions/block_data-1.0.0"
-
-    >>> with asdf.config_context() as cfg:
-    ...    cfg.add_extension(BlockExtension())
-    ...    ff = asdf.AsdfFile({"example": BlockData(b"abcdefg")})
-    ...    ff.write_to("block_converter_example.asdf")
+   >>> with asdf.config_context() as cfg:
+   ...    cfg.add_extension(BlockExtension())
+   ...    ff = asdf.AsdfFile({"example": BlockData(b"abcdefg")})
+   ...    ff.write_to("block_converter_example.asdf")
 
 During read, `Converter.from_yaml_tree` will be called. Within this method
 the Converter can prepare to access a block by calling
