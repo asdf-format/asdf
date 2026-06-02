@@ -1,0 +1,3 @@
+Fixed ``AsdfFile.info`` reporting an object shared between sibling
+branches (for example the same tuple assigned to two keys) as a
+``(recursive reference)`` when there is no cycle.
