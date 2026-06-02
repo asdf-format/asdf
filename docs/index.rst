@@ -31,11 +31,11 @@ Getting Started
 .. toctree::
   :maxdepth: 2
 
-  _asdf/install
-  _asdf/overview
-  _asdf/features
-  _asdf/config
-  _asdf/asdf_tool
+  asdf/install
+  asdf/overview
+  asdf/features
+  asdf/config
+  asdf/asdf_tool
 
 .. _extending:
 
@@ -45,15 +45,15 @@ Extending ASDF
 .. toctree::
   :maxdepth: 2
 
-  _asdf/extending/use_cases
-  _asdf/extending/uris
-  _asdf/extending/schemas
-  _asdf/extending/resources
-  _asdf/extending/converters
-  _asdf/extending/extensions
-  _asdf/extending/manifests
-  _asdf/extending/compressors
-  _asdf/extending/validators
+  asdf/extending/use_cases
+  asdf/extending/uris
+  asdf/extending/schemas
+  asdf/extending/resources
+  asdf/extending/converters
+  asdf/extending/extensions
+  asdf/extending/manifests
+  asdf/extending/compressors
+  asdf/extending/validators
 
 API Documentation
 =================
@@ -61,8 +61,8 @@ API Documentation
 .. toctree::
   :maxdepth: 1
 
-  _asdf/user_api/index
-  _asdf/developer_api
+  asdf/user_api/index
+  asdf/developer_api
 
 Resources
 =========
@@ -70,13 +70,13 @@ Resources
 .. toctree::
   :maxdepth: 1
 
-  _asdf/contributing
-  _asdf/CODE_OF_CONDUCT
-  _asdf/release_and_support
-  _asdf/whats_new
-  _asdf/deprecations
-  _asdf/changes
-  _asdf/citation
+  asdf/contributing
+  asdf/CODE_OF_CONDUCT
+  asdf/release_and_support
+  asdf/whats_new
+  asdf/deprecations
+  asdf/changes
+  asdf/citation
 
 See also
 ========
