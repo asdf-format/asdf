@@ -350,19 +350,25 @@ class NodeSchemaInfo:
         """
         extension_manager = extension_manager or _get_extension_manager()
 
-        current_nodes = [(None, root_identifier, root_node)]
-        seen = set()
+        # Each queued node carries the set of ``id()``s of its ancestors (the
+        # nodes along the path from the root to it). A node is a recursive
+        # reference only when it appears within its own ancestry, i.e. a real
+        # cycle. Tracking this per-branch (rather than tree-wide) means that an
+        # object simply shared between sibling branches -- for example the empty
+        # tuple ``()`` assigned to two keys -- is no longer misreported as
+        # recursive (see GH #1891).
+        current_nodes = [(None, root_identifier, root_node, frozenset())]
         root_info = None
         current_depth = 0
         while True:
             next_nodes = []
 
-            for parent, identifier, node in current_nodes:
+            for parent, identifier, node, ancestors in current_nodes:
                 # node is the item in the tree
                 # We might sometimes not want to use that node directly
                 # but instead using a different node for traversal.
                 t_node, traversable, _ = _make_traversable(node, extension_manager)
-                if (is_container(node) or traversable) and id(node) in seen:
+                if (is_container(node) or traversable) and id(node) in ancestors:
                     info = NodeSchemaInfo(
                         key,
                         parent,
@@ -394,10 +400,11 @@ class NodeSchemaInfo:
                         # track that this node is a child of the parent
                         parent.children.append(info)
 
-                    # Track which nodes have been seen to avoid an infinite
-                    # loop and to find recursive references
-                    # This is tree wide but should be per-branch.
-                    seen.add(id(node))
+                    # The ancestry passed to this node's children includes this
+                    # node, so that a child which refers back to one of its own
+                    # ancestors (a genuine cycle) is detected as recursive while
+                    # the traversal still terminates.
+                    child_ancestors = ancestors | {id(node)}
 
                     # if the node has __asdf_traverse__ and a _tag attribute
                     # that is a valid tag, load it's schema
@@ -414,7 +421,7 @@ class NodeSchemaInfo:
 
                     # add children to queue
                     for child_identifier, child_node in get_children(t_node):
-                        next_nodes.append((info, child_identifier, child_node))
+                        next_nodes.append((info, child_identifier, child_node, child_ancestors))
 
             if len(next_nodes) == 0:
                 break

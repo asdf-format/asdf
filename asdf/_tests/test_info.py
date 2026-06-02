@@ -832,6 +832,36 @@ def test_info_no_infinite_loop(capsys):
     assert "recursive" in captured.out
 
 
+def test_info_shared_object_not_recursive(capsys):
+    """
+    An object shared between sibling branches (here the empty tuple ``()``
+    assigned to two keys) is not a recursive reference and must not be
+    reported as one. Regression test for GH #1891.
+    """
+    af = asdf.AsdfFile()
+    af["l"] = af["l2"] = ()
+    af.info()
+    captured = capsys.readouterr()
+    assert "recursive reference" not in captured.out
+
+
+def test_info_shared_subtree_shown_fully(capsys):
+    """
+    A non-recursive subtree referenced from two places should be displayed in
+    full at each location rather than the second occurrence being collapsed to
+    a (recursive reference). Regression test for GH #1891.
+    """
+    af = asdf.AsdfFile()
+    shared = {"value": 42}
+    af["a"] = shared
+    af["b"] = shared
+    af.info()
+    captured = capsys.readouterr()
+    assert "recursive reference" not in captured.out
+    # The shared mapping's contents appear under both "a" and "b".
+    assert captured.out.count("value (int): 42") == 2
+
+
 def _get_block_output(capsys, af, *args, **kwargs) -> str:
     """Passes provided arguments to both `asdf.info` and `AsdfFile.info` and verifies the outputs match.
 
