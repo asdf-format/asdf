@@ -1,6 +1,7 @@
 import io
 import lzma
 import os
+import typing
 from typing import Any
 
 import numpy as np
@@ -10,6 +11,9 @@ import asdf
 from asdf import _compression, config_context, generic_io
 from asdf._tests import _helpers as helpers
 from asdf.extension import Compressor, Extension
+
+if typing.TYPE_CHECKING:
+    from asdf.generic_io import GenericFile
 
 RNG = np.random.default_rng(0)
 
@@ -88,11 +92,12 @@ def test_get_compressed_size():
 
 
 def test_decompress_too_long_short():
-    fio = io.BytesIO()
+    fio = typing.cast("GenericFile", io.BytesIO())
     _compression.compress(fio, b"0" * 1024, "zlib")
     size = fio.tell()
     fio.seek(0)
     blocks = lambda us: [fio.read(us)]  # noqa: E731
+    # pyrefly: ignore [bad-assignment]
     fio.read_blocks = blocks
     _compression.decompress(fio, size, 1024, "zlib")
     fio.seek(0)
@@ -188,6 +193,7 @@ def test_set_array_compression(tmp_path):
             af_out.write_to(tmpfile)
         af_out.set_array_compression(bzp2_data, "bzp2", compresslevel=9)
         af_out.write_to(tmpfile)
+        # pyrefly: ignore [unsupported-operation]
         assert af_out.get_array_compression_kwargs(bzp2_data)["compresslevel"] == 9
 
     with asdf.open(tmpfile) as af_in:

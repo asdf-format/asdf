@@ -328,6 +328,8 @@ def both_are_ndarrays(tree0, tree1):
     """Returns True if both inputs correspond to ndarrays, False otherwise"""
     if not (isinstance(tree0, Tagged) and isinstance(tree1, Tagged)):
         return False
+    if tree0._tag is None or tree1._tag is None:
+        return False
     if not (NDARRAY_TAG in tree0._tag and NDARRAY_TAG in tree1._tag):
         return False
     return True

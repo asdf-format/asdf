@@ -8,26 +8,42 @@ the block manager to have a reference to the `AsdfFile`
 (that references the block manager).
 """
 
+from __future__ import annotations
+
+import enum
 import os
 import urllib
+import urllib.request
+from typing import TYPE_CHECKING, Final, Literal
 
 import numpy as np
 
 from asdf import generic_io, util
 
+if TYPE_CHECKING:
+    from asdf.typing import ByteArray1D
 
-class UseInternalType:
-    pass
+
+class _USE_INTERNAL_TYPE(enum.Enum):
+    USE_INTERNAL = "UseInternal"
+
+    def __repr__(self) -> str:
+        return str(self.value)
 
 
-UseInternal = UseInternalType()
+USE_INTERNAL: Final = _USE_INTERNAL_TYPE.USE_INTERNAL
+
+#: Type corresponding to ``USE_INTERNAL`` value for use in type-checking
+UseInternal: Final = Literal[_USE_INTERNAL_TYPE.USE_INTERNAL]
 
 
 class ExternalBlockCache:
     def __init__(self):
         self.clear()
 
-    def load(self, base_uri, uri, memmap=False, validate_checksums=False):
+    def load(
+        self, base_uri: str | None, uri: str, memmap: bool = False, validate_checksums: bool = False
+    ) -> ByteArray1D | UseInternal:
         key = util.get_base_uri(uri)
         if key not in self._cache:
             resolved_uri = generic_io.resolve_uri(base_uri, uri)
@@ -37,7 +53,7 @@ class ExternalBlockCache:
             if resolved_uri.endswith("#"):
                 resolved_uri = resolved_uri[:-1]
             if resolved_uri == "" or resolved_uri == base_uri:
-                return UseInternal
+                return USE_INTERNAL
 
             from asdf import open as asdf_open
 
@@ -47,7 +63,7 @@ class ExternalBlockCache:
                 blk = af._blocks.blocks[0]
                 if memmap and blk.header["compression"] == b"\0\0\0\0":
                     parsed_url = util._patched_urllib_parse.urlparse(resolved_uri)
-                    if parsed_url.scheme == "file":
+                    if parsed_url.scheme == "file" and blk.data_offset is not None:
                         # deal with leading slash for windows file://
                         filename = urllib.request.url2pathname(parsed_url.path)
                         arr = np.memmap(filename, np.uint8, "r", blk.data_offset, blk.cached_data.nbytes)
@@ -58,11 +74,11 @@ class ExternalBlockCache:
             self._cache[key] = arr
         return self._cache[key]
 
-    def clear(self):
+    def clear(self) -> None:
         self._cache = {}
 
 
-def relative_uri_for_index(uri, index):
+def relative_uri_for_index(uri: str, index: int) -> str:
     # get the os-native separated path for this uri
     path = util._patched_urllib_parse.urlparse(uri).path
     _, filename = os.path.split(path)

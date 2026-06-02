@@ -164,7 +164,7 @@ def write_edited_yaml_larger(path, new_content, version):
                 # update index
                 if block_index is not None:
                     offset = new_first_block_offset - old_first_block_offset
-                    updated_block_index = [i + offset for i in block_index]
+                    updated_block_index = [i + offset if i is not None else None for i in block_index]
                     bio.write_block_index(fd, updated_block_index)
 
         # Swap in the new version of the file atomically:

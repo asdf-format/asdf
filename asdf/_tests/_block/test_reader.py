@@ -42,7 +42,12 @@ def gen_blocks(
             fd.write(constants.BLOCK_MAGIC)
             data = np.ones(size, dtype="uint8") * i
             bio.write_block(
-                fd, data, stream=streamed and (i == n - 1), padding=block_padding, write_checksum=write_checksums
+                fd,
+                # pyrefly: ignore [bad-argument-type]
+                data,
+                stream=streamed and (i == n - 1),
+                padding=block_padding,
+                write_checksum=write_checksums,
             )
         if with_index and not streamed:
             bio.write_block_index(fd, offsets)
@@ -172,6 +177,8 @@ def test_invalid_block_in_index_with_valid_magic(tmp_path):
         # move the first block offset to the padding before
         # the second block with enough space to write
         # valid magic (but invalid header)
+
+        # pyrefly: ignore [unsupported-operation]
         block_index[0] = block_index[1] - 6
         fd.seek(block_index[0])
         fd.write(constants.BLOCK_MAGIC)

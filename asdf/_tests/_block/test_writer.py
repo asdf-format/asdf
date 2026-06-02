@@ -48,6 +48,8 @@ def test_write_blocks(tmp_path, lazy, index, padding, compression, stream, seeka
             if padding:
                 assert r.header["allocated_size"] > r.header["used_size"]
         if stream:
+            assert streamed_block is not None
+
             read_stream_block = read_blocks[-1]
             np.testing.assert_array_equal(read_stream_block.data, streamed_block.data)
             assert read_stream_block.header["flags"] & constants.BLOCK_FLAG_STREAMED
@@ -79,7 +81,7 @@ def test_non_seekable_files_with_odd_tells(tmp_path, stream, index, tell):
     with generic_io.get_file(fn, mode="w") as fd:
         fd.seekable = lambda: False
         if callable(tell):
-            fd.tell = tell
+            fd.tell = tell  # pyrefly: ignore [bad-assignment]
         else:
             fd.tell = lambda: tell
         writer.write_blocks(fd, blocks, streamed_block=streamed_block, write_index=index)
@@ -96,7 +98,7 @@ def test_non_seekable_files_with_odd_tells(tmp_path, stream, index, tell):
                 assert r.data.size == 0
             else:
                 np.testing.assert_array_equal(r.data, d)
-        if stream:
+        if streamed_block is not None:
             read_stream_block = read_blocks[-1]
             np.testing.assert_array_equal(read_stream_block.data, streamed_block.data)
             assert read_stream_block.header["flags"] & constants.BLOCK_FLAG_STREAMED

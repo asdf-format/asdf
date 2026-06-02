@@ -172,6 +172,7 @@ def test_keys_for_value():
         returned_objects = set()
         for k in s.keys_for_value(v):
             assert k._is_valid()
+            # pyrefly: ignore [not-callable]
             obj = k._ref()
             returned_objects.add(obj)
         assert objs == returned_objects

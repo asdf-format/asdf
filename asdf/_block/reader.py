@@ -1,5 +1,9 @@
+from __future__ import annotations
+
+import typing
 import warnings
 import weakref
+from typing import TYPE_CHECKING
 
 from asdf import constants
 from asdf.exceptions import AsdfBlockIndexWarning, AsdfWarning, DelimiterNotFoundError
@@ -7,33 +11,48 @@ from asdf.exceptions import AsdfBlockIndexWarning, AsdfWarning, DelimiterNotFoun
 from . import io as bio
 from .exceptions import BlockIndexError
 
+if TYPE_CHECKING:
+    from asdf._block.io import BlockHeader
+    from asdf.generic_io import GenericFile
+    from asdf.typing import BlockDataCallback, ByteArray1D
+
 
 class ReadBlock:
     """
     Represents an ASDF block read from a file.
     """
 
-    def __init__(self, offset, fd, memmap, lazy_load, validate_checksum, header=None, data_offset=None, data=None):
-        self.offset = offset  # after block magic bytes
+    def __init__(
+        self,
+        offset: int | None,
+        fd: GenericFile,
+        memmap: bool,
+        lazy_load: bool,
+        validate_checksum: bool,
+        header: BlockHeader | None = None,
+        data_offset: int | None = None,
+        data: ByteArray1D | BlockDataCallback | None = None,
+    ):
+        self.offset: int | None = offset  # after block magic bytes
         self._fd = weakref.ref(fd)
         self._header = header
-        self.data_offset = data_offset
+        self.data_offset: int | None = data_offset
         self._data = data
         self._cached_data = None
-        self.memmap = memmap
-        self.lazy_load = lazy_load
-        self.validate_checksum = validate_checksum
+        self.memmap: bool = memmap
+        self.lazy_load: bool = lazy_load
+        self.validate_checksum: bool = validate_checksum
         if not lazy_load:
             self.load()
 
-    def close(self):
+    def close(self) -> None:
         self._cached_data = None
 
     @property
-    def loaded(self):
+    def loaded(self) -> bool:
         return self._data is not None
 
-    def load(self):
+    def load(self) -> None:
         """
         Load the block data (if it is not already loaded).
 
@@ -55,7 +74,7 @@ class ReadBlock:
         fd.seek(position)
 
     @property
-    def data(self):
+    def data(self) -> ByteArray1D:
         """
         Read, parse and return data for an ASDF block.
 
@@ -71,10 +90,10 @@ class ReadBlock:
         else:
             data = self._data
 
-        return data
+        return typing.cast("ByteArray1D", data)
 
     @property
-    def cached_data(self):
+    def cached_data(self) -> ByteArray1D:
         """
         Return cached data for an ASDF block.
 
@@ -87,7 +106,7 @@ class ReadBlock:
         return self._cached_data
 
     @property
-    def header(self):
+    def header(self) -> BlockHeader:
         """
         Get the block header. For a lazy loaded block the first time
         this is called the header will be read from the file and
@@ -100,10 +119,16 @@ class ReadBlock:
         """
         if not self.loaded:
             self.load()
-        return self._header
+        return typing.cast("BlockHeader", self._header)
 
 
-def _read_blocks_serially(fd, memmap=False, lazy_load=False, validate_checksums=False, after_magic=False):
+def _read_blocks_serially(
+    fd: GenericFile,
+    memmap: bool = False,
+    lazy_load: bool = False,
+    validate_checksums: bool = False,
+    after_magic: bool = False,
+) -> list[ReadBlock]:
     """
     Read blocks serially from a file without looking for a block index.
 
@@ -149,7 +174,13 @@ def _read_blocks_serially(fd, memmap=False, lazy_load=False, validate_checksums=
     return blocks
 
 
-def read_blocks(fd, memmap=False, lazy_load=False, validate_checksums=False, after_magic=False):
+def read_blocks(
+    fd: GenericFile,
+    memmap: bool = False,
+    lazy_load: bool = False,
+    validate_checksums: bool = False,
+    after_magic: bool = False,
+) -> list[ReadBlock]:
     """
     Read a sequence of ASDF blocks from a file.
 
@@ -220,19 +251,23 @@ def read_blocks(fd, memmap=False, lazy_load=False, validate_checksums=False, aft
         return _read_blocks_serially(fd, memmap, lazy_load, validate_checksums, after_magic)
     # skip magic for each block
     magic_len = len(constants.BLOCK_MAGIC)
-    blocks = [ReadBlock(offset + magic_len, fd, memmap, lazy_load, validate_checksums) for offset in block_index]
-    try:
-        # load first and last blocks to check if the index looks correct
-        for index in (0, -1):
-            fd.seek(block_index[index])
+    blocks = [
+        ReadBlock(offset + magic_len if offset is not None else None, fd, memmap, lazy_load, validate_checksums)
+        for offset in block_index
+    ]
+
+    # load first and last blocks to check if the index looks correct
+    for index in (0, -1):
+        try:
+            fd.seek(typing.cast("int", block_index[index]))
             buff = fd.read(magic_len)
             if buff != constants.BLOCK_MAGIC:
                 msg = "Invalid block magic"
                 raise OSError(msg)
             blocks[index].load()
-    except (OSError, ValueError) as e:
-        msg = f"Invalid block index contents for block {index}, falling back to serial reading: {e!s}"
-        warnings.warn(msg, AsdfBlockIndexWarning)
-        fd.seek(starting_offset)
-        return _read_blocks_serially(fd, memmap, lazy_load, after_magic)
+        except (OSError, ValueError) as e:
+            msg = f"Invalid block index contents for block {index}, falling back to serial reading: {e!s}"
+            warnings.warn(msg, AsdfBlockIndexWarning)
+            fd.seek(starting_offset)
+            return _read_blocks_serially(fd, memmap, lazy_load, after_magic)
     return blocks
