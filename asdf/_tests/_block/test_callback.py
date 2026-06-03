@@ -11,6 +11,7 @@ def test_default_attribute():
         def __init__(self, value):
             self.data = value
 
+    # pyrefly: ignore [no-matching-overload]
     blks = ReadBlocks([Data("a"), Data("b")])
     cbs = [DataCallback(0, blks), DataCallback(1, blks)]
 
@@ -23,6 +24,7 @@ def test_attribute_access():
         def __init__(self, attr, value):
             setattr(self, attr, value)
 
+    # pyrefly: ignore [no-matching-overload]
     blks = ReadBlocks([Foo("a", "foo"), Foo("a", "bar")])
     cb = DataCallback(0, blks)
 
@@ -34,6 +36,7 @@ def test_weakref():
         def __init__(self, value):
             self.data = value
 
+    # pyrefly: ignore [no-matching-overload]
     blks = ReadBlocks([Data("a"), Data("b")])
     cb = DataCallback(0, blks)
     del blks
@@ -48,11 +51,13 @@ def test_reassign():
         def __init__(self, value):
             self.data = value
 
+    # pyrefly: ignore [no-matching-overload]
     blks = ReadBlocks([Data("a"), Data("b")])
     cb = DataCallback(0, blks)
 
     assert cb() == "a"
 
+    # pyrefly: ignore [no-matching-overload]
     blks2 = ReadBlocks([Data("c"), Data("d")])
     cb._reassign(1, blks2)
 

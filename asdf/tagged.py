@@ -28,28 +28,39 @@ and dumper (``yamlutil.AsdfLoader`` and ``yamlutil.AsdfDumper``) and
 is not intended to be exposed to the end user.
 """
 
+from __future__ import annotations
+
 from collections import UserDict, UserList, UserString
 from copy import copy, deepcopy
+from typing import TYPE_CHECKING, Any, Generic, TypeVar, overload
+
+if TYPE_CHECKING:
+    from asdf import AsdfFile
 
 __all__ = ["Tagged", "TaggedDict", "TaggedList", "TaggedString", "get_tag", "tag_object"]
 
+_T = TypeVar("_T")
+_KT = TypeVar("_KT")
+_VT = TypeVar("_VT")
 
-class Tagged:
+
+class Tagged(Generic[_T]):
     """
     Base class of classes that wrap a given object and store a tag
     with it.
     """
 
-    _base_type = None
+    _base_type: type[_T]
+    _tag: str | None = None
 
     @property
     def base(self):
         """Convert to base type"""
 
-        return self._base_type(self)
+        return self._base_type(self)  # pyrefly: ignore [bad-argument-count]
 
 
-class TaggedDict(Tagged, UserDict, dict):
+class TaggedDict(Generic[_KT, _VT], Tagged[dict[_KT, _VT]], UserDict[_KT, _VT], dict[_KT, _VT]):
     """
     A Python dict with a tag attached.
     """
@@ -77,7 +88,7 @@ class TaggedDict(Tagged, UserDict, dict):
         return TaggedDict(data_copy, self._tag)
 
 
-class TaggedList(Tagged, UserList, list):
+class TaggedList(Generic[_T], Tagged[list[_T]], UserList[_T], list[_T]):
     """
     A Python list with a tag attached.
     """
@@ -104,7 +115,7 @@ class TaggedList(Tagged, UserList, list):
         return TaggedList(data_copy, self._tag)
 
 
-class TaggedString(Tagged, UserString, str):
+class TaggedString(Tagged[str], UserString, str):
     """
     A Python string with a tag attached.
     """
@@ -113,8 +124,24 @@ class TaggedString(Tagged, UserString, str):
 
     style = None
 
-    def __eq__(self, other):
-        return isinstance(other, TaggedString) and str.__eq__(self, other) and self._tag == other._tag
+    def __eq__(self, string):
+        return isinstance(string, TaggedString) and str.__eq__(self, string) and self._tag == string._tag
+
+
+_Tagged = TypeVar("_Tagged", bound=Tagged)
+
+
+# Define specific overloads mapping types to their tagged versions
+@overload
+def tag_object(tag: str, instance: _Tagged, ctx: AsdfFile | None = ...) -> _Tagged: ...
+@overload
+def tag_object(tag: str, instance: dict[Any, Any], ctx: AsdfFile | None = ...) -> TaggedDict: ...
+@overload
+def tag_object(tag: str, instance: list[Any], ctx: AsdfFile | None = ...) -> TaggedList: ...
+@overload
+def tag_object(tag: str, instance: str, ctx: AsdfFile | None = ...) -> TaggedString: ...
+@overload
+def tag_object(tag: str, instance: Any, ctx: AsdfFile | None = ...) -> Tagged: ...
 
 
 def tag_object(tag, instance, ctx=None):
@@ -142,6 +169,12 @@ def tag_object(tag, instance, ctx=None):
             raise TypeError(msg) from err
         instance._tag = tag
     return instance
+
+
+@overload
+def get_tag(instance: Tagged) -> str: ...
+@overload
+def get_tag(instance: Any) -> None: ...
 
 
 def get_tag(instance):

@@ -15,7 +15,14 @@ operations that we generally do not want to expose to
 extension code.
 """
 
+from __future__ import annotations
+
 import weakref
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from asdf._block.manager import ReadBlocks
+    from asdf.typing import ByteArray1D
 
 
 class DataCallback:
@@ -24,10 +31,10 @@ class DataCallback:
     read from an ASDF file.
     """
 
-    def __init__(self, index, read_blocks):
+    def __init__(self, index: int, read_blocks: ReadBlocks):
         self._reassign(index, read_blocks)
 
-    def __call__(self, _attr=None):
+    def __call__(self, _attr: str | None = None) -> ByteArray1D:
         read_blocks = self._read_blocks_ref()
         if read_blocks is None:
             msg = "Attempt to read block data from missing block"
@@ -39,6 +46,6 @@ class DataCallback:
             # like reading the header and cached_data
             return getattr(read_blocks[self._index], _attr)
 
-    def _reassign(self, index, read_blocks):
+    def _reassign(self, index: int, read_blocks: ReadBlocks) -> None:
         self._index = index
         self._read_blocks_ref = weakref.ref(read_blocks)
