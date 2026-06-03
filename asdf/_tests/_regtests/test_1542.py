@@ -17,7 +17,7 @@ def test_failure_to_write_blocks_to_non_seekable_file():
     https://github.com/asdf-format/asdf/issues/1542
     """
     r, w = os.pipe()
-    with os.fdopen(r, "rb") as rf:
+    with os.fdopen(r, "rb") as rf, pytest.deprecated_call():
         with os.fdopen(w, "wb") as wf:
             arrs = [np.zeros(1, dtype="uint8") + i for i in range(10)]
             af = asdf.AsdfFile({"arrs": arrs})

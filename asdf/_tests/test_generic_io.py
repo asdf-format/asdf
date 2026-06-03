@@ -44,7 +44,8 @@ def test_mode_fail(tmp_path):
     path = os.path.join(str(tmp_path), "test.asdf")
 
     with pytest.raises(ValueError, match=r"mode must be 'r', 'w' or 'rw'"):
-        generic_io.get_file(path, mode="r+")  # pyrefly: ignore[bad-argument-type]
+        # pyrefly: ignore[no-matching-overload]
+        generic_io.get_file(path, mode="r+")
 
 
 @pytest.mark.parametrize("mode", ["r", "w", "rw"])
@@ -245,7 +246,8 @@ def test_urlopen(tree, httpserver):
         return generic_io.get_file(open(path, "wb"), mode="w")
 
     def get_read_fd():
-        return generic_io.get_file(urllib_request.urlopen(httpserver.url + "test.asdf"))
+        with pytest.deprecated_call():
+            return generic_io.get_file(urllib_request.urlopen(httpserver.url + "test.asdf"))
 
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
         assert len(ff._blocks.blocks) == 2
@@ -374,7 +376,7 @@ def test_open_stdout():
 def test_invalid_obj(tmp_path):
     with pytest.raises(ValueError, match=r"Can't handle .* as a file for mode 'r'"):
         # Intentionally incorrect file type
-        # pyrefly: ignore[bad-argument-type]
+        # pyrefly: ignore[no-matching-overload]
         generic_io.get_file(42)
 
     path = os.path.join(str(tmp_path), "test.asdf")
@@ -416,12 +418,14 @@ def test_nonseekable_file(tmp_path):
             return True
 
     with FileWrapper(os.path.join(str(tmp_path), "test.asdf"), "wb") as fd:
-        assert isinstance(generic_io.get_file(fd, "w"), generic_io.OutputStream)
-        with pytest.raises(ValueError, match=r"File .* could not be opened in 'rw' mode"):
-            generic_io.get_file(fd, "rw")
+        with pytest.deprecated_call():
+            assert isinstance(generic_io.get_file(fd, "w"), generic_io.OutputStream)
+            with pytest.raises(ValueError, match=r"File .* could not be opened in 'rw' mode"):
+                generic_io.get_file(fd, "rw")
 
     with FileWrapper(os.path.join(str(tmp_path), "test.asdf"), "rb") as fd:
-        assert isinstance(generic_io.get_file(fd, "r"), generic_io.InputStream)
+        with pytest.deprecated_call():
+            assert isinstance(generic_io.get_file(fd, "r"), generic_io.InputStream)
 
 
 def test_relative_uri():
@@ -478,19 +482,22 @@ def test_arbitrary_file_object():
         pass
 
     buff = io.BytesIO()
-    assert isinstance(generic_io.get_file(Reader(buff), "r"), generic_io.InputStream)
-    assert isinstance(generic_io.get_file(Writer(buff), "w"), generic_io.OutputStream)
-    assert isinstance(generic_io.get_file(RandomReader(buff), "r"), generic_io.MemoryIO)
-    assert isinstance(generic_io.get_file(RandomWriter(buff), "w"), generic_io.MemoryIO)
-    assert isinstance(generic_io.get_file(All(buff), "rw"), generic_io.MemoryIO)
-    assert isinstance(generic_io.get_file(All(buff), "r"), generic_io.MemoryIO)
-    assert isinstance(generic_io.get_file(All(buff), "w"), generic_io.MemoryIO)
+    with pytest.deprecated_call():
+        assert isinstance(generic_io.get_file(Reader(buff), "r"), generic_io.InputStream)
+        assert isinstance(generic_io.get_file(Writer(buff), "w"), generic_io.OutputStream)
+        assert isinstance(generic_io.get_file(RandomReader(buff), "r"), generic_io.MemoryIO)
+        assert isinstance(generic_io.get_file(RandomWriter(buff), "w"), generic_io.MemoryIO)
+        assert isinstance(generic_io.get_file(All(buff), "rw"), generic_io.MemoryIO)
+        assert isinstance(generic_io.get_file(All(buff), "r"), generic_io.MemoryIO)
+        assert isinstance(generic_io.get_file(All(buff), "w"), generic_io.MemoryIO)
 
     with pytest.raises(ValueError, match=r"Can't handle .* as a file for mode 'w'"):
-        generic_io.get_file(Reader(buff), "w")
+        with pytest.deprecated_call():
+            generic_io.get_file(Reader(buff), "w")
 
     with pytest.raises(ValueError, match=r"Can't handle .* as a file for mode 'r'"):
-        generic_io.get_file(Writer(buff), "r")
+        with pytest.deprecated_call():
+            generic_io.get_file(Writer(buff), "r")
 
 
 def test_check_bytes(tmp_path):

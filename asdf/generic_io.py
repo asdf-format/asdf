@@ -16,11 +16,13 @@ import pathlib
 import re
 import sys
 import typing
+import warnings
 from os import SEEK_CUR, SEEK_END, SEEK_SET
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, overload
 from urllib.request import url2pathname
 
 import numpy as np
+from typing_extensions import Reader, Writer, deprecated
 
 from ._extern import atomicfile
 from .exceptions import DelimiterNotFoundError
@@ -31,7 +33,7 @@ if TYPE_CHECKING:
 
     from fsspec.core import OpenFile
 
-    from asdf.typing import ByteArray1D, FileLike, FileMode, Reader
+    from asdf.typing import ByteArray1D, FileLike, FileMode, PathLike, Reader
 
 __all__ = ["GenericFile", "get_file", "get_uri", "relative_uri", "resolve_uri"]
 
@@ -1000,6 +1002,23 @@ def get_uri(file_obj):
     return getattr(file_obj, "name", "")
 
 
+@overload
+def get_file(
+    init: PathLike | io.IOBase | GenericFile,
+    mode: FileMode = ...,
+    uri: str | None = ...,
+    close: bool = ...,
+) -> GenericFile: ...
+@overload
+@deprecated("Duck-typed file objects are deprecated. Use an instance of IOBase instead.")
+def get_file(
+    init: Reader | Writer,
+    mode: FileMode = ...,
+    uri: str | None = ...,
+    close: bool = ...,
+) -> GenericFile: ...
+
+
 def get_file(
     init: FileLike,
     mode: FileMode = "r",
@@ -1133,6 +1152,23 @@ def get_file(
     if isinstance(init, io.StringIO):
         msg = "io.StringIO objects are not supported.  Use io.BytesIO instead."
         raise TypeError(msg)
+
+    if not isinstance(init, io.IOBase):
+        # Only generate a warning if its an actual duck-typed file.
+        # If its just a random object it will raise a ValueError below anyway.
+        if hasattr(init, "read") or hasattr(init, "write"):
+            warnings.warn(
+                "Duck-typed file objects are deprecated. Use an instance of IOBase instead.",
+                DeprecationWarning,
+            )
+    elif not init.seekable() and mode != "w":
+        warnings.warn(
+            (
+                "Reading from non-seekable files is deprecated. "
+                "Consider implementing seek() or reading the file into a BytesIO instance."
+            ),
+            DeprecationWarning,
+        )
 
     if isinstance(init, io.IOBase):
         if ("r" in mode and not init.readable()) or ("w" in mode and not init.writable()):

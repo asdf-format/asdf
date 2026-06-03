@@ -87,7 +87,8 @@ def test_get_file_type(content, expected_type):
         def read(self, size=-1):
             return self._fd.read(size)
 
-    fd = generic_io.get_file(OnlyHasAReadMethod(content))
+    with pytest.deprecated_call():
+        fd = generic_io.get_file(OnlyHasAReadMethod(content))
     assert util.get_file_type(fd) == expected_type
     assert fd.read() == content
 

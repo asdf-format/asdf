@@ -102,8 +102,9 @@ def test_open_stream(tmp_path):
         def read(self, size=-1):
             return self._fd.read(size)
 
-    with file_path.open("rb") as fd, asdf.open(StreamWrapper(fd)) as af:
-        assert af["foo"] == "bar"
+    with pytest.deprecated_call():
+        with file_path.open("rb") as fd, asdf.open(StreamWrapper(fd)) as af:
+            assert af["foo"] == "bar"
 
 
 def test_atomic_write(tmp_path, small_tree):
