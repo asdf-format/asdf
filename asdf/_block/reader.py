@@ -278,4 +278,7 @@ def read_blocks(
         return _read_blocks_serially(fd, memmap, lazy_load, after_magic)
 
     # skip magic for each block
-    return [ReadBlock(offset + magic_len, fd, memmap, lazy_load, validate_checksums) for offset in block_index]
+    return [
+        ReadBlock(offset + magic_len if offset is not None else None, fd, memmap, lazy_load, validate_checksums)
+        for offset in block_index
+    ]
