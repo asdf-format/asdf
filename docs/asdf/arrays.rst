@@ -15,24 +15,43 @@ floating-point numbers (using `numpy.random.rand`).  Note that the resulting
 YAML output contains information about the structure (size and data type) of
 the array, but the actual array content is in a binary block.
 
-.. runcode::
+.. code:: python
 
-   from asdf import AsdfFile
-   import numpy as np
+   >>> from asdf import AsdfFile
+   >>> import numpy as np
 
-   tree = {'my_array': np.random.rand(8, 8)}
-   ff = AsdfFile(tree)
-   ff.write_to("array.asdf")
+   >>> tree = {'my_array': np.random.rand(8, 8)}
+   >>> ff = AsdfFile(tree)
+   >>> ff.write_to("array.asdf")
 
 .. note::
 
    In the file examples below, the first YAML part appears as it
-   appears in the file.  The ``BLOCK`` sections are stored as binary
-   data in the file, but are presented in human-readable form on this
-   page.
+   appears in the file.  Binary blocks are not shown as they are not
+   human-readable.
 
+.. code:: yaml
 
-.. asdf:: array.asdf
+   #ASDF 1.0.0
+   #ASDF_STANDARD 1.6.0
+   %YAML 1.1
+   %TAG ! tag:stsci.edu:asdf/
+   --- !core/asdf-1.1.0
+   asdf_library: !core/software-1.0.0 {author: The ASDF Developers, homepage: 'http://github.com/asdf-format/asdf',
+     name: asdf, version: 5.3.0}
+   history:
+     extensions:
+     - !core/extension_metadata-1.0.0
+       extension_class: asdf.extension._manifest.ManifestExtension
+       extension_uri: asdf://asdf-format.org/core/extensions/core-1.6.0
+       manifest_software: !core/software-1.0.0 {name: asdf_standard, version: 1.5.0}
+       software: !core/software-1.0.0 {name: asdf, version: 5.3.0}
+   my_array: !core/ndarray-1.1.0
+     source: 0
+     datatype: float64
+     byteorder: little
+     shape: [8, 8]
+   ...
 
 See :ref:`overview_reading` for a description of how to open this file.
 
@@ -45,19 +64,19 @@ data in the file.  In this example an array and a subview on that same
 array are saved to the same file, resulting in only a single block of
 data being saved.
 
-.. runcode::
+.. code:: python
 
-   from asdf import AsdfFile
-   import numpy as np
+   >>> from asdf import AsdfFile
+   >>> import numpy as np
 
-   my_array = np.random.rand(8, 8)
-   subset = my_array[2:4,3:6]
-   tree = {
-       'my_array': my_array,
-       'subset':   subset
-   }
-   ff = AsdfFile(tree)
-   ff.write_to("array_with_subset.asdf")
+   >>> my_array = np.random.rand(8, 8)
+   >>> subset = my_array[2:4,3:6]
+   >>> tree = {
+   ...     'my_array': my_array,
+   ...     'subset':   subset
+   ... }
+   >>> ff = AsdfFile(tree)
+   >>> ff.write_to("array_with_subset.asdf")
 
 For circumstances where this is undesirable (such as saving
 a small view of a large array) this can be disabled by setting
@@ -65,7 +84,35 @@ a small view of a large array) this can be disabled by setting
 or `asdf.AsdfFile.set_array_save_base` to control the behavior for
 a specific array.
 
-.. asdf:: array_with_subset.asdf
+.. code:: yaml
+
+   #ASDF 1.0.0
+   #ASDF_STANDARD 1.6.0
+   %YAML 1.1
+   %TAG ! tag:stsci.edu:asdf/
+   --- !core/asdf-1.1.0
+   asdf_library: !core/software-1.0.0 {author: The ASDF Developers, homepage: 'http://github.com/asdf-format/asdf',
+     name: asdf, version: 5.3.0}
+   history:
+     extensions:
+     - !core/extension_metadata-1.0.0
+       extension_class: asdf.extension._manifest.ManifestExtension
+       extension_uri: asdf://asdf-format.org/core/extensions/core-1.6.0
+       manifest_software: !core/software-1.0.0 {name: asdf_standard, version: 1.5.0}
+       software: !core/software-1.0.0 {name: asdf, version: 5.3.0}
+   my_array: !core/ndarray-1.1.0
+     source: 0
+     datatype: float64
+     byteorder: little
+     shape: [8, 8]
+   subset: !core/ndarray-1.1.0
+     source: 0
+     datatype: float64
+     byteorder: little
+     shape: [2, 3]
+     offset: 152
+     strides: [64, 8]
+   ...
 
 Saving inline arrays
 ====================
@@ -84,18 +131,54 @@ storage type of the associated data. The allowed values are ``internal``,
 
 - ``inline``: Store the data as YAML inline in the tree.
 
-.. runcode::
+.. code:: python
 
-   from asdf import AsdfFile
-   import numpy as np
+   >>> from asdf import AsdfFile
+   >>> import numpy as np
 
-   my_array = np.random.rand(8, 8)
-   tree = {'my_array': my_array}
-   ff = AsdfFile(tree)
-   ff.set_array_storage(my_array, 'inline')
-   ff.write_to("inline_array.asdf")
+   >>> my_array = np.random.rand(8, 8)
+   >>> tree = {'my_array': my_array}
+   >>> ff = AsdfFile(tree)
+   >>> ff.set_array_storage(my_array, 'inline')
+   >>> ff.write_to("inline_array.asdf")
 
-.. asdf:: inline_array.asdf
+.. code:: yaml
+
+   #ASDF 1.0.0
+   #ASDF_STANDARD 1.6.0
+   %YAML 1.1
+   %TAG ! tag:stsci.edu:asdf/
+   --- !core/asdf-1.1.0
+   asdf_library: !core/software-1.0.0 {author: The ASDF Developers, homepage: 'http://github.com/asdf-format/asdf',
+     name: asdf, version: 5.3.0}
+   history:
+     extensions:
+     - !core/extension_metadata-1.0.0
+       extension_class: asdf.extension._manifest.ManifestExtension
+       extension_uri: asdf://asdf-format.org/core/extensions/core-1.6.0
+       manifest_software: !core/software-1.0.0 {name: asdf_standard, version: 1.5.0}
+       software: !core/software-1.0.0 {name: asdf, version: 5.3.0}
+   my_array: !core/ndarray-1.1.0
+     data:
+     - [0.37364029001505683, 0.32162730726994515, 0.5174687024953414, 0.6819358522124768,
+       0.31545084462136797, 0.45336717886535716, 0.8766200166261489, 0.5351125807423055]
+     - [0.21313738755058198, 0.08678080629794094, 0.262603440816942, 0.08050589478748083,
+       0.137419316524092, 0.57123203453451, 0.40074196097349324, 0.849757947165214]
+     - [0.23667849260250273, 0.024930741318300198, 0.9758526963943653, 0.03298431078548114,
+       0.31662774377786995, 0.68377308750848, 0.790290072359762, 0.5050720750955217]
+     - [0.7378502143845163, 0.8893229877547028, 0.5351249751905818, 0.0022624182357939837,
+       0.7506228371871324, 0.9551597691023826, 0.1693896122914036, 0.8246100314570424]
+     - [0.647505181978522, 0.33308226013000286, 0.8135005179839472, 0.8404212344059925,
+       0.1562139195022587, 0.13503673673258954, 0.5874265747778596, 0.8032211348819358]
+     - [0.42912361221963025, 0.12376484161537937, 0.650502918744316, 0.4687943836977091,
+       0.38574705081654814, 0.195267928717743, 0.16493413972136817, 0.6627050583885223]
+     - [0.4327563083511644, 0.7236790063915097, 0.22216584584793642, 0.10166807219644336,
+       0.33464193496267347, 0.6941406199202252, 0.6329950377636102, 0.07729054807086944]
+     - [0.12793926460863403, 0.9588116248796417, 0.2001139992410388, 0.48143125131473163,
+       0.47964972042078724, 0.12156604005269112, 0.23365466431734938, 0.7703204892145835]
+     datatype: float64
+     shape: [8, 8]
+   ...
 
 Alternatively, it is possible to use the ``all_array_storage`` parameter of
 `AsdfFile.write_to` and `AsdfFile.update` to control the storage
@@ -139,25 +222,44 @@ Exploded form is useful in the following scenarios:
 To save a block in an external file, set its block type to
 ``'external'``.
 
-.. runcode::
+.. code:: python
 
-   from asdf import AsdfFile
-   import numpy as np
+   >>> from asdf import AsdfFile
+   >>> import numpy as np
 
-   my_array = np.random.rand(8, 8)
-   tree = {'my_array': my_array}
-   ff = AsdfFile(tree)
+   >>> my_array = np.random.rand(8, 8)
+   >>> tree = {'my_array': my_array}
+   >>> ff = AsdfFile(tree)
 
-   # On an individual block basis:
-   ff.set_array_storage(my_array, 'external')
-   ff.write_to("external.asdf")
+   >>> # On an individual block basis:
+   >>> ff.set_array_storage(my_array, 'external')
+   >>> ff.write_to("external.asdf")
 
-   # Or for every block:
-   ff.write_to("external.asdf", all_array_storage='external')
+   >>> # Or for every block:
+   >>> ff.write_to("external.asdf", all_array_storage='external')
 
-.. asdf:: external.asdf
+.. code:: yaml
 
-.. asdf:: external0000.asdf
+   #ASDF 1.0.0
+   #ASDF_STANDARD 1.6.0
+   %YAML 1.1
+   %TAG ! tag:stsci.edu:asdf/
+   --- !core/asdf-1.1.0
+   asdf_library: !core/software-1.0.0 {author: The ASDF Developers, homepage: 'http://github.com/asdf-format/asdf',
+     name: asdf, version: 5.3.0}
+   history:
+     extensions:
+     - !core/extension_metadata-1.0.0
+       extension_class: asdf.extension._manifest.ManifestExtension
+       extension_uri: asdf://asdf-format.org/core/extensions/core-1.6.0
+       manifest_software: !core/software-1.0.0 {name: asdf_standard, version: 1.5.0}
+       software: !core/software-1.0.0 {name: asdf, version: 5.3.0}
+   my_array: !core/ndarray-1.1.0
+     source: external0000.asdf
+     datatype: float64
+     byteorder: little
+     shape: [8, 8]
+   ...
 
 Streaming array data
 ====================
@@ -177,27 +279,48 @@ of the streamed data, but will not write out the actual content.  The
 file handle's ``write`` method is then used to manually write out the
 binary data.
 
-.. runcode::
+.. code:: python
 
-   from asdf import AsdfFile
-   from asdf.tags.core import Stream
-   import numpy as np
+   >>> from asdf import AsdfFile
+   >>> from asdf.tags.core import Stream
+   >>> import numpy as np
 
-   tree = {
-       # Each "row" of data will have 128 entries.
-       'my_stream': Stream([128], np.float64)
-   }
+   >>> tree = {
+   ...     # Each "row" of data will have 128 entries.
+   ...     'my_stream': Stream([128], np.float64)
+   ... }
 
-   ff = AsdfFile(tree)
-   with open('stream.asdf', 'wb') as fd:
-       ff.write_to(fd)
-       # Write 100 rows of data, one row at a time.  ``write``
-       # expects the raw binary bytes, not an array, so we use
-       # ``tobytes()``.
-       for i in range(100):
-           fd.write(np.array([i] * 128, np.float64).tobytes())
+   >>> ff = AsdfFile(tree)
+   >>> with open('stream.asdf', 'wb') as fd:  # doctest: +SKIP
+   ...     ff.write_to(fd)
+   ...     # Write 100 rows of data, one row at a time.  ``write``
+   ...     # expects the raw binary bytes, not an array, so we use
+   ...     # ``tobytes()``.
+   ...     for i in range(100):
+   ...         fd.write(np.array([i] * 128, np.float64).tobytes())
 
-.. asdf:: stream.asdf
+.. code:: yaml
+
+   #ASDF 1.0.0
+   #ASDF_STANDARD 1.6.0
+   %YAML 1.1
+   %TAG ! tag:stsci.edu:asdf/
+   --- !core/asdf-1.1.0
+   asdf_library: !core/software-1.0.0 {author: The ASDF Developers, homepage: 'http://github.com/asdf-format/asdf',
+     name: asdf, version: 5.3.0}
+   history:
+     extensions:
+     - !core/extension_metadata-1.0.0
+       extension_class: asdf.extension._manifest.ManifestExtension
+       extension_uri: asdf://asdf-format.org/core/extensions/core-1.6.0
+       manifest_software: !core/software-1.0.0 {name: asdf_standard, version: 1.5.0}
+       software: !core/software-1.0.0 {name: asdf, version: 5.3.0}
+   my_stream: !core/ndarray-1.1.0
+     source: -1
+     datatype: float64
+     byteorder: little
+     shape: ['*', 128]
+   ...
 
 When reading a file with a streamed block the streamed block will
 be treated as a normal non-streamed block. It may be useful to enable
@@ -257,21 +380,47 @@ are included in every asdf install. Passing one of these 4 character
 codes as ``all_array_compression`` to `asdf.AsdfFile.write_to` will
 compress all blocks with the corresponding algorithm:
 
-.. runcode::
+.. code:: python
 
-   from asdf import AsdfFile
-   import numpy as np
+   >>> from asdf import AsdfFile
+   >>> import numpy as np
 
-   tree = {
-       'a': np.random.rand(32, 32),
-       'b': np.random.rand(64, 64)
-   }
+   >>> tree = {
+   ...     'a': np.random.rand(32, 32),
+   ...     'b': np.random.rand(64, 64)
+   ... }
 
-   target = AsdfFile(tree)
-   target.write_to('target.asdf', all_array_compression='zlib')
-   target.write_to('target.asdf', all_array_compression='bzp2')
+   >>> target = AsdfFile(tree)
+   >>> target.write_to('target.asdf', all_array_compression='zlib')
+   >>> target.write_to('target.asdf', all_array_compression='bzp2')
 
-.. asdf:: target.asdf
+.. code:: yaml
+
+   #ASDF 1.0.0
+   #ASDF_STANDARD 1.6.0
+   %YAML 1.1
+   %TAG ! tag:stsci.edu:asdf/
+   --- !core/asdf-1.1.0
+   asdf_library: !core/software-1.0.0 {author: The ASDF Developers, homepage: 'http://github.com/asdf-format/asdf',
+     name: asdf, version: 5.3.0}
+   history:
+     extensions:
+     - !core/extension_metadata-1.0.0
+       extension_class: asdf.extension._manifest.ManifestExtension
+       extension_uri: asdf://asdf-format.org/core/extensions/core-1.6.0
+       manifest_software: !core/software-1.0.0 {name: asdf_standard, version: 1.5.0}
+       software: !core/software-1.0.0 {name: asdf, version: 5.3.0}
+   a: !core/ndarray-1.1.0
+     source: 0
+     datatype: float64
+     byteorder: little
+     shape: [32, 32]
+   b: !core/ndarray-1.1.0
+     source: 1
+     datatype: float64
+     byteorder: little
+     shape: [64, 64]
+   ...
 
 The `lz4 <https://en.wikipedia.org/wiki/LZ_4>`__ compression algorithm is also
 supported, but requires the optional
