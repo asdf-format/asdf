@@ -250,21 +250,46 @@ of `asdf` can largely ignore that.
 
 First, we'll create a ASDF file with a couple of arrays in it:
 
-.. runcode::
+.. code:: python
 
-   import asdf
-   from asdf import AsdfFile
-   import numpy as np
+   >>> from asdf import AsdfFile
+   >>> import numpy as np
 
-   tree = {
-       'a': np.arange(0, 10),
-       'b': np.arange(10, 20)
-   }
+   >>> tree = {
+   ...     'a': np.arange(0, 10),
+   ...     'b': np.arange(10, 20)
+   ... }
 
-   target = AsdfFile(tree)
-   target.write_to('target.asdf')
+   >>> target = AsdfFile(tree)
+   >>> target.write_to("target.asdf")
 
-.. asdf:: target.asdf
+.. code:: yaml
+
+   #ASDF 1.0.0
+   #ASDF_STANDARD 1.6.0
+   %YAML 1.1
+   %TAG ! tag:stsci.edu:asdf/
+   --- !core/asdf-1.1.0
+   asdf_library: !core/software-1.0.0 {author: The ASDF Developers, homepage: 'http://github.com/asdf-format/asdf',
+     name: asdf, version: 5.3.0}
+   history:
+     extensions:
+     - !core/extension_metadata-1.0.0
+       extension_class: asdf.extension._manifest.ManifestExtension
+       extension_uri: asdf://asdf-format.org/core/extensions/core-1.6.0
+       manifest_software: !core/software-1.0.0 {name: asdf_standard, version: 1.5.0}
+       software: !core/software-1.0.0 {name: asdf, version: 5.3.0}
+   a: !core/ndarray-1.1.0
+     source: 0
+     datatype: int64
+     byteorder: little
+     shape: [10]
+   b: !core/ndarray-1.1.0
+     source: 1
+     datatype: int64
+     byteorder: little
+     shape: [10]
+   ...
 
 Then we will reference those arrays in a couple of different ways.
 First, we'll load the source file in Python and use the
@@ -273,42 +298,88 @@ Second, we'll work at the lower level by manually writing a JSON
 Pointer to array ``b``, which doesn't require loading or having access
 to the target file.
 
-.. runcode::
+.. code:: python
 
-   ff = AsdfFile()
+   >>> import asdf
+   >>> from asdf import AsdfFile
+   >>> ff = AsdfFile()
 
-   with asdf.open('target.asdf') as target:
-       ff.tree['my_ref_a'] = target.make_reference(['a'])
+   >>> with asdf.open('target.asdf') as target:
+   ...     ff.tree['my_ref_a'] = target.make_reference(['a'])
 
-   ff.tree['my_ref_b'] = {'$ref': 'target.asdf#b'}
+   >>> ff.tree['my_ref_b'] = {'$ref': 'target.asdf#b'}
+   >>> ff.write_to("source.asdf")
 
-   ff.write_to('source.asdf')
+.. code:: yaml
 
-.. asdf:: source.asdf
+   #ASDF 1.0.0
+   #ASDF_STANDARD 1.6.0
+   %YAML 1.1
+   %TAG ! tag:stsci.edu:asdf/
+   --- !core/asdf-1.1.0
+   asdf_library: !core/software-1.0.0 {author: The ASDF Developers, homepage: 'http://github.com/asdf-format/asdf',
+     name: asdf, version: 5.3.0}
+   history:
+     extensions:
+     - !core/extension_metadata-1.0.0
+       extension_class: asdf.extension._manifest.ManifestExtension
+       extension_uri: asdf://asdf-format.org/core/extensions/core-1.6.0
+       manifest_software: !core/software-1.0.0 {name: asdf_standard, version: 1.5.0}
+       software: !core/software-1.0.0 {name: asdf, version: 5.3.0}
+   my_ref_a: {$ref: target.asdf#a}
+   my_ref_b: {$ref: target.asdf#b}
+   ...
 
 Calling `~asdf.AsdfFile.find_references` will look up all of the
 references so they can be used as if they were local to the tree.  It
 doesn't actually move any of the data, and keeps the references as
 references.
 
-.. runcode::
+.. code:: python
 
-   with asdf.open('source.asdf') as ff:
-       ff.find_references()
-       assert ff.tree['my_ref_b'].shape == (10,)
+   >>> import asdf
+   >>> with asdf.open('source.asdf') as ff:
+   ...    ff.find_references()
+   ...    assert ff.tree['my_ref_b'].shape == (10,)
 
 On the other hand, calling `~asdf.AsdfFile.resolve_references`
 places all of the referenced content directly in the tree, so when we
 write it out again, all of the external references are gone, with the
 literal content in its place.
 
-.. runcode::
+.. code:: python
 
-   with asdf.open('source.asdf') as ff:
-       ff.resolve_references()
-       ff.write_to('resolved.asdf')
+   >>> import asdf
+   >>> with asdf.open('source.asdf') as ff:
+   ...    ff.resolve_references()
 
-.. asdf:: resolved.asdf
+.. code:: yaml
+
+   #ASDF 1.0.0
+   #ASDF_STANDARD 1.6.0
+   %YAML 1.1
+   %TAG ! tag:stsci.edu:asdf/
+   --- !core/asdf-1.1.0
+   asdf_library: !core/software-1.0.0 {author: The ASDF Developers, homepage: 'http://github.com/asdf-format/asdf',
+     name: asdf, version: 5.3.0}
+   history:
+     extensions:
+     - !core/extension_metadata-1.0.0
+       extension_class: asdf.extension._manifest.ManifestExtension
+       extension_uri: asdf://asdf-format.org/core/extensions/core-1.6.0
+       manifest_software: !core/software-1.0.0 {name: asdf_standard, version: 1.5.0}
+       software: !core/software-1.0.0 {name: asdf, version: 5.3.0}
+   my_ref_a: !core/ndarray-1.1.0
+     source: 0
+     datatype: int64
+     byteorder: little
+     shape: [10]
+   my_ref_b: !core/ndarray-1.1.0
+     source: 1
+     datatype: int64
+     byteorder: little
+     shape: [10]
+   ...
 
 A similar feature provided by YAML, anchors and aliases, also provides
 a way to support references within the same file.  These are supported
@@ -323,16 +394,35 @@ Anchors and aliases are handled automatically by `asdf` when the
 data structure is recursive.  For example here is a dictionary that is
 included twice in the same tree:
 
-.. runcode::
+.. code:: python
 
-    d = {'foo': 'bar'}
-    d['baz'] = d
-    tree = {'d': d}
+   >>> from asdf import AsdfFile
+   >>> d = {'foo': 'bar'}
+   >>> d['baz'] = d
+   >>> tree = {'d': d}
 
-    ff = AsdfFile(tree)
-    ff.write_to('anchors.asdf')
+   >>> ff = AsdfFile(tree)
 
-.. asdf:: anchors.asdf
+.. code:: yaml
+
+   #ASDF 1.0.0
+   #ASDF_STANDARD 1.6.0
+   %YAML 1.1
+   %TAG ! tag:stsci.edu:asdf/
+   --- !core/asdf-1.1.0
+   asdf_library: !core/software-1.0.0 {author: The ASDF Developers, homepage: 'http://github.com/asdf-format/asdf',
+     name: asdf, version: 5.3.0}
+   history:
+     extensions:
+     - !core/extension_metadata-1.0.0
+       extension_class: asdf.extension._manifest.ManifestExtension
+       extension_uri: asdf://asdf-format.org/core/extensions/core-1.6.0
+       manifest_software: !core/software-1.0.0 {name: asdf_standard, version: 1.5.0}
+       software: !core/software-1.0.0 {name: asdf, version: 5.3.0}
+   d: &id001
+     baz: *id001
+     foo: bar
+   ...
 
 .. _array-references:
 
@@ -371,19 +461,39 @@ As an example, we will create a reference to an external CSV file. We will
 assume that one of the rows of the CSV file contains the array data we care
 about:
 
-.. runcode::
+.. code::
 
-    import asdf
+   >>> import asdf
 
-    csv_data_row = 10 # The row of the CSV file containing the data we want
-    csv_row_size = 100 # The size of the array
-    extref = asdf.ExternalArrayReference('data.csv', csv_data_row, "int64", (csv_row_size,))
+   >>> csv_data_row = 10 # The row of the CSV file containing the data we want
+   >>> csv_row_size = 100 # The size of the array
+   >>> extref = asdf.ExternalArrayReference('data.csv', csv_data_row, "int64", (csv_row_size,))
 
-    tree = {'csv_data': extref}
-    af = asdf.AsdfFile(tree)
-    af.write_to('external_array.asdf')
+   >>> tree = {'csv_data': extref}
+   >>> af = asdf.AsdfFile(tree)
 
-.. asdf:: external_array.asdf
+.. code:: yaml
+
+   #ASDF 1.0.0
+   #ASDF_STANDARD 1.6.0
+   %YAML 1.1
+   %TAG ! tag:stsci.edu:asdf/
+   --- !core/asdf-1.1.0
+   asdf_library: !core/software-1.0.0 {author: The ASDF Developers, homepage: 'http://github.com/asdf-format/asdf',
+     name: asdf, version: 5.3.0}
+   history:
+     extensions:
+     - !core/extension_metadata-1.0.0
+       extension_class: asdf.extension._manifest.ManifestExtension
+       extension_uri: asdf://asdf-format.org/core/extensions/core-1.6.0
+       manifest_software: !core/software-1.0.0 {name: asdf_standard, version: 1.5.0}
+       software: !core/software-1.0.0 {name: asdf, version: 5.3.0}
+   csv_data: !core/externalarray-1.0.0
+     datatype: int64
+     fileuri: data.csv
+     shape: [100]
+     target: 10
+   ...
 
 When reading a file containing external references, the user is responsible for
 using the information in the `ExternalArrayReference` type to open the external
@@ -399,25 +509,51 @@ Given a `~asdf.AsdfFile` object, call `~asdf.AsdfFile.add_history_entry`, given
 a description of the change and optionally a description of the software (i.e.
 your software, not `asdf`) that performed the operation.
 
-.. runcode::
+.. code:: python
 
-   from asdf import AsdfFile
-   import numpy as np
+   >>> from asdf import AsdfFile
+   >>> import numpy as np
 
-   tree = {
-       'a': np.random.rand(32, 32)
-   }
+   >>> tree = {
+   ...    'a': np.random.rand(32, 32)
+   ... }
 
-   ff = AsdfFile(tree)
-   ff.add_history_entry(
-       "Initial random numbers",
-       {'name': 'asdf examples',
-        'author': 'John Q. Public',
-        'homepage': 'http://github.com/asdf-format/asdf',
-        'version': '0.1'})
-   ff.write_to('example.asdf')
+   >>> ff = AsdfFile(tree)
+   >>> ff.add_history_entry(
+   ...    "Initial random numbers",
+   ...    {'name': 'asdf examples',
+   ...     'author': 'John Q. Public',
+   ...     'homepage': 'http://github.com/asdf-format/asdf',
+   ...     'version': '0.1'})
 
-.. asdf:: example.asdf
+.. code:: yaml
+
+   #ASDF 1.0.0
+   #ASDF_STANDARD 1.6.0
+   %YAML 1.1
+   %TAG ! tag:stsci.edu:asdf/
+   --- !core/asdf-1.1.0
+   asdf_library: !core/software-1.0.0 {author: The ASDF Developers, homepage: 'http://github.com/asdf-format/asdf',
+     name: asdf, version: 5.3.0}
+   history:
+     entries:
+     - !core/history_entry-1.0.0
+       description: Initial random numbers
+       software: !core/software-1.0.0 {author: John Q. Public, homepage: 'http://github.com/asdf-format/asdf',
+         name: asdf examples, version: '0.1'}
+       time: 2026-06-01 16:19:08+00:00
+     extensions:
+     - !core/extension_metadata-1.0.0
+       extension_class: asdf.extension._manifest.ManifestExtension
+       extension_uri: asdf://asdf-format.org/core/extensions/core-1.6.0
+       manifest_software: !core/software-1.0.0 {name: asdf_standard, version: 1.5.0}
+       software: !core/software-1.0.0 {name: asdf, version: 5.3.0}
+   a: !core/ndarray-1.1.0
+     source: 0
+     datatype: float64
+     byteorder: little
+     shape: [32, 32]
+   ...
 
 `asdf` automatically saves history metadata about the extensions that were used
 to create the file. This information is used when opening files to determine if
