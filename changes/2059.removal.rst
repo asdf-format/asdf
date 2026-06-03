@@ -1,0 +1,2 @@
+Deprecated support for duck-typed files that aren't instances of ``IOBase``.
+Deprecated reading from non-seekable files.
