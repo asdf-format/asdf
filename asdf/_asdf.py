@@ -1099,6 +1099,7 @@ class AsdfFile:
         schema.validate(
             yamlutil.custom_tree_to_tagged_tree({"entry": entry}, self),
             ctx=self,
+            schema={},
         )
 
         if self.version >= versioning.NEW_HISTORY_FORMAT_MIN_VERSION:

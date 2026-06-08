@@ -293,3 +293,18 @@ def test_history_validate():
     with pytest.raises(ValidationError):
         af.add_history_entry(1)
     assert len(af.get_history_entries()) == 1
+
+
+def test_history_ignores_custom_schema(tmp_path):
+    """
+    Test that add_history_entry doesn't use any provided custom schema.
+    """
+    fn = tmp_path / "custom.yaml"
+    with open(fn, "w") as f:
+        f.write("required: ['foo']")
+    af = asdf.AsdfFile(version="1.6.0", custom_schema=fn)
+    with pytest.raises(ValidationError):
+        af.validate()
+
+    af.add_history_entry("test")
+    assert af.get_history_entries()[0]["description"] == "test"

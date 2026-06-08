@@ -156,6 +156,10 @@ target-version = "py310"
 line-length = 120
 extend-exclude = ["asdf/_extern/*", "asdf/_jsonschema/*", "docs/*"]
 
+[tool.ruff.format]
+docstring-code-format = true
+docstring-code-line-length = 88
+
 [tool.ruff.lint]
 select = [
   # minimal set to match pre-ruff behavior
@@ -204,3 +208,9 @@ issue_format = "`#{issue} <https://github.com/asdf-format/asdf/pull/{issue}>`_"
 [tool.towncrier.fragment.removal]
 
 [tool.towncrier.fragment.general]
+
+# Disable automatic table sorting for pyproject.toml
+[[tool.tombi.schemas]]
+path = "tombi://www.schemastore.org/pyproject.json"
+include = ["pyproject.toml"]
+format.rules.table-keys-order.enabled = false

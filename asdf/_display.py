@@ -40,7 +40,7 @@ def render_table(
     inner_width = key_width + val_width + 1
 
     # Format each row with key left-aligned and value centered
-    content = [f"┃ {key:<{key_width-2}} │ {value:^{val_width-2}} ┃" for key, value in rows]
+    content = [f"┃ {key:<{key_width - 2}} │ {value:^{val_width - 2}} ┃" for key, value in rows]
     return [
         "┏" + "━" * inner_width + "┓",
         f"┃{title:^{inner_width}s}┃",  # Centered table title
