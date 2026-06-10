@@ -1,0 +1,1 @@
+Change block index parsing to only check the first block header. This improves IO performance (especially for remote files) by removing several file seeks and reads.
