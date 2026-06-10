@@ -140,31 +140,25 @@ def test_invalid_block_index(invalid_type):
         # trash the block index
         offset = bio.find_block_index(fd)
         assert offset is not None
-        match invalid_type:
-            case "junk":
-                # trash the whole index
-                fd.seek(-4, 2)
-                fd.write(b"junk")
-            case "first":
-                # mess up the first entry of the index
-                block_index = bio.read_block_index(fd, offset)
-                block_index[0] += 4
-                fd.seek(offset)
-                bio.write_block_index(fd, block_index)
-            case "empty":
-                # write out an empty index
-                fd.seek(offset)
-                bio.write_block_index(fd, [])
+        if invalid_type == "junk":
+            # trash the whole index
+            fd.seek(-4, 2)
+            fd.write(b"junk")
+            ctx = pytest.warns(AsdfBlockIndexWarning, match="Failed to read block index")
+        elif invalid_type == "first":
+            # mess up the first entry of the index
+            block_index = bio.read_block_index(fd, offset)
+            block_index[0] += 4
+            fd.seek(offset)
+            bio.write_block_index(fd, block_index)
+            ctx = pytest.warns(AsdfBlockIndexWarning, match="Invalid block index contents")
+        else:  # "empty"
+            # write out an empty index
+            fd.seek(offset)
+            bio.write_block_index(fd, [])
+            ctx = pytest.warns(AsdfBlockIndexWarning, match="Invalid block index contents")
         fd.truncate()
         fd.seek(0)
-
-        # when the block index is read, only the first and last blocks
-        # are check, so any other invalid entry should result in failure
-        match invalid_type:
-            case "junk":
-                ctx = pytest.warns(AsdfBlockIndexWarning, match="Failed to read block index")
-            case "first" | "empty":
-                ctx = pytest.warns(AsdfBlockIndexWarning, match="Invalid block index contents")
         with ctx:
             check(read_blocks(fd, lazy_load=True))
 

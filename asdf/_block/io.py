@@ -536,7 +536,7 @@ def find_block_index(fd: GenericFile, min_offset: int | None = None, max_offset:
     return block_index_offset
 
 
-def read_block_index(fd: GenericFile, offset: int | None = None) -> list[int | None]:
+def read_block_index(fd: GenericFile, offset: int | None = None) -> list[int]:
     """
     Read an ASDF block index from a file.
 
