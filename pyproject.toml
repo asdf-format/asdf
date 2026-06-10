@@ -72,6 +72,7 @@ exclude = ["asdf/_jsonschema/json/*"]
 
 [tool.setuptools_scm]
 version_file = "asdf/_version.py"
+version_scheme = "release-branch-semver"
 
 [tool.black]
 line-length = 120

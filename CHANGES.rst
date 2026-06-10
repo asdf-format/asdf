@@ -1,3 +1,13 @@
+5.3.1 (2026-06-08)
+==================
+
+Bugfix
+------
+
+- Fix bug where ``add_history_entry`` incorrectly used a custom schema if
+  available. (`#2044 <https://github.com/asdf-format/asdf/pull/2044>`_)
+
+
 5.3.0 (2026-04-23)
 ==================
 
