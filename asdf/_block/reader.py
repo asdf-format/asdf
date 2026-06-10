@@ -265,7 +265,7 @@ def read_blocks(
 
     # index says no blocks but we found block magic above, this so the index is wrong
     if not len(block_index):
-        msg = "Failed to read block index, falling back to serial reading"
+        msg = "Invalid block index contents, no offsets, falling back to serial reading"
         warnings.warn(msg, AsdfBlockIndexWarning)
         fd.seek(starting_offset)
         return _read_blocks_serially(fd, memmap, lazy_load, validate_checksums, after_magic)
