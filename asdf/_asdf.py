@@ -274,7 +274,10 @@ class AsdfFile:
         ):
             return
 
-        for extension in tree["history"]["extensions"]:
+        for ex in tree["history"]["extensions"]:
+            # Convert extension entries to `ExtensionMetadata` if needed
+            # Entries can be plain dictionaries if they don't have schema tags
+            extension = ExtensionMetadata(ex)
             installed = None
             for ext in self._user_extensions + self._plugin_extensions:
                 if (extension.extension_uri is not None and extension.extension_uri == ext.extension_uri) or (

@@ -1,6 +1,7 @@
 import datetime
 import fractions
 import warnings
+from io import BytesIO
 
 import pytest
 
@@ -309,3 +310,27 @@ def test_history_ignores_custom_schema(tmp_path):
 
     af.add_history_entry("test")
     assert af.get_history_entries()[0]["description"] == "test"
+
+
+def test_history_missing_schema_tag():
+    """Test that a file can be loaded and validated even if its extension list entries don't have schema tags."""
+    file = """#ASDF 1.0.0
+#ASDF_STANDARD 1.6.0
+%YAML 1.1
+%TAG ! tag:stsci.edu:asdf/
+--- !core/asdf-1.1.0
+history:
+  extensions:
+    - extension_class: "asdf.extension._manifest.ManifestExtension"
+      extension_uri: "asdf://asdf-format.org/core/extensions/core-1.6.0"
+      manifest_software:
+        name: "asdf_standard"
+        version: "1.1.1"
+      software:
+        name: "asdf"
+        version: "4.1.0"
+...
+    """
+
+    with asdf.open(BytesIO(file.encode())) as af:
+        af.validate()
