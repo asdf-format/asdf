@@ -212,7 +212,7 @@ def test_dont_load_data():
         repr(ff.tree)
 
         for block in ff._blocks.blocks:
-            assert callable(block._data)
+            assert not block.loaded
 
 
 def test_table_inline():

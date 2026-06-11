@@ -232,8 +232,21 @@ def read_blocks(
         # load all blocks serially
         return _read_blocks_serially(fd, memmap, lazy_load, validate_checksums, after_magic)
 
-    # try to find block index
+    # store starting offset
     starting_offset = fd.tell()
+    magic_len = len(constants.BLOCK_MAGIC)
+
+    # we should be at the first block, have no blocks, or have padding
+    if not after_magic:
+        # seek until the first magic is found
+        try:
+            fd.seek_until(b"(" + constants.BLOCK_MAGIC + b")", magic_len)
+        except DelimiterNotFoundError:
+            fd.seek(starting_offset)
+            return []
+    first_block_offset = fd.tell() - magic_len
+
+    # try to find block index
     index_offset = bio.find_block_index(fd, starting_offset)
     if index_offset is None:
         # if failed, load all blocks serially
@@ -249,25 +262,23 @@ def read_blocks(
         warnings.warn(msg, AsdfBlockIndexWarning)
         fd.seek(starting_offset)
         return _read_blocks_serially(fd, memmap, lazy_load, validate_checksums, after_magic)
+
+    # index says no blocks but we found block magic above, this so the index is wrong
+    if not len(block_index):
+        msg = "Invalid block index contents, no offsets, falling back to serial reading"
+        warnings.warn(msg, AsdfBlockIndexWarning)
+        fd.seek(starting_offset)
+        return _read_blocks_serially(fd, memmap, lazy_load, validate_checksums, after_magic)
+
+    # check that the offset for the first block matches
+    if block_index[0] != first_block_offset:
+        msg = "Invalid block index contents for block 0, falling back to serial reading"
+        warnings.warn(msg, AsdfBlockIndexWarning)
+        fd.seek(starting_offset)
+        return _read_blocks_serially(fd, memmap, lazy_load, after_magic)
+
     # skip magic for each block
-    magic_len = len(constants.BLOCK_MAGIC)
-    blocks = [
+    return [
         ReadBlock(offset + magic_len if offset is not None else None, fd, memmap, lazy_load, validate_checksums)
         for offset in block_index
     ]
-
-    # load first and last blocks to check if the index looks correct
-    for index in (0, -1):
-        try:
-            fd.seek(typing.cast("int", block_index[index]))
-            buff = fd.read(magic_len)
-            if buff != constants.BLOCK_MAGIC:
-                msg = "Invalid block magic"
-                raise OSError(msg)
-            blocks[index].load()
-        except (OSError, ValueError) as e:
-            msg = f"Invalid block index contents for block {index}, falling back to serial reading: {e!s}"
-            warnings.warn(msg, AsdfBlockIndexWarning)
-            fd.seek(starting_offset)
-            return _read_blocks_serially(fd, memmap, lazy_load, after_magic)
-    return blocks
