@@ -1,0 +1,1 @@
+Fixed files failing to load if their history section contains extension entries without schema tags.
