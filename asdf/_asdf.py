@@ -807,12 +807,26 @@ class AsdfFile:
             padding = util.calculate_padding(fd.tell(), pad_blocks, fd.block_size)
             fd.fast_forward(padding)
 
+    def _warn_if_asdf_library_overwritten(self) -> None:
+        # "asdf_library" is reserved for the library version information
+        # generated at write time. A round-tripped file carries the
+        # ``Software`` written by the previous write, which is expected to
+        # be replaced silently; anything else was set by the user and would
+        # otherwise be discarded without feedback (#1921).
+        if "asdf_library" in self._tree and not isinstance(self._tree["asdf_library"], Software):
+            msg = (
+                "'asdf_library' is reserved for library version information; "
+                "the value in the tree will be replaced when writing"
+            )
+            warnings.warn(msg, AsdfWarning)
+
     def _serial_write(
         self, fd: GenericFile, pad_blocks: float | bool, include_block_index: bool, write_checksums: bool
     ) -> None:
         with self._blocks.write_context(fd):
             # prep a tree for a writing
             tree = copy.copy(self._tree)
+            self._warn_if_asdf_library_overwritten()
             tree["asdf_library"] = _io.get_asdf_library_info()
             if "history" in self._tree:
                 tree["history"] = copy.deepcopy(self._tree["history"])
@@ -936,6 +950,7 @@ class AsdfFile:
                 rewrite(fd)
                 return
 
+            self._warn_if_asdf_library_overwritten()
             self._tree["asdf_library"] = _io.get_asdf_library_info()
 
             # prepare block manager for writing

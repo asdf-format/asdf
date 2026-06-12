@@ -12,7 +12,7 @@ from numpy.testing import assert_array_equal
 
 import asdf
 from asdf import config_context, get_config, treeutil, versioning
-from asdf.exceptions import AsdfPackageVersionWarning, ValidationError
+from asdf.exceptions import AsdfPackageVersionWarning, AsdfWarning, ValidationError
 from asdf.extension import ExtensionProxy
 from asdf.resource import ResourceMappingProxy
 from asdf.testing.helpers import roundtrip_object, yaml_to_asdf
@@ -554,6 +554,34 @@ def test_update_asdf_standard_version_tag_selection():
     content = buff.read()
     assert b"!core/asdf-1.1.0" in content
     assert b"!core/asdf-1.0.0" not in content
+
+
+def test_write_to_warns_when_replacing_user_set_asdf_library(tmp_path):
+    """A user-set 'asdf_library' is replaced at write time; warn instead of
+    discarding it silently (#1921)."""
+    af = asdf.AsdfFile()
+    af["asdf_library"] = 1
+    with pytest.warns(AsdfWarning, match="'asdf_library' is reserved"):
+        af.write_to(tmp_path / "test.asdf")
+
+
+def test_update_warns_when_replacing_user_set_asdf_library(tmp_path):
+    """update() replaces 'asdf_library' like write_to does (#1921)."""
+    fn = tmp_path / "test.asdf"
+    asdf.AsdfFile({"foo": "bar"}).write_to(fn)
+    with asdf.open(fn, mode="rw") as af:
+        af["asdf_library"] = {"name": "mylib"}
+        with pytest.warns(AsdfWarning, match="'asdf_library' is reserved"):
+            af.update()
+
+
+def test_round_trip_does_not_warn_for_asdf_library(tmp_path, recwarn):
+    """The 'asdf_library' read back from a file is replaced silently."""
+    fn = tmp_path / "test.asdf"
+    asdf.AsdfFile({"foo": "bar"}).write_to(fn)
+    with asdf.open(fn) as af:
+        af.write_to(tmp_path / "test2.asdf")
+    assert not any(isinstance(w.message, AsdfWarning) for w in recwarn.list)
 
 
 @pytest.mark.parametrize("valid_filename", [True, False], ids=["valid_filename", "invalid_filename"])
