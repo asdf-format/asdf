@@ -325,7 +325,7 @@ history:
       extension_uri: "asdf://asdf-format.org/core/extensions/core-1.6.0"
       manifest_software:
         name: "asdf_standard"
-        version: "1.1.1"
+        version: "1.1.0"
       software:
         name: "asdf"
         version: "4.1.0"
