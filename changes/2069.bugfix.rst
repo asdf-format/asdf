@@ -1,0 +1,1 @@
+Warn with ``AsdfWarning`` when ``write_to`` or ``update`` replaces a user-set ``asdf_library`` in the tree.
