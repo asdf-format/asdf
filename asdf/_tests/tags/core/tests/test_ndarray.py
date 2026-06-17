@@ -1129,3 +1129,20 @@ def test_lazy_load_array_class(tmp_path, lazy_load, lazy_tree, array_class):
 
     with asdf.open(file_path, lazy_load=lazy_load, lazy_tree=lazy_tree) as af:
         assert type(af["arr"]) is array_class
+
+
+@pytest.mark.parametrize(
+    "shape",
+    [
+        (0,),
+        (0, 10),
+        (10, 0),
+        (10, 0, 10),
+        (10, 0, 10, 0),
+    ],
+)
+def test_empty_inline_array_roundtrip(shape):
+    """Test that arrays with zero-length axes are round-tripped correctly"""
+    array = np.zeros(shape, dtype=np.float32)
+    f = asdf.loads(asdf.dumps({"array": array}, all_array_storage="inline"))
+    assert f["array"].shape == shape

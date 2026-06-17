@@ -1,11 +1,17 @@
+from __future__ import annotations
+
 import mmap
 import sys
+import typing
 
 import numpy as np
 from numpy import ma
 
 from asdf import util
 from asdf._jsonschema import ValidationError
+
+if typing.TYPE_CHECKING:
+    from asdf.typing import NDArray
 
 _STRUCTURED_DATATYPE_KEYS = {"name", "datatype", "byteorder", "shape"}
 
@@ -229,6 +235,18 @@ def numpy_array_to_list(array):
     return ascii_to_unicode(tolist(array))
 
 
+def inline_array_relax_empty_shape(array: NDArray, shape: None | tuple[int | str, ...]) -> NDArray:
+    if shape is None or any(isinstance(s, str) for s in shape):
+        return array
+
+    # unfortunately above lines do not trigger correct type-narrowing
+    shape = typing.cast("tuple[int, ...]", shape)
+    if array.size == 0 and np.prod(shape) == 0:
+        array = array.reshape(shape)
+
+    return array
+
+
 class NDArrayType:
     def __init__(self, source, shape, dtype, offset, strides, order, mask, data_callback=None):
         self._source = source
@@ -239,6 +257,11 @@ class NDArrayType:
         if isinstance(source, list):
             self._array = inline_data_asarray(source, dtype)
             self._array = self._apply_mask(self._array, self._mask)
+
+            # inline arrays with zero-length dimensions outside the last axis don't round-trip correctly
+            # https://github.com/asdf-format/asdf/issues/2071
+            self._array = inline_array_relax_empty_shape(self._array, shape)
+
             # single element structured arrays can have shape == ()
             # https://github.com/asdf-format/asdf/issues/1540
             if shape is not None and (
