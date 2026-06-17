@@ -1,0 +1,1 @@
+Fixed ndarrays with zero-length dimensions failing to round-trip correctly.
