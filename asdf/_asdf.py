@@ -456,7 +456,8 @@ class AsdfFile:
                         version=resource_mapping.package_version,
                     )
 
-            for i, entry in enumerate(tree["history"]["extensions"]):
+            for i, ex in enumerate(tree["history"]["extensions"]):
+                entry = ExtensionMetadata(ex)
                 # Update metadata about this extension if it already exists
                 if (
                     entry.extension_uri is not None and entry.extension_uri == extension.extension_uri

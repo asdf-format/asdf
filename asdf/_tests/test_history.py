@@ -334,3 +334,5 @@ history:
 
     with asdf.open(BytesIO(file.encode())) as af:
         af.validate()
+
+        af.write_to(BytesIO())
