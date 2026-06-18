@@ -312,8 +312,8 @@ def test_history_ignores_custom_schema(tmp_path):
     assert af.get_history_entries()[0]["description"] == "test"
 
 
-def test_history_missing_schema_tag():
-    """Test that a file can be loaded and validated even if its extension list entries don't have schema tags."""
+def test_history_extensions_missing_tags():
+    """Test that a file can be loaded and validated even if its extension list entries don't have tags."""
     file = """#ASDF 1.0.0
 #ASDF_STANDARD 1.6.0
 %YAML 1.1
