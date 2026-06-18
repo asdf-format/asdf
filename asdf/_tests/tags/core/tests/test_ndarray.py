@@ -1135,6 +1135,7 @@ def test_lazy_load_array_class(tmp_path, lazy_load, lazy_tree, array_class):
     "shape",
     [
         (0,),
+        (0, 0),
         (0, 10),
         (10, 0),
         (10, 0, 10),
