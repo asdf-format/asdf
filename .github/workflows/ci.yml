@@ -48,21 +48,7 @@ jobs:
     with:
       submodules: false
       envs: |
-        - linux: coverage
-          name: Python 3.14 coverage
-          python-version: 3.14
-        - linux: coverage
-          name: Python 3.13 coverage
-          python-version: 3.13
-        - linux: coverage
-          name: Python 3.12 coverage
-          python-version: 3.12
-        - linux: coverage
-          name: Python 3.11 coverage
-          python-version: 3.11
-        - linux: coverage
-          name: Python 3.10 coverage
-          python-version: 3.10
+        - linux: py*-coverage
       coverage: codecov
 
   jsonschema:
@@ -97,11 +83,7 @@ jobs:
     with:
       submodules: false
       envs: |
-        - linux: py310-coverage-devdeps-parallel
-        - linux: py311-coverage-devdeps-parallel
-        - linux: py312-coverage-devdeps-parallel
-        - linux: py313-coverage-devdeps-parallel
-        - linux: py314-coverage-devdeps-parallel
+        - linux: py*-coverage-devdeps-parallel
         - linux: py315-coverage-pytestdev-parallel
           python-version: 3.15
         # separate pytest so a failure here doesn't cause the whole suite to fail
