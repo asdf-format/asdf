@@ -7,9 +7,7 @@ from __future__ import annotations
 import contextlib
 import io
 import pathlib
-from typing import TYPE_CHECKING, Any, TypeVar
-
-from asdf.versioning import AsdfVersion
+from typing import TYPE_CHECKING, Any, overload
 
 from . import _version, constants, generic_io, versioning, yamlutil
 from ._block.manager import Manager as BlockManager
@@ -22,6 +20,7 @@ if TYPE_CHECKING:
     from asdf.generic_io import GenericFile
     from asdf.tagged import TaggedDict
     from asdf.typing import FileLike, FileMode, TreeKey
+    from asdf.versioning import AsdfVersion
 
 
 def get_asdf_library_info() -> Software:
@@ -96,11 +95,14 @@ def read_comment_section(fd: GenericFile) -> list[bytes]:
     return comments
 
 
-# Required for type narrowing in `find_asdf_version_in_comments``
-_MaybeVer = TypeVar("_MaybeVer", AsdfVersion, None)
+# Overloads provide type narrowing so `AsdfVersion` is always returned if `default` isn't `None`
+@overload
+def find_asdf_version_in_comments(comments: list[bytes], default: AsdfVersion) -> AsdfVersion: ...
+@overload
+def find_asdf_version_in_comments(comments: list[bytes], default: None = ...) -> AsdfVersion | None: ...
 
 
-def find_asdf_version_in_comments(comments: list[bytes], default: _MaybeVer = None) -> _MaybeVer:
+def find_asdf_version_in_comments(comments: list[bytes], default: AsdfVersion | None = None) -> AsdfVersion | None:
     for comment in comments:
         parts = comment.split()
         if len(parts) == 2 and parts[0] == constants.ASDF_STANDARD_COMMENT:
