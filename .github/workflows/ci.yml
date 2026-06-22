@@ -44,7 +44,6 @@ jobs:
     - run: pip install -e ".[all,tests,typing]"
     - run: pyrefly check --output-format=github
   core:
-    needs: [pre-commit]
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v2
     with:
       submodules: false
@@ -76,7 +75,6 @@ jobs:
           python-version: 3.12
 
   asdf-schemas:
-    needs: [core]
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v2
     with:
       submodules: false
@@ -87,7 +85,6 @@ jobs:
           python-version: 3.12
 
   test:
-    needs: [core]
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v2
     with:
       submodules: false
@@ -96,7 +93,6 @@ jobs:
         - windows: py311-parallel
 
   dev:
-    needs: [core]
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v2
     with:
       submodules: false
@@ -113,7 +109,6 @@ jobs:
       coverage: codecov
 
   oldest:
-    needs: [core]
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v2
     with:
       submodules: false
@@ -121,7 +116,6 @@ jobs:
         - linux: py310-oldestdeps-parallel
 
   compatibility:
-    needs: [core]
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v2
     with:
       submodules: false
@@ -130,7 +124,6 @@ jobs:
           python-version: 3.11
 
   mocks3:
-    needs: [core]
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v2
     with:
       submodules: false
