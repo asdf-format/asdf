@@ -103,7 +103,7 @@ jobs:
         - linux: py313-coverage-devdeps-parallel
         - linux: py314-coverage-devdeps-parallel
         - linux: py315-coverage-pytestdev-parallel
-          python-version: 3.15-dev
+          python-version: 3.15
         # separate pytest so a failure here doesn't cause the whole suite to fail
         - linux: py314-coverage-pytestdev-parallel
       coverage: codecov
