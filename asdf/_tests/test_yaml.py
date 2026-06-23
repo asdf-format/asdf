@@ -2,6 +2,7 @@ import contextlib
 import io
 import re
 from collections import OrderedDict
+from typing import Any
 
 import numpy as np
 import pytest
@@ -183,7 +184,7 @@ def test_yaml_internal_reference(tmp_path):
     as well as recursive data structures.
     """
 
-    d = {
+    d: dict[str, Any] = {
         "foo": "2",
     }
     d["bar"] = d
