@@ -2,6 +2,7 @@ import collections
 import copy
 import gc
 import weakref
+from typing import Any
 
 import numpy as np
 import pytest
@@ -421,7 +422,7 @@ def test_lazy_copy(tmp_path):
     """
     fn = tmp_path / "test.asdf"
     obj = asdf.tags.core.IntegerType(1)
-    tree = {"a": {"b": obj}}
+    tree: dict[str, Any] = {"a": {"b": obj}}
     # make a recursive structure
     tree["a"]["c"] = tree["a"]
 
