@@ -334,5 +334,7 @@ history:
 
     with asdf.open(BytesIO(file.encode())) as af:
         af.validate()
+        # check that extensions entries remain untagged
+        assert type(af["history"]["extensions"][0]) is dict
 
         af.write_to(BytesIO())
