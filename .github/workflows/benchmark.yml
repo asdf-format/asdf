@@ -37,7 +37,7 @@ jobs:
           python-version: "3.13"
       - name: Install dependencies
         run: pip install pytest-codspeed .[benchmark]
-      - uses: CodSpeedHQ/action@v4
+      - uses: CodSpeedHQ/action@v4.17.5
         with:
           run: pytest benchmarks/ --codspeed --codspeed-mode simulation
           mode: simulation
