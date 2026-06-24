@@ -1142,8 +1142,21 @@ def test_lazy_load_array_class(tmp_path, lazy_load, lazy_tree, array_class):
         (10, 0, 10, 0),
     ],
 )
-def test_empty_inline_array_roundtrip(shape):
+@pytest.mark.parametrize(
+    "dtype",
+    [
+        np.float32,  # Basic scalar type
+        np.dtype([("x", "f4"), ("y", "<U10")]),  # 1-D structured type
+        np.dtype([("x", "f4")]),  # structured type with a single field
+        np.dtype([("x", [("a", "f4"), ("b", "<i8")]), ("y", "<U10")]),  # Nested structured type
+        # Just in case the nested field not being first matters for some reason
+        np.dtype([("y", "<U10"), ("x", [("a", "f4"), ("b", "<i8")])]),
+    ],
+)
+def test_empty_inline_array_roundtrip(shape, dtype):
     """Test that arrays with zero-length axes are round-tripped correctly"""
-    array = np.zeros(shape, dtype=np.float32)
+    array = np.empty(shape, dtype=dtype)
     f = asdf.loads(asdf.dumps({"array": array}, all_array_storage="inline"))
-    assert f["array"].shape == shape
+    # Can't just compare the arrays because numpy doesn't like comparing empty arrays
+    assert f["array"].shape == array.shape
+    assert f["array"].dtype == array.dtype
