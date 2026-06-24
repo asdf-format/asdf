@@ -156,7 +156,7 @@ def numpy_dtype_to_asdf_datatype(dtype, include_byteorder=True, override_byteord
     raise ValueError(msg)
 
 
-def inline_data_asarray(inline, dtype=None, shape=None):
+def inline_data_asarray(inline, dtype=None):
     # np.asarray doesn't handle structured arrays unless the innermost
     # elements are tuples.  To do that, we drill down the first
     # element of each level until we find a single item that
