@@ -1,0 +1,1 @@
+Fixed structured arrays with zero-length dimensions failing to round-trip correctly when saved inline.

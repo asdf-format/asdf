@@ -168,6 +168,12 @@ def inline_data_asarray(inline, dtype=None):
     # there.
     if dtype is not None and dtype.fields is not None:
 
+        def is_empty(arr):
+            if isinstance(arr, list):
+                return all(is_empty(x) for x in arr)
+
+            return False
+
         def find_innermost_match(line, depth=0):
             if not isinstance(line, list) or not len(line):
                 msg = "data can not be converted to structured array"
@@ -179,15 +185,15 @@ def inline_data_asarray(inline, dtype=None):
             else:
                 return depth
 
-        depth = find_innermost_match(inline)
-
         def convert_to_tuples(line, data_depth, depth=0):
             if data_depth == depth:
                 return tuple(line)
 
             return [convert_to_tuples(x, data_depth, depth + 1) for x in line]
 
-        inline = convert_to_tuples(inline, depth)
+        if not is_empty(inline):
+            depth = find_innermost_match(inline)
+            inline = convert_to_tuples(inline, depth)
 
         return np.asarray(inline, dtype=dtype)
 
