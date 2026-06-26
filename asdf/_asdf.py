@@ -274,7 +274,10 @@ class AsdfFile:
         ):
             return
 
-        for extension in tree["history"]["extensions"]:
+        for ex in tree["history"]["extensions"]:
+            # Convert extension entries to `ExtensionMetadata` if needed
+            # Entries can be plain dictionaries if they don't have schema tags
+            extension = ExtensionMetadata(ex)
             installed = None
             for ext in self._user_extensions + self._plugin_extensions:
                 if (extension.extension_uri is not None and extension.extension_uri == ext.extension_uri) or (
@@ -453,7 +456,8 @@ class AsdfFile:
                         version=resource_mapping.package_version,
                     )
 
-            for i, entry in enumerate(tree["history"]["extensions"]):
+            for i, ex in enumerate(tree["history"]["extensions"]):
+                entry = ExtensionMetadata(ex)
                 # Update metadata about this extension if it already exists
                 if (
                     entry.extension_uri is not None and entry.extension_uri == extension.extension_uri
