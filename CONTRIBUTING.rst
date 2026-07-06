@@ -61,3 +61,8 @@ to the maintainers, who are glad to assist you.
     - ``doc``: documentation change
     - ``removal``: deprecation or removal of public API
     - ``general``: infrastructure or miscellaneous change
+
+AI Policy
+---------
+
+All contributions must conform to ASDF's `AI Policy <https://github.com/asdf-format/.github/blob/main/AI_POLICY.md>`_
