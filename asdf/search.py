@@ -44,26 +44,26 @@ class AsdfSearchResult:
 
         Parameters
         ----------
-        max_rows : int, tuple, None, or NotSet, optional
+        max_rows : int, tuple, None, or NOT_SET, optional
             Maximum number of lines to print.  Nodes that cannot be
             displayed will be elided with a message.
             If int, constrain total number of displayed lines.
             If tuple, constrain lines per node at the depth corresponding \
                 to the tuple index.
             If None, display all lines.
-            If NotSet, retain existing value.
+            If NOT_SET, retain existing value.
 
-        max_cols : int, None or NotSet, optional
+        max_cols : int, None or NOT_SET, optional
             Maximum length of line to print.  Nodes that cannot
             be fully displayed will be truncated with a message.
             If int, constrain length of displayed lines.
             If None, line length is unconstrained.
-            If NotSet, retain existing value.
+            If NOT_SET, retain existing value.
 
-        show_values : bool or NotSet, optional
+        show_values : bool or NOT_SET, optional
             Set to False to disable display of primitive values in
             the rendered tree.
-            Set to NotSet to retain existign value.
+            Set to NOT_SET to retain existign value.
 
         Returns
         -------
@@ -120,23 +120,23 @@ class AsdfSearchResult:
 
         Parameters
         ----------
-        key : NotSet, str, or any other object
+        key : NOT_SET, str, or any other object
             Search query that selects nodes by dict key or list index.
-            If NotSet, the node key is unconstrained.
+            If NOT_SET, the node key is unconstrained.
             If str, the input is searched among keys/indexes as a regular
             expression pattern.
             If any other object, node's key or index must equal the queried key.
 
-        type_ : NotSet, str, or builtins.type
+        type_ : NOT_SET, str, or builtins.type
             Search query that selects nodes by type.
-            If NotSet, the node type is unconstrained.
+            If NOT_SET, the node type is unconstrained.
             If str, the input is searched among (fully qualified) node type
             names as a regular expression pattern.
             If builtins.type, the node must be an instance of the input.
 
-        value : NotSet, str, or any other object
+        value : NOT_SET, str, or any other object
             Search query that selects nodes by value.
-            If NotSet, the node value is unconstrained.
+            If NOT_SET, the node value is unconstrained.
             If str, the input is searched among values as a regular
             expression pattern.
             If any other object, node's value must equal the queried value.
@@ -157,7 +157,7 @@ class AsdfSearchResult:
             the subsequent search result
         """
         if not (isinstance(type_, (str, typing.Pattern, builtins.type)) or type_ is NOT_SET):
-            msg = "type must be NotSet, str, regular expression, or instance of builtins.type"
+            msg = "type must be NOT_SET, str, regular expression, or instance of builtins.type"
             raise TypeError(msg)
 
         # value and key arguments can be anything, but pattern and str have special behavior
