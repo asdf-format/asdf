@@ -3,7 +3,6 @@ import importlib.util
 import math
 import re
 import struct
-import sys
 from functools import lru_cache
 from typing import Final
 
@@ -11,17 +10,6 @@ import numpy as np
 import yaml
 
 from . import constants
-
-# The standard library importlib.metadata returns duplicate entrypoints
-# for all python versions up to and including 3.11
-# https://github.com/python/importlib_metadata/issues/410#issuecomment-1304258228
-# see PR https://github.com/asdf-format/asdf/pull/1260
-# see issue https://github.com/asdf-format/asdf/issues/1254
-if sys.version_info >= (3, 12):
-    pass
-else:
-    pass
-
 
 # We're importing our own copy of urllib.parse because
 # we need to patch it to support asdf:// URIs, but it'd
@@ -40,6 +28,7 @@ _patched_urllib_parse.uses_netloc.append("asdf")
 
 
 __all__ = [
+    "NOT_SET",
     "FileType",
     "NotSet",
     "calculate_padding",
@@ -283,7 +272,8 @@ class _NOT_SET_TYPE(enum.Enum):
 
 #: Special value indicating that a parameter is not set.
 #: Distinct from None, which may for example be a value of interest in a search.
-NotSet: Final = _NOT_SET_TYPE.NOT_SET
+NOT_SET: Final = _NOT_SET_TYPE.NOT_SET
+NotSet: Final = NOT_SET
 
 
 def uri_match(pattern, uri):
