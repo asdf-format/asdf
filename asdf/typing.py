@@ -25,6 +25,7 @@ __all__ = [
     "FileMode",
     "FilterFn",
     "NDArray",
+    "NotSetType",
     "PathLike",
     "Reader",
     "TreeKey",
