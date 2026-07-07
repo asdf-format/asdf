@@ -5,7 +5,7 @@ import re
 import struct
 import sys
 from functools import lru_cache
-from typing import Final, Literal, TypeAlias
+from typing import Final
 
 import numpy as np
 import yaml
@@ -40,7 +40,6 @@ _patched_urllib_parse.uses_netloc.append("asdf")
 
 
 __all__ = [
-    "NOT_SET",
     "FileType",
     "NotSet",
     "calculate_padding",
@@ -287,10 +286,7 @@ class _NOT_SET_TYPE(enum.Enum):
 
 #: Special value indicating that a parameter is not set.
 #: Distinct from None, which may for example be a value of interest in a search.
-NOT_SET: Final = _NOT_SET_TYPE.NOT_SET
-
-#: Type corresponding to ``NOT_SET`` value for use in type-checking
-NotSet: TypeAlias = Literal[_NOT_SET_TYPE.NOT_SET]
+NotSet: Final = _NOT_SET_TYPE.NOT_SET
 
 
 def uri_match(pattern, uri):

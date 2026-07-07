@@ -28,7 +28,7 @@ from .exceptions import (
 from .extension import Extension, ExtensionProxy, _serialization_context, get_cached_extension_manager
 from .search import AsdfSearchResult
 from .tags.core import AsdfObject, ExtensionMetadata, HistoryEntry, Software
-from .util import NOT_SET
+from .util import NotSet
 
 if TYPE_CHECKING:
     from collections import dict_keys
@@ -51,7 +51,6 @@ if TYPE_CHECKING:
         TreeKey,
     )
 
-    from .util import NotSet
     from .versioning import AsdfVersion
 
 
@@ -826,9 +825,9 @@ class AsdfFile:
 
     def update(
         self,
-        all_array_storage: ArrayStorage | NotSet = NOT_SET,
-        all_array_compression: Compression | NotSet = NOT_SET,
-        compression_kwargs: dict[str, Any] | NotSet = NOT_SET,
+        all_array_storage: ArrayStorage | NotSet = NotSet,
+        all_array_compression: Compression | NotSet = NotSet,
+        compression_kwargs: dict[str, Any] | NotSet = NotSet,
         pad_blocks: bool | float = False,
         include_block_index: bool = True,
         version: str | None = None,
@@ -891,11 +890,11 @@ class AsdfFile:
         """
 
         with config_context() as config:
-            if all_array_storage is not NOT_SET:
+            if all_array_storage is not NotSet:
                 config.all_array_storage = all_array_storage
-            if all_array_compression is not NOT_SET:
+            if all_array_compression is not NotSet:
                 config.all_array_compression = all_array_compression
-            if compression_kwargs is not NOT_SET:
+            if compression_kwargs is not NotSet:
                 config.all_array_compression_kwargs = compression_kwargs
 
             fd = self._fd
@@ -994,9 +993,9 @@ class AsdfFile:
     def write_to(
         self,
         fd: FileLike,
-        all_array_storage: ArrayStorage | NotSet = NOT_SET,
-        all_array_compression: Compression | NotSet = NOT_SET,
-        compression_kwargs: dict[str, Any] | NotSet = NOT_SET,
+        all_array_storage: ArrayStorage | NotSet = NotSet,
+        all_array_compression: Compression | NotSet = NotSet,
+        compression_kwargs: dict[str, Any] | NotSet = NotSet,
         pad_blocks: bool | float = False,
         include_block_index: bool = True,
         version: str | None = None,
@@ -1068,11 +1067,11 @@ class AsdfFile:
             Compute and write block checksums to the file.
         """
         with config_context() as config:
-            if all_array_storage is not NOT_SET:
+            if all_array_storage is not NotSet:
                 config.all_array_storage = all_array_storage
-            if all_array_compression is not NOT_SET:
+            if all_array_compression is not NotSet:
                 config.all_array_compression = all_array_compression
-            if compression_kwargs is not NOT_SET:
+            if compression_kwargs is not NotSet:
                 config.all_array_compression_kwargs = compression_kwargs
 
             previous_version = None
@@ -1312,9 +1311,9 @@ class AsdfFile:
 
     def search(
         self,
-        key: str | Any | NotSet = NOT_SET,
-        type_: str | type | NotSet = NOT_SET,
-        value: str | Any | NotSet = NOT_SET,
+        key: str | Any | NotSet = NotSet,
+        type_: str | type | NotSet = NotSet,
+        value: str | Any | NotSet = NotSet,
         filter_: FilterFn | None = None,
     ) -> AsdfSearchResult:
         """
@@ -1411,7 +1410,7 @@ def open_asdf(
     ignore_unrecognized_tag: bool = False,
     _force_raw_types: bool = False,
     memmap: bool = False,
-    lazy_tree: bool | NotSet = NOT_SET,
+    lazy_tree: bool | NotSet = NotSet,
     lazy_load: bool = True,
     custom_schema: str | None = None,
     strict_extension_check: bool = False,
@@ -1497,7 +1496,7 @@ def open_asdf(
         msg = "'strict_extension_check' and 'ignore_missing_extensions' are incompatible options"
         raise ValueError(msg)
 
-    if lazy_tree is NOT_SET:
+    if lazy_tree is NotSet:
         lazy_tree = get_config().lazy_tree
 
     instance = AsdfFile(
