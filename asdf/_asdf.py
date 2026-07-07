@@ -47,6 +47,7 @@ if TYPE_CHECKING:
         FileMode,
         FilterFn,
         NDArray,
+        NotSetType,
         PathLike,
         TreeKey,
     )
@@ -825,9 +826,9 @@ class AsdfFile:
 
     def update(
         self,
-        all_array_storage: ArrayStorage | NotSet = NotSet,
-        all_array_compression: Compression | NotSet = NotSet,
-        compression_kwargs: dict[str, Any] | NotSet = NotSet,
+        all_array_storage: ArrayStorage | NotSetType = NotSet,
+        all_array_compression: Compression | NotSetType = NotSet,
+        compression_kwargs: dict[str, Any] | NotSetType = NotSet,
         pad_blocks: bool | float = False,
         include_block_index: bool = True,
         version: str | None = None,
@@ -891,11 +892,11 @@ class AsdfFile:
 
         with config_context() as config:
             if all_array_storage is not NotSet:
-                config.all_array_storage = all_array_storage
+                config.all_array_storage = all_array_storage  # type: ignore
             if all_array_compression is not NotSet:
-                config.all_array_compression = all_array_compression
+                config.all_array_compression = all_array_compression  # type: ignore
             if compression_kwargs is not NotSet:
-                config.all_array_compression_kwargs = compression_kwargs
+                config.all_array_compression_kwargs = compression_kwargs  # type: ignore
 
             fd = self._fd
 
@@ -968,9 +969,9 @@ class AsdfFile:
     def write_to(
         self,
         fd: PathLike | io.IOBase | GenericFile,
-        all_array_storage: ArrayStorage | NotSet = ...,
-        all_array_compression: Compression | NotSet = ...,
-        compression_kwargs: dict[str, Any] | NotSet = ...,
+        all_array_storage: ArrayStorage | NotSetType = ...,
+        all_array_compression: Compression | NotSetType = ...,
+        compression_kwargs: dict[str, Any] | NotSetType = ...,
         pad_blocks: bool | float = ...,
         include_block_index: bool = ...,
         version: str | None = ...,
@@ -981,9 +982,9 @@ class AsdfFile:
     def write_to(
         self,
         fd: Reader | Writer,
-        all_array_storage: ArrayStorage | NotSet = ...,
-        all_array_compression: Compression | NotSet = ...,
-        compression_kwargs: dict[str, Any] | NotSet = ...,
+        all_array_storage: ArrayStorage | NotSetType = ...,
+        all_array_compression: Compression | NotSetType = ...,
+        compression_kwargs: dict[str, Any] | NotSetType = ...,
         pad_blocks: bool | float = ...,
         include_block_index: bool = ...,
         version: str | None = ...,
@@ -993,9 +994,9 @@ class AsdfFile:
     def write_to(
         self,
         fd: FileLike,
-        all_array_storage: ArrayStorage | NotSet = NotSet,
-        all_array_compression: Compression | NotSet = NotSet,
-        compression_kwargs: dict[str, Any] | NotSet = NotSet,
+        all_array_storage: ArrayStorage | NotSetType = NotSet,
+        all_array_compression: Compression | NotSetType = NotSet,
+        compression_kwargs: dict[str, Any] | NotSetType = NotSet,
         pad_blocks: bool | float = False,
         include_block_index: bool = True,
         version: str | None = None,
@@ -1068,11 +1069,11 @@ class AsdfFile:
         """
         with config_context() as config:
             if all_array_storage is not NotSet:
-                config.all_array_storage = all_array_storage
+                config.all_array_storage = all_array_storage  # type: ignore
             if all_array_compression is not NotSet:
-                config.all_array_compression = all_array_compression
+                config.all_array_compression = all_array_compression  # type: ignore
             if compression_kwargs is not NotSet:
-                config.all_array_compression_kwargs = compression_kwargs
+                config.all_array_compression_kwargs = compression_kwargs  # type: ignore
 
             previous_version = None
             if version is not None:
@@ -1311,9 +1312,9 @@ class AsdfFile:
 
     def search(
         self,
-        key: str | Any | NotSet = NotSet,
-        type_: str | type | NotSet = NotSet,
-        value: str | Any | NotSet = NotSet,
+        key: str | Any | NotSetType = NotSet,
+        type_: str | type | NotSetType = NotSet,
+        value: str | Any | NotSetType = NotSet,
         filter_: FilterFn | None = None,
     ) -> AsdfSearchResult:
         """
@@ -1376,7 +1377,7 @@ def open_asdf(
     ignore_unrecognized_tag: bool = ...,
     _force_raw_types: bool = ...,
     memmap: bool = ...,
-    lazy_tree: bool | NotSet = ...,
+    lazy_tree: bool | NotSetType = ...,
     lazy_load: bool = ...,
     custom_schema: str | None = ...,
     strict_extension_check: bool = ...,
@@ -1393,7 +1394,7 @@ def open_asdf(
     ignore_unrecognized_tag: bool = ...,
     _force_raw_types: bool = ...,
     memmap: bool = ...,
-    lazy_tree: bool | NotSet = ...,
+    lazy_tree: bool | NotSetType = ...,
     lazy_load: bool = ...,
     custom_schema: str | None = ...,
     strict_extension_check: bool = ...,
@@ -1410,7 +1411,7 @@ def open_asdf(
     ignore_unrecognized_tag: bool = False,
     _force_raw_types: bool = False,
     memmap: bool = False,
-    lazy_tree: bool | NotSet = NotSet,
+    lazy_tree: bool | NotSetType = NotSet,
     lazy_load: bool = True,
     custom_schema: str | None = None,
     strict_extension_check: bool = False,

@@ -281,9 +281,6 @@ class _NOT_SET_TYPE(enum.Enum):
         return str(self.value)
 
 
-# This needs to be all caps because otherwise type-checkers will assume its mutable
-# https://github.com/facebook/pyrefly/issues/3042
-
 #: Special value indicating that a parameter is not set.
 #: Distinct from None, which may for example be a value of interest in a search.
 NotSet: Final = _NOT_SET_TYPE.NOT_SET
