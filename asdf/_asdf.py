@@ -892,11 +892,11 @@ class AsdfFile:
 
         with config_context() as config:
             if all_array_storage is not NotSet:
-                config.all_array_storage = all_array_storage  # type: ignore
+                config.all_array_storage = typing.cast("ArrayStorage", all_array_storage)
             if all_array_compression is not NotSet:
-                config.all_array_compression = all_array_compression  # type: ignore
+                config.all_array_compression = typing.cast("Compression", all_array_compression)
             if compression_kwargs is not NotSet:
-                config.all_array_compression_kwargs = compression_kwargs  # type: ignore
+                config.all_array_compression_kwargs = typing.cast("dict", compression_kwargs)
 
             fd = self._fd
 
@@ -1069,11 +1069,11 @@ class AsdfFile:
         """
         with config_context() as config:
             if all_array_storage is not NotSet:
-                config.all_array_storage = all_array_storage  # type: ignore
+                config.all_array_storage = typing.cast("ArrayStorage", all_array_storage)
             if all_array_compression is not NotSet:
-                config.all_array_compression = all_array_compression  # type: ignore
+                config.all_array_compression = typing.cast("Compression", all_array_compression)
             if compression_kwargs is not NotSet:
-                config.all_array_compression_kwargs = compression_kwargs  # type: ignore
+                config.all_array_compression_kwargs = typing.cast("dict", compression_kwargs)
 
             previous_version = None
             if version is not None:
