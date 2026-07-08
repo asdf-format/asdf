@@ -43,7 +43,7 @@ jobs:
         python-version: "3.10"
     - run: pip install -e ".[all,tests,typing]"
     - run: pyrefly check --output-format=github
-  core:
+  coverage:
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v3
     with:
       submodules: false
@@ -51,21 +51,19 @@ jobs:
         - linux: coverage
           name: Python 3.14 coverage
           python-version: 3.14
-        - linux: coverage
-          name: Python 3.13 coverage
-          python-version: 3.13
-        - linux: coverage
-          name: Python 3.12 coverage
-          python-version: 3.12
-        - linux: coverage
-          name: Python 3.11 coverage
-          python-version: 3.11
-        - linux: coverage
-          name: Python 3.10 coverage
-          python-version: 3.10
       coverage: codecov
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  core:
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v3
+    with:
+      submodules: false
+      envs: |
+        - linux: py313
+        - linux: py312
+        - linux: py311
+        - linux: py310
 
   jsonschema:
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v3
@@ -99,15 +97,15 @@ jobs:
     with:
       submodules: false
       envs: |
-        - linux: py310-coverage-devdeps-parallel
-        - linux: py311-coverage-devdeps-parallel
-        - linux: py312-coverage-devdeps-parallel
-        - linux: py313-coverage-devdeps-parallel
-        - linux: py314-coverage-devdeps-parallel
-        - linux: py315-coverage-pytestdev-parallel
+        - linux: py310-devdeps-parallel
+        - linux: py311-devdeps-parallel
+        - linux: py312-devdeps-parallel
+        - linux: py313-devdeps-parallel
+        - linux: py314-devdeps-parallel
+        - linux: py315-pytestdev-parallel
           python-version: 3.15
         # separate pytest so a failure here doesn't cause the whole suite to fail
-        - linux: py314-coverage-pytestdev-parallel
+        - linux: py314-pytestdev-parallel
       coverage: codecov
 
   oldest:
