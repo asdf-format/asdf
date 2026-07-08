@@ -7,10 +7,6 @@ ASDF - Advanced Scientific Data Format
     :target: https://github.com/asdf-format/asdf/actions
     :alt: CI Status
 
-.. image:: https://github.com/asdf-format/asdf/workflows/Downstream/badge.svg
-    :target: https://github.com/asdf-format/asdf/actions
-    :alt: Downstream CI Status
-
 .. image:: https://readthedocs.org/projects/asdf/badge/?version=latest
     :target: https://asdf.readthedocs.io/en/latest/
 
@@ -26,13 +22,6 @@ ASDF - Advanced Scientific Data Format
 
 .. image:: https://img.shields.io/pypi/l/asdf.svg
     :target: https://img.shields.io/pypi/l/asdf.svg
-
-.. image:: https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white
-    :target: https://github.com/pre-commit/pre-commit
-    :alt: pre-commit
-
-.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
-    :target: https://github.com/psf/black
 
 .. _end-badges:
 
@@ -57,7 +46,7 @@ The ASDF format has the following features:
 
 ASDF is under active development `on github
 <https://github.com/asdf-format/asdf>`__. More information on contributing
-can be found `below <#contributing>`__.
+can be found below.
 
 Overview
 --------
@@ -182,10 +171,6 @@ The `open` function also works as a context handler:
     with asdf.open("example.asdf") as af:
         ...
 
-.. warning::
-    The ``memmap`` argument replaces ``copy_arrays`` as of ASDF 4.0
-    (``memmap == not copy_arrays``).
-
 To get a quick overview of the data stored in the file, use the top-level
 `AsdfFile.info()` method:
 
@@ -255,7 +240,7 @@ to `open`:
 .. _end-read-file-text:
 
 For more information and for advanced usage examples, see the
-`documentation <#documentation>`__.
+`documentation <http://asdf.readthedocs.io/en/latest/>`__.
 
 Extending ASDF
 ~~~~~~~~~~~~~~
@@ -358,11 +343,6 @@ More detailed documentation on this software package can be found
 More information on the ASDF file format itself can be found
 `here <https://asdf-standard.readthedocs.io>`__.
 
-There are two mailing lists for ASDF:
-
-* `asdf-users <https://groups.google.com/forum/#!forum/asdf-users>`_
-* `asdf-developers <https://groups.google.com/forum/#!forum/asdf-developers>`_
-
     If you are looking for the **A**\ daptable **S**\ eismic **D**\ ata
     **F**\ ormat, information can be found
     `here <https://seismic-data.org/>`__.
@@ -370,8 +350,8 @@ There are two mailing lists for ASDF:
 License
 -------
 
-ASDF is licensed under a BSD 3-clause style license. See `LICENSE.rst <LICENSE.rst>`_
-for the `licenses folder <licenses>`_ for
+ASDF is licensed under a BSD 3-clause style license. See `LICENSE <https://github.com/asdf-format/asdf/blob/main/LICENSE>`_
+for the `licenses folder <https://github.com/asdf-format/asdf/tree/main/licenses>`_ for
 licenses for any included software.
 
 Contributing
@@ -379,8 +359,8 @@ Contributing
 
 We welcome feedback and contributions to the project. Contributions of
 code, documentation, or general feedback are all appreciated. Please
-follow the `contributing guidelines <CONTRIBUTING.rst>`__ to submit an
+follow the `contributing guidelines <https://github.com/asdf-format/asdf/blob/main/CONTRIBUTING.rst>`__ to submit an
 issue or a pull request.
 
 We strive to provide a welcoming community to all of our users by
-abiding to the `Code of Conduct <CODE_OF_CONDUCT.md>`__.
+abiding to the `Code of Conduct <https://github.com/asdf-format/asdf?tab=coc-ov-file>`__.
