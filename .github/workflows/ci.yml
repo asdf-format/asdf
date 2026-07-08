@@ -106,7 +106,6 @@ jobs:
           python-version: 3.15
         # separate pytest so a failure here doesn't cause the whole suite to fail
         - linux: py314-pytestdev-parallel
-      coverage: codecov
 
   oldest:
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v3
