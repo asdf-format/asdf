@@ -3,8 +3,8 @@ ASDF - Advanced Scientific Data Format
 
 .. _begin-badges:
 
-.. image:: https://github.com/asdf-format/asdf/workflows/CI/badge.svg
-    :target: https://github.com/asdf-format/asdf/actions
+.. image:: https://github.com/asdf-format/asdf/workflows/ci.yml/badge.svg
+    :target: https://github.com/asdf-format/asdf/actions/workflows/ci.yml
     :alt: CI Status
 
 .. image:: https://readthedocs.org/projects/asdf/badge/?version=latest
