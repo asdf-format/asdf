@@ -46,14 +46,14 @@ benchmark = ["asdf[tests]", "pytest-benchmark"]
 test = ["asdf[tests]"]
 
 [project.urls]
-'documentation' = "https://asdf.readthedocs.io/en/stable/"
-'repository' = "https://github.com/asdf-format/asdf"
-'tracker' = "https://github.com/asdf-format/asdf/issues"
+"documentation" = "https://asdf.readthedocs.io/en/stable/"
+"repository" = "https://github.com/asdf-format/asdf"
+"tracker" = "https://github.com/asdf-format/asdf/issues"
 
 [project.entry-points]
 asdf_extensions = { builtin = "asdf.extension._legacy:BuiltinExtension" }
-'asdf.extensions' = { asdf = "asdf._core._integration:get_extensions" }
-'asdf.resource_mappings' = { asdf = "asdf._core._integration:get_json_schema_resource_mappings" }
+"asdf.extensions" = { asdf = "asdf._core._integration:get_extensions" }
+"asdf.resource_mappings" = { asdf = "asdf._core._integration:get_json_schema_resource_mappings" }
 
 [project.scripts]
 asdftool = "asdf._commands.main:main"
@@ -67,9 +67,9 @@ include = ["asdf*"]
 exclude = ["asdf/_jsonschema/json/*"]
 
 [tool.setuptools.package-data]
-'asdf.commands.tests.data' = ["*"]
-'asdf.tags.core.tests.data' = ["*"]
-'asdf.tests.data' = ["*"]
+"asdf.commands.tests.data" = ["*"]
+"asdf.tags.core.tests.data" = ["*"]
+"asdf.tests.data" = ["*"]
 
 [tool.setuptools_scm]
 version_file = "asdf/_version.py"
@@ -215,7 +215,7 @@ issue_format = "`#{issue} <https://github.com/asdf-format/asdf/pull/{issue}>`_"
 [tool.towncrier.fragment.general]
 
 [tool.pyrefly]
-project-excludes = ["asdf/_jsonschema/"]
+project-excludes = ["asdf/_jsonschema/", "noxfile.py"]
 search-path = [".", "integration_tests/compatibility"]
 baseline = ".pyrefly-baseline.json"
 
