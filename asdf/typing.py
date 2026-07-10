@@ -11,6 +11,7 @@ import numpy.typing as npt
 from typing_extensions import Reader, Writer
 
 from asdf.generic_io import GenericFile
+from asdf.util import _NOT_SET_TYPE
 from asdf.versioning import AsdfVersion
 
 __all__ = [
@@ -24,6 +25,7 @@ __all__ = [
     "FileMode",
     "FilterFn",
     "NDArray",
+    "NotSetType",
     "PathLike",
     "Reader",
     "TreeKey",
@@ -77,3 +79,5 @@ ByteArray1D: TypeAlias = np.ndarray[tuple[int], np.dtype[np.uint8]]
 
 #: A callback that returns a `ByteArray1D`
 BlockDataCallback = Callable[[], ByteArray1D]
+
+NotSetType = Literal[_NOT_SET_TYPE.NOT_SET]

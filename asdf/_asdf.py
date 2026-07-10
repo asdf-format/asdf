@@ -47,11 +47,11 @@ if TYPE_CHECKING:
         FileMode,
         FilterFn,
         NDArray,
+        NotSetType,
         PathLike,
         TreeKey,
     )
 
-    from .util import NotSet
     from .versioning import AsdfVersion
 
 
@@ -826,9 +826,9 @@ class AsdfFile:
 
     def update(
         self,
-        all_array_storage: ArrayStorage | NotSet = NOT_SET,
-        all_array_compression: Compression | NotSet = NOT_SET,
-        compression_kwargs: dict[str, Any] | NotSet = NOT_SET,
+        all_array_storage: ArrayStorage | NotSetType = NOT_SET,
+        all_array_compression: Compression | NotSetType = NOT_SET,
+        compression_kwargs: dict[str, Any] | NotSetType = NOT_SET,
         pad_blocks: bool | float = False,
         include_block_index: bool = True,
         version: str | None = None,
@@ -969,9 +969,9 @@ class AsdfFile:
     def write_to(
         self,
         fd: PathLike | io.IOBase | GenericFile,
-        all_array_storage: ArrayStorage | NotSet = ...,
-        all_array_compression: Compression | NotSet = ...,
-        compression_kwargs: dict[str, Any] | NotSet = ...,
+        all_array_storage: ArrayStorage | NotSetType = ...,
+        all_array_compression: Compression | NotSetType = ...,
+        compression_kwargs: dict[str, Any] | NotSetType = ...,
         pad_blocks: bool | float = ...,
         include_block_index: bool = ...,
         version: str | None = ...,
@@ -982,9 +982,9 @@ class AsdfFile:
     def write_to(
         self,
         fd: Reader | Writer,
-        all_array_storage: ArrayStorage | NotSet = ...,
-        all_array_compression: Compression | NotSet = ...,
-        compression_kwargs: dict[str, Any] | NotSet = ...,
+        all_array_storage: ArrayStorage | NotSetType = ...,
+        all_array_compression: Compression | NotSetType = ...,
+        compression_kwargs: dict[str, Any] | NotSetType = ...,
         pad_blocks: bool | float = ...,
         include_block_index: bool = ...,
         version: str | None = ...,
@@ -994,9 +994,9 @@ class AsdfFile:
     def write_to(
         self,
         fd: FileLike,
-        all_array_storage: ArrayStorage | NotSet = NOT_SET,
-        all_array_compression: Compression | NotSet = NOT_SET,
-        compression_kwargs: dict[str, Any] | NotSet = NOT_SET,
+        all_array_storage: ArrayStorage | NotSetType = NOT_SET,
+        all_array_compression: Compression | NotSetType = NOT_SET,
+        compression_kwargs: dict[str, Any] | NotSetType = NOT_SET,
         pad_blocks: bool | float = False,
         include_block_index: bool = True,
         version: str | None = None,
@@ -1312,9 +1312,9 @@ class AsdfFile:
 
     def search(
         self,
-        key: str | Any | NotSet = NOT_SET,
-        type_: str | type | NotSet = NOT_SET,
-        value: str | Any | NotSet = NOT_SET,
+        key: str | Any | NotSetType = NOT_SET,
+        type_: str | type | NotSetType = NOT_SET,
+        value: str | Any | NotSetType = NOT_SET,
         filter_: FilterFn | None = None,
     ) -> AsdfSearchResult:
         """
@@ -1322,23 +1322,23 @@ class AsdfFile:
 
         Parameters
         ----------
-        key : NotSet, str, or any other object
+        key : NOT_SET, str, or any other object
             Search query that selects nodes by dict key or list index.
-            If NotSet, the node key is unconstrained.
+            If NOT_SET, the node key is unconstrained.
             If str, the input is searched among keys/indexes as a regular
             expression pattern.
             If any other object, node's key or index must equal the queried key.
 
-        type_ : NotSet, str, or builtins.type
+        type_ : NOT_SET, str, or builtins.type
             Search query that selects nodes by type.
-            If NotSet, the node type is unconstrained.
+            If NOT_SET, the node type is unconstrained.
             If str, the input is searched among (fully qualified) node type
             names as a regular expression pattern.
             If builtins.type, the node must be an instance of the input.
 
-        value : NotSet, str, or any other object
+        value : NOT_SET, str, or any other object
             Search query that selects nodes by value.
-            If NotSet, the node value is unconstrained.
+            If NOT_SET, the node value is unconstrained.
             If str, the input is searched among values as a regular
             expression pattern.
             If any other object, node's value must equal the queried value.
@@ -1377,7 +1377,7 @@ def open_asdf(
     ignore_unrecognized_tag: bool = ...,
     _force_raw_types: bool = ...,
     memmap: bool = ...,
-    lazy_tree: bool | NotSet = ...,
+    lazy_tree: bool | NotSetType = ...,
     lazy_load: bool = ...,
     custom_schema: str | None = ...,
     strict_extension_check: bool = ...,
@@ -1394,7 +1394,7 @@ def open_asdf(
     ignore_unrecognized_tag: bool = ...,
     _force_raw_types: bool = ...,
     memmap: bool = ...,
-    lazy_tree: bool | NotSet = ...,
+    lazy_tree: bool | NotSetType = ...,
     lazy_load: bool = ...,
     custom_schema: str | None = ...,
     strict_extension_check: bool = ...,
@@ -1411,7 +1411,7 @@ def open_asdf(
     ignore_unrecognized_tag: bool = False,
     _force_raw_types: bool = False,
     memmap: bool = False,
-    lazy_tree: bool | NotSet = NOT_SET,
+    lazy_tree: bool | NotSetType = NOT_SET,
     lazy_load: bool = True,
     custom_schema: str | None = None,
     strict_extension_check: bool = False,

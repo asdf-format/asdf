@@ -13,6 +13,8 @@ def test_not_set():
 
     assert repr(util.NOT_SET) == "NotSet"
 
+    assert util.NotSet is util.NOT_SET
+
 
 class SomeClass:
     class SomeInnerClass:
