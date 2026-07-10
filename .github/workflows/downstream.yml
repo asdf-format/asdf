@@ -23,55 +23,79 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  asdf:
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v2
+  generate-jobs:
     if: (github.repository == 'asdf-format/asdf' && (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Downstream CI')))
-    with:
-      submodules: false
-      # Any env name which does not start with `pyXY` will use this Python version.
-      default_python: '3.12'
-      envs: |
-        - linux: asdf-wcs-schemas
-        - linux: asdf-coordinates-schemas
-        - linux: asdf-zarr
-        - linux: asdf-compression
+    runs-on: ubuntu-latest
+    outputs:
+      session: ${{ steps.set-matrix.outputs.session }}
+    steps:
+    - uses: actions/checkout@v3
+    - uses: wntrblm/nox@main
+    - id: set-matrix
+      shell: bash
+      run: echo session=$(nox --json -l -t downstream | jq -c '[.[].session]') | tee --append $GITHUB_OUTPUT
+  nox:
+    if: (github.repository == 'asdf-format/asdf' && (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Downstream CI')))
+    name: ${{ matrix.session }}
+    needs: [generate-jobs]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        session: ${{ fromJson(needs.generate-jobs.outputs.session) }}
+    steps:
+    - uses: actions/checkout@v3
+    - uses: wntrblm/nox@main
+    - run: nox -v -s "${{ matrix.session }}"
+  # asdf:
+  #   uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v2
+  #   if: (github.repository == 'asdf-format/asdf' && (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Downstream CI')))
+  #   with:
+  #     submodules: false
+  #     # Any env name which does not start with `pyXY` will use this Python version.
+  #     default_python: '3.12'
+  #     envs: |
+  #       - linux: asdf-wcs-schemas
+  #       - linux: asdf-coordinates-schemas
+  #       - linux: asdf-zarr
+  #       - linux: asdf-compression
 
-  astropy:
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v2
-    if: (github.repository == 'asdf-format/asdf' && (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Downstream CI')))
-    with:
-      submodules: false
-      # Any env name which does not start with `pyXY` will use this Python version.
-      default_python: '3.12'
-      envs: |
-        - linux: asdf-astropy
-        - linux: specutils
+  # astropy:
+  #   uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v2
+  #   if: (github.repository == 'asdf-format/asdf' && (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Downstream CI')))
+  #   with:
+  #     submodules: false
+  #     # Any env name which does not start with `pyXY` will use this Python version.
+  #     default_python: '3.12'
+  #     envs: |
+  #       - linux: asdf-astropy
+  #       - linux: specutils
 
-  stsci:
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v2
-    if: (github.repository == 'asdf-format/asdf' && (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Downstream CI')))
-    with:
-      submodules: false
-      # Any env name which does not start with `pyXY` will use this Python version.
-      default_python: '3.12'
-      envs: |
-        - linux: astrocut
-        - linux: gwcs
-        - linux: jwst
-        - linux: stdatamodels
-        - linux: stpipe
-        - linux: roman_datamodels
+  # stsci:
+  #   uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v2
+  #   if: (github.repository == 'asdf-format/asdf' && (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Downstream CI')))
+  #   with:
+  #     submodules: false
+  #     # Any env name which does not start with `pyXY` will use this Python version.
+  #     default_python: '3.12'
+  #     envs: |
+  #       - linux: astrocut
+  #       - linux: gwcs
+  #       - linux: jwst
+  #       - linux: stdatamodels
+  #       - linux: stpipe
+  #       - linux: roman_datamodels
 
-  third-party:
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v2
-    if: (github.repository == 'asdf-format/asdf' && (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Downstream CI')))
-    with:
-      submodules: false
-      # Any env name which does not start with `pyXY` will use this Python version.
-      default_python: '3.12'
-      envs: |
-        - linux: weldx
-        - linux: sunpy
-        - linux: dkist
-        - linux: dkist-inventory
-        - linux: abacusutils
+  # third-party:
+  #   uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v2
+  #   if: (github.repository == 'asdf-format/asdf' && (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Downstream CI')))
+  #   with:
+  #     submodules: false
+  #     # Any env name which does not start with `pyXY` will use this Python version.
+  #     default_python: '3.12'
+  #     envs: |
+  #       - linux: weldx
+  #       - linux: sunpy
+  #       - linux: dkist
+  #       - linux: dkist-inventory
+  #       - linux: abacusutils
