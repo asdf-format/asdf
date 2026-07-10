@@ -21,7 +21,21 @@ class Package:
         """Build a nox `param` from the package configuration."""
         return nox.param(self, tags=self.tags, id=self.name)
 
-    def installer_spec(self, dir: Path) -> str:
+    def download_and_install(self, session):
+        dir = Path(session.cache_dir) / self.name
+        if dir.exists():
+            with session.cd(dir):
+                session.run_install("git", "pull", "--prune", external=True, silent=True)
+        else:
+            session.run_install("git", "clone", self.repo, dir, external=True, silent=True)
+
+        session.install("-e", self._installer_spec(dir))
+        return dir
+
+    def test(self, session):
+        session.run(*self._generate_pytest_command(), env=self.env)
+
+    def _installer_spec(self, dir: Path) -> str:
         """Get the full dependency spec for installing the package which can be passed to pip.
 
         `dir` is the full path to the package repo.
@@ -29,7 +43,7 @@ class Package:
         extras = f"[{','.join(self.extras)}]" if self.extras else ""
         return f"{dir}{extras}"
 
-    def generate_pytest_command(self):
+    def _generate_pytest_command(self):
         """Get the full pytest command for testing this package.
 
         Returns a generator that yields the pytest command followed by all arguments.
@@ -132,6 +146,7 @@ DOWNSTREAM = [
         tags=["third-party"],
         extras=["test"],
     ),
+    # This package's tests only work on linux
     Package(
         "abacusutils",
         "https://github.com/abacusorg/abacusutils.git",
@@ -139,18 +154,6 @@ DOWNSTREAM = [
         pytest_paths=["tests/test_data.py"],
     ),
 ]
-
-
-def install_repo(session, pkg: Package) -> Path:
-    dir = Path(session.cache_dir) / pkg.name
-    if dir.exists():
-        with session.cd(dir):
-            session.run_install("git", "pull", "--prune", external=True, silent=True)
-    else:
-        session.run_install("git", "clone", pkg.repo, dir, external=True, silent=True)
-
-    session.install("-e", pkg.installer_spec(dir))
-    return dir
 
 
 def log_env(session):
@@ -169,27 +172,29 @@ def pytest_args(*, parallel: bool, show_slowest: int | None = 10):
 
 @nox.session(tags=["test", "downstream"], python="3.12")
 @nox.parametrize("pkg", [pkg.as_param() for pkg in DOWNSTREAM])
-def downstream(session, pkg):
-    dir = install_repo(session, pkg)
+def downstream(session, pkg: Package):
+    dir = pkg.download_and_install(session)
+
     session.install("-e", ".[all,tests]")
     log_env(session)
 
     with session.cd(dir):
-        session.run(*pkg.generate_pytest_command())
+        pkg.test(session)
 
 
 @nox.session(tags=["test", "core"], python=["3.10", "3.11", "3.12", "3.13"])
 def core(session):
-    session.install("-e", ".[all,tests]")
     session.install("pytest-xdist")
+    session.install("-e", ".[all,tests]")
 
     session.run(*pytest_args(parallel=True))
 
 
 @nox.session(tags=["test", "coverage"], python="3.14")
 def coverage(session):
-    session.install("-e", ".[all,tests]")
     session.install("pytest-cov")
+    session.install("-e", ".[all,tests]")
+
     session.run(
         *pytest_args(parallel=False),
         "--cov",
@@ -204,15 +209,61 @@ def coverage(session):
 
 @nox.session(tags=["test", "devdeps"], python=["3.10", "3.11", "3.12", "3.13", "3.14"])
 def devdeps(session):
-    session.install("-e", ".[all,tests]")
     session.install("pytest-xdist")
+    session.install("-e", ".[all,tests]")
+
     session.install("-r", "requirements-dev.txt")
     session.run(*pytest_args(parallel=True), "-W", "ignore::asdf_standard.exceptions.UnstableCoreSchemasWarning")
 
 
+@nox.session(tags=["test", "core"], python="3.12")
+def mocks3(session):
+    pyproject = nox.project.load_toml("pyproject.toml")
+
+    session.install("-e", ".[all,tests]")
+    session.install(*nox.project.dependency_groups(pyproject, "mocks3"))
+
+    session.run(*pytest_args(parallel=False), "integration_tests/mocks3/")
+
+
+@nox.session(tags=["test", "core"], python="3.11")
+def compatibility(session):
+    session.install("-e", ".[all,tests]")
+    session.install("virtualenv")
+
+    session.run(*pytest_args(parallel=False), "integration_tests/compatibility/")
+
+
+@nox.session(tags=["test", "core"], python="3.12")
+def jsonschema(session):
+    session.install("-e", ".[all,tests]")
+
+    session.run(*pytest_args(parallel=False), "--jsonschema")
+
+
+@nox.session(
+    tags=["test", "core"],
+    python="3.10",
+    # This test only passes using the virtualenv backend
+    # Probably due to differences in build isolation with the uv backend
+    venv_backend="virtualenv",
+)
+def oldestdeps(session):
+    session.install("pytest-xdist", "minimum_dependencies")
+    session.install("-e", ".[all,tests]")
+
+    tmp_path = Path(session.create_tmp()) / "requirements-min.txt"
+    session.run_install("minimum_dependencies", "asdf", "--filename", str(tmp_path), silent=True)
+
+    session.install("-r", tmp_path)
+    log_env(session)
+    session.run(*pytest_args(parallel=True))
+
+
 @nox.session(tags=["test", "pytestdev"], python=["3.14", "3.15"])
 def pytestdev(session):
-    session.install("-e", ".[all,tests]")
     session.install("pytest-xdist")
+    session.install("-e", ".[all,tests]")
+
     session.install("git+https://github.com/pytest-dev/pytest")
     session.run(*pytest_args(parallel=True))
