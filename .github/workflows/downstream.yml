@@ -45,6 +45,8 @@ jobs:
         session: ${{ fromJson(needs.generate-jobs.outputs.session) }}
     steps:
     - uses: actions/checkout@v7
+      with:
+          fetch-depth: 0
     - uses: astral-sh/setup-uv@v8.3.2
     - uses: wntrblm/nox@d73f96a257af685c948326cd37a3125ffbe778dc
     - run: nox -v -s "${{ matrix.session }}"
