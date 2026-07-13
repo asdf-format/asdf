@@ -58,9 +58,6 @@ asdf_extensions = { builtin = "asdf.extension._legacy:BuiltinExtension" }
 [project.scripts]
 asdftool = "asdf._commands.main:main"
 
-[dependency-groups]
-mocks3 = ["boto", "fsspec", "moto[s3,server]", "s3fs>2023.12.1"]
-
 [build-system]
 requires = ["setuptools>=60", "setuptools_scm[toml]>=8", "wheel"]
 build-backend = "setuptools.build_meta"
