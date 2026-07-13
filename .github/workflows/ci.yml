@@ -17,6 +17,7 @@ on:
       - synchronize
       - labeled
 
+permissions: {}
 
 # Only cancel in-progress jobs or runs for the current workflow
 #   This cancels the already triggered workflows for a specific PR without canceling
