@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import KW_ONLY, dataclass, field
 from pathlib import Path
 
 import nox
@@ -17,9 +17,11 @@ class Package:
 
     name: str
     repo: str
+    _: KW_ONLY
     tags: list[str] = field(default_factory=list)
     extras: list[str] | None = None
     env: dict[str, str] | None = None
+    parallel: bool = False
     pytest_paths: list[str] | None = None
     pytest_args: list[str] | None = None
 
@@ -63,6 +65,9 @@ class Package:
 
         if self.pytest_paths is not None:
             yield from self.pytest_paths
+
+        if self.parallel:
+            yield from ("-n", "auto")
 
         if self.pytest_args is not None:
             yield from self.pytest_args
@@ -181,7 +186,7 @@ DOWNSTREAM = [
         "https://bitbucket.org/dkistdc/dkist-inventory.git",
         tags=["third-party"],
         extras=["test"],
-        pytest_args=["-n", "auto"],
+        parallel=True,
     ),
     # This package's tests only work on linux
     Package(
