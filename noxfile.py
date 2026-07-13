@@ -8,8 +8,6 @@ nox.options.default_venv_backend = "uv|virtualenv"
 # Fail if using an external program without external=True
 nox.options.error_on_external_run = True
 
-PYPROJECT = nox.project.load_toml("pyproject.toml")
-
 
 @dataclass(frozen=True)
 class Package:
@@ -79,22 +77,6 @@ CRDS_ENV = {
     "CRDS_CLIENT_RETRY_COUNT": "3",
     "CRDS_CLIENT_RETRY_DELAY_SECONDS": "20",
 }
-
-# Asdf schema packages with test suites to run against the local asdf version
-ASDF_SCHEMAS = [
-    Package(
-        "asdf-standard",
-        "https://github.com/asdf-format/asdf-standard.git",
-        tags=["asdf-schemas"],
-        extras=["test"],
-    ),
-    Package(
-        "asdf-transform-schemas",
-        "https://github.com/asdf-format/asdf-transform-schemas.git",
-        tags=["asdf-schemas"],
-        extras=["test"],
-    ),
-]
 
 # Downstream packages with test suites to run against the local asdf version
 DOWNSTREAM = [
@@ -198,29 +180,6 @@ DOWNSTREAM = [
 ]
 
 
-def pytest_args(*, parallel: bool, show_slowest: int | None = 10):
-    """Generate pytest command and arguments.
-
-    Intended to be passed to `session.run`.
-    """
-    yield "pytest"
-    if show_slowest is not None:
-        yield f"--durations={show_slowest}"
-    if parallel:
-        yield from ("--numprocesses", "auto")
-
-
-@nox.session(tags=["test"], python="3.12")
-@nox.parametrize("pkg", [pkg.as_param() for pkg in ASDF_SCHEMAS])
-def asdf_schemas(session, pkg: Package):
-    """Run the test suite for an asdf schema package against the local asdf version."""
-    dir = pkg.download_and_install(session)
-    session.install("-e", ".[all,tests]")
-
-    with session.cd(dir):
-        pkg.test(session)
-
-
 @nox.session(tags=["test", "downstream"], python="3.12")
 @nox.parametrize("pkg", [pkg.as_param() for pkg in DOWNSTREAM])
 def downstream(session, pkg: Package):
@@ -230,95 +189,3 @@ def downstream(session, pkg: Package):
 
     with session.cd(dir):
         pkg.test(session)
-
-
-@nox.session(tags=["test", "core"], python=["3.10", "3.11", "3.12", "3.13"])
-def core(session):
-    """Run asdf test suite"""
-    session.install("pytest-xdist")
-    session.install("-e", ".[all,tests]")
-
-    session.run(*pytest_args(parallel=True))
-
-
-@nox.session(tags=["test", "coverage"], python="3.14")
-def coverage(session):
-    """Run asdf test suite with coverage"""
-    session.install("pytest-cov")
-    session.install("-e", ".[all,tests]")
-
-    session.run(
-        *pytest_args(parallel=False),
-        "--cov",
-        "--cov-config",
-        "pyproject.toml",
-        "--cov-report",
-        "term-missing",
-        "--cov-report",
-        "xml",
-    )
-
-
-@nox.session(tags=["test", "devdeps"], python=["3.10", "3.11", "3.12", "3.13", "3.14"])
-def devdeps(session):
-    """Run asdf tests against latest unstable versions of asdf dependencies"""
-    session.install("pytest-xdist")
-    session.install("-e", ".[all,tests]")
-
-    session.install("-r", "requirements-dev.txt")
-    session.run(*pytest_args(parallel=True), "-W", "ignore::asdf_standard.exceptions.UnstableCoreSchemasWarning")
-
-
-@nox.session(tags=["test", "core"], python="3.12")
-def mocks3(session):
-    """Set up AWS mocks and run S3 integration tests"""
-    session.install("-e", ".[all,tests]")
-    session.install(*nox.project.dependency_groups(PYPROJECT, "mocks3"))
-
-    session.run(*pytest_args(parallel=False), "integration_tests/mocks3/")
-
-
-@nox.session(tags=["test", "core"], python="3.11")
-def compatibility(session):
-    """Run asdf compatibility integration tests"""
-    session.install("-e", ".[all,tests]")
-    session.install("virtualenv")
-
-    session.run(*pytest_args(parallel=False), "integration_tests/compatibility/")
-
-
-@nox.session(tags=["test", "core"], python="3.12")
-def jsonschema(session):
-    """Run asdf jsonschema tests"""
-    session.install("-e", ".[all,tests]")
-
-    session.run(*pytest_args(parallel=False), "--jsonschema")
-
-
-@nox.session(
-    tags=["test", "core"],
-    python="3.10",
-    # This test doesn't work with the uv backend
-    # Probably due to differences in build isolation
-    venv_backend="virtualenv",
-)
-def oldestdeps(session):
-    """Run asdf tests against oldest supported dependency versions"""
-    session.install("pytest-xdist", "minimum_dependencies")
-    session.install("-e", ".[all,tests]")
-
-    tmp_path = Path(session.create_tmp()) / "requirements-min.txt"
-    session.run_install("minimum_dependencies", "asdf", "--filename", str(tmp_path), silent=True)
-
-    session.install("-r", tmp_path)
-    session.run(*pytest_args(parallel=True))
-
-
-@nox.session(tags=["test", "pytestdev"], python=["3.14", "3.15"])
-def pytestdev(session):
-    """Run asdf tests using latest unstable pytest version"""
-    session.install("pytest-xdist")
-    session.install("-e", ".[all,tests]")
-
-    session.install("git+https://github.com/pytest-dev/pytest")
-    session.run(*pytest_args(parallel=True))
