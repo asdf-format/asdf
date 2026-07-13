@@ -18,3 +18,5 @@ updates:
     target-branch: "main"
     schedule:
       interval: "monthly"
+    cooldown:
+      default-days: 7
