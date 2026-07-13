@@ -127,6 +127,7 @@ DOWNSTREAM = [
         "https://github.com/spacetelescope/astrocut.git",
         tags=["stsci"],
         extras=["test"],
+        pytest_args=["--pyargs", "astrocut"],
     ),
     Package(
         "gwcs",
@@ -180,6 +181,7 @@ DOWNSTREAM = [
         "https://bitbucket.org/dkistdc/dkist-inventory.git",
         tags=["third-party"],
         extras=["test"],
+        pytest_args=["-n", "auto"],
     ),
     # This package's tests only work on linux
     Package(
