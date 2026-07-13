@@ -180,12 +180,22 @@ DOWNSTREAM = [
 ]
 
 
+def install_asdf(session) -> None:
+    session.install("-e", ".[all,tests]")
+
+    # Log installed packages
+    if session.venv_backend == "uv":
+        session.run_install("uv", "pip", "freeze", silent=True)
+    else:
+        session.run_install("pip", "freeze", silent=True)
+
+
 @nox.session(tags=["test", "downstream"], python="3.12")
 @nox.parametrize("pkg", [pkg.as_param() for pkg in DOWNSTREAM])
 def downstream(session, pkg: Package):
     """Run the test suite for a downstream package against the local asdf version."""
     dir = pkg.download_and_install(session)
-    session.install("-e", ".[all,tests]")
+    install_asdf(session)
 
     with session.cd(dir):
         pkg.test(session)
