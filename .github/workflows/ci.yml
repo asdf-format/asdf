@@ -31,12 +31,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v7
+      with:
+        persist-credentials: false
     - uses: actions/setup-python@v6
     - uses: j178/prek-action@v2
   type-checking:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v7
+      with:
+        persist-credentials: false
     - uses: actions/setup-python@v6
       with:
         # Run type checking against the oldest supported version
