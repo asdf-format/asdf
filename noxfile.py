@@ -82,6 +82,12 @@ CRDS_ENV = {
 DOWNSTREAM = [
     ### asdf ###
     Package(
+        "asdf-standard",
+        "https://github.com/asdf-format/asdf-standard.git",
+        tags=["asdf"],
+        extras=["test"],
+    ),
+    Package(
         "asdf-compression",
         "https://github.com/asdf-format/asdf-compression.git",
         tags=["asdf"],
@@ -92,6 +98,12 @@ DOWNSTREAM = [
     Package(
         "asdf-coordinates-schemas",
         "https://github.com/asdf-format/asdf-coordinates-schemas.git",
+        tags=["asdf"],
+        extras=["test"],
+    ),
+    Package(
+        "asdf-transform-schemas",
+        "https://github.com/asdf-format/asdf-transform-schemas.git",
         tags=["asdf"],
         extras=["test"],
     ),
