@@ -39,7 +39,6 @@ jobs:
       shell: bash
       run: echo session=$(nox --json -l -t downstream | jq -c '[.[].session]') | tee --append $GITHUB_OUTPUT
   nox:
-    if: (github.repository == 'asdf-format/asdf' && (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Downstream CI')))
     name: ${{ matrix.session }}
     needs: [generate-jobs]
     runs-on: ubuntu-latest
