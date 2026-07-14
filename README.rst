@@ -312,24 +312,29 @@ the package.
     $ pip install "asdf[tests]"
     $ pytest --pyargs asdf
 
-It is also possible to run the tests using `tox
-<https://tox.readthedocs.io/en/latest/>`__.
+It is also possible to run the tests using `nox
+<https://nox.thea.codes/>`__.
 
 ::
 
-   $ pip install tox
+   $ pip install nox
 
-To list all available environments:
-
-::
-
-   $ tox -va
-
-To run a specific environment:
+To list all available sessions:
 
 ::
 
-   $ tox -e <envname>
+   $ nox -l
+
+To run a specific session:
+
+::
+
+   $ nox -s "core-3.12"  # Run core ASDF tests in Python 3.12
+
+Groups of sessions can also be specified by tag:
+
+::
+    $ nox -t downstream  # Run all downstream sessions
 
 
 .. _end-testing-text:
