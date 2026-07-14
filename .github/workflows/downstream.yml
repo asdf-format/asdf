@@ -25,55 +25,37 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  asdf:
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@afacbe8ebafa67b369e1f605b4f6989284ba2e87 # v2.6.5
+  generate-jobs:
     if: (github.repository == 'asdf-format/asdf' && (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Downstream CI')))
-    with:
-      submodules: false
-      # Any env name which does not start with `pyXY` will use this Python version.
-      default_python: '3.12'
-      envs: |
-        - linux: asdf-wcs-schemas
-        - linux: asdf-coordinates-schemas
-        - linux: asdf-zarr
-        - linux: asdf-compression
-
-  astropy:
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@afacbe8ebafa67b369e1f605b4f6989284ba2e87 # v2.6.5
+    runs-on: ubuntu-latest
+    outputs:
+      session: ${{ steps.set-matrix.outputs.session }}
+    steps:
+    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      with:
+        persist-credentials: false
+    - uses: wntrblm/nox@3284968a16fa5bd7fc0cc64a69a531404ccb4756 # 2026.07.11
+    - id: set-matrix
+      shell: bash
+      run: echo session=$(nox --json -l -t downstream | jq -c '[.[].session]') | tee --append $GITHUB_OUTPUT
+  nox:
     if: (github.repository == 'asdf-format/asdf' && (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Downstream CI')))
-    with:
-      submodules: false
-      # Any env name which does not start with `pyXY` will use this Python version.
-      default_python: '3.12'
-      envs: |
-        - linux: asdf-astropy
-        - linux: specutils
-
-  stsci:
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@afacbe8ebafa67b369e1f605b4f6989284ba2e87 # v2.6.5
-    if: (github.repository == 'asdf-format/asdf' && (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Downstream CI')))
-    with:
-      submodules: false
-      # Any env name which does not start with `pyXY` will use this Python version.
-      default_python: '3.12'
-      envs: |
-        - linux: astrocut
-        - linux: gwcs
-        - linux: jwst
-        - linux: stdatamodels
-        - linux: stpipe
-        - linux: roman_datamodels
-
-  third-party:
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@afacbe8ebafa67b369e1f605b4f6989284ba2e87 # v2.6.5
-    if: (github.repository == 'asdf-format/asdf' && (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Downstream CI')))
-    with:
-      submodules: false
-      # Any env name which does not start with `pyXY` will use this Python version.
-      default_python: '3.12'
-      envs: |
-        - linux: weldx
-        - linux: sunpy
-        - linux: dkist
-        - linux: dkist-inventory
-        - linux: abacusutils
+    name: ${{ matrix.session }}
+    needs: [generate-jobs]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        session: ${{ fromJson(needs.generate-jobs.outputs.session) }}
+    steps:
+    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      with:
+          # Need tags for dynamic versioning
+          fetch-depth: 0
+          persist-credentials: false
+    - uses: | # v8.3.2 # zizmor: ignore[cache-poisoning] this workflow doesn't publish any artifacts
+        astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990
+    - uses: wntrblm/nox@3284968a16fa5bd7fc0cc64a69a531404ccb4756 # 2026.07.11
+    - run: nox -v -s "${MATRIX_SESSION}"
+      env:
+        MATRIX_SESSION: ${{ matrix.session }}

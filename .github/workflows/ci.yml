@@ -78,17 +78,6 @@ jobs:
       envs: |
         - linux: jsonschema
           python-version: 3.12
-
-  asdf-schemas:
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@afacbe8ebafa67b369e1f605b4f6989284ba2e87 # v2.6.5
-    with:
-      submodules: false
-      envs: |
-        - linux: asdf-standard
-          python-version: 3.12
-        - linux: asdf-transform-schemas
-          python-version: 3.12
-
   test:
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@afacbe8ebafa67b369e1f605b4f6989284ba2e87 # v2.6.5
     with:
