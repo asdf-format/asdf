@@ -319,7 +319,7 @@ def compatibility(session):
     Asdf(parallel=False).install(session, "virtualenv").test(session, "integration_tests/compatibility/")
 
 
-@nox.session(tags=["test", "core"], python="3.12")
+@nox.session(tags=["test"], python="3.12")
 def jsonschema(session):
     """Run asdf jsonschema tests"""
     Asdf(parallel=False).install(session).test(session, "--jsonschema")

@@ -89,7 +89,7 @@ jobs:
     - uses: | # v8.3.2 # zizmor: ignore[cache-poisoning] this workflow doesn't publish any artifacts
         astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990
     - uses: wntrblm/nox@3284968a16fa5bd7fc0cc64a69a531404ccb4756 # 2026.07.11
-    - run: nox -v -s coverage
+    - run: nox -v -t coverage
     - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
       with:
         fail_ci_if_error: true
@@ -108,3 +108,15 @@ jobs:
         astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990
     - uses: wntrblm/nox@3284968a16fa5bd7fc0cc64a69a531404ccb4756 # 2026.07.11
     - run: nox -v -s "core-3.11"
+  jsonschema:
+    if: (github.repository == 'asdf-format/asdf' && (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'jsonschema')))
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      with:
+          fetch-depth: 0
+          persist-credentials: false
+    - uses: | # v8.3.2 # zizmor: ignore[cache-poisoning] this workflow doesn't publish any artifacts
+        astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990
+    - uses: wntrblm/nox@3284968a16fa5bd7fc0cc64a69a531404ccb4756 # 2026.07.11
+    - run: nox -v -s jsonschema
