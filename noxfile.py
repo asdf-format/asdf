@@ -102,7 +102,7 @@ class Asdf:
     parallel: bool
     show_slowest: int | None = 10
 
-    def install(self, session: Session, *extra_deps) -> Asdf:
+    def install(self, session: Session, *extra_deps: str) -> Asdf:
         """Install local version of ASDF and its dependencies.
 
         Arguments passed to `extra_deps` are installed after ASDF.
@@ -117,7 +117,7 @@ class Asdf:
 
         return self
 
-    def test(self, session: Session, *extra_args) -> Asdf:
+    def test(self, session: Session, *extra_args: str) -> Asdf:
         """Run the ASDF test suite.
 
         Arguments passed to `extra_args` are forwarded to pytest.
