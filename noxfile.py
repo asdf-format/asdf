@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from dataclasses import KW_ONLY, dataclass, field
 from pathlib import Path
 
@@ -7,6 +9,19 @@ import nox
 nox.options.default_venv_backend = "uv|virtualenv"
 # Fail if using an external program without external=True
 nox.options.error_on_external_run = True
+
+PYPROJECT = nox.project.load_toml("pyproject.toml")
+
+
+def log_dependencies(session) -> None:
+    """Log all dependencies in the current environment.
+
+    Only shown if nox is run with `nox -v`.
+    """
+    if session.venv_backend == "uv":
+        session.run_install("uv", "pip", "freeze", silent=True)
+    else:
+        session.run_install("pip", "freeze", silent=True)
 
 
 @dataclass(frozen=True)
@@ -42,8 +57,13 @@ class Package:
         session.install("-e", self._installer_spec(dir))
         return dir
 
+    def install_asdf(self, session) -> None:
+        """Install local version of ASDF and all required dependencies."""
+        session.install("-e", ".[all,tests]")
+
     def test(self, session) -> None:
         """Run the package's test suite."""
+        log_dependencies(session)
         session.run(*self._generate_pytest_command(), env=self.env)
 
     def _installer_spec(self, dir: Path) -> str:
@@ -71,6 +91,58 @@ class Package:
             yield from self.pytest_args
 
 
+@dataclass(frozen=True, kw_only=True)
+class Asdf:
+    """Helper class for managing ASDF installation and testing options."""
+
+    parallel: bool
+    show_slowest: int | None = 10
+
+    def install(self, session, *extra_deps):
+        """Install local version of ASDF and its dependencies.
+
+        Arguments passed to `extra_deps` are installed after ASDF.
+        """
+        if self.parallel:
+            session.install("pytest-xdist")
+
+        session.install("-e", ".[all,tests]")
+
+        if extra_deps:
+            session.install(*extra_deps)
+
+        return self
+
+    def test(self, session, *extra_args) -> Asdf:
+        """Run the ASDF test suite.
+
+        Arguments passed to `extra_args` are forwarded to pytest.
+        """
+        log_dependencies(session)
+        session.run(*self._pytest_args(), *extra_args)
+        return self
+
+    def install_oldest_deps(self, session) -> Asdf:
+        """Install the oldest supported versions of all ASDF dependencies."""
+        session.install("minimum_dependencies")
+        tmp_path = Path(session.create_tmp()) / "requirements-min.txt"
+        session.run_install("minimum_dependencies", "asdf", "--filename", str(tmp_path), silent=True)
+
+        session.install("-r", tmp_path)
+        return self
+
+    def _pytest_args(self):
+        """Generate pytest command and arguments.
+
+        Intended to be passed to `session.run`.
+        """
+        yield "pytest"
+        if self.show_slowest is not None:
+            yield f"--durations={self.show_slowest}"
+        if self.parallel:
+            yield from ("--numprocesses", "auto")
+
+
 CRDS_ENV = {
     "CRDS_SERVER_URL": "https://jwst-crds.stsci.edu",
     "CRDS_PATH": "/tmp/crds_cache",  # noqa: S108
@@ -82,12 +154,6 @@ CRDS_ENV = {
 DOWNSTREAM = [
     ### asdf ###
     Package(
-        "asdf-standard",
-        "https://github.com/asdf-format/asdf-standard.git",
-        tags=["asdf"],
-        extras=["test"],
-    ),
-    Package(
         "asdf-compression",
         "https://github.com/asdf-format/asdf-compression.git",
         tags=["asdf"],
@@ -98,12 +164,6 @@ DOWNSTREAM = [
     Package(
         "asdf-coordinates-schemas",
         "https://github.com/asdf-format/asdf-coordinates-schemas.git",
-        tags=["asdf"],
-        extras=["test"],
-    ),
-    Package(
-        "asdf-transform-schemas",
-        "https://github.com/asdf-format/asdf-transform-schemas.git",
         tags=["asdf"],
         extras=["test"],
     ),
@@ -192,14 +252,9 @@ DOWNSTREAM = [
 ]
 
 
-def install_asdf(session) -> None:
-    session.install("-e", ".[all,tests]")
-
-    # Log installed packages
-    if session.venv_backend == "uv":
-        session.run_install("uv", "pip", "freeze", silent=True)
-    else:
-        session.run_install("pip", "freeze", silent=True)
+################
+### SESSIONS ###
+################
 
 
 @nox.session(tags=["test", "downstream"], python="3.12")
@@ -207,7 +262,82 @@ def install_asdf(session) -> None:
 def downstream(session, pkg: Package):
     """Run the test suite for a downstream package against the local asdf version."""
     dir = pkg.download_and_install(session)
-    install_asdf(session)
+    pkg.install_asdf(session)
 
     with session.cd(dir):
         pkg.test(session)
+
+
+@nox.session(tags=["test", "core"], python=["3.10", "3.11", "3.12", "3.13"])
+def core(session):
+    """Run asdf test suite"""
+    Asdf(parallel=True).install(session).test(session)
+
+
+@nox.session(tags=["test", "coverage"], python="3.14")
+def coverage(session):
+    """Run asdf test suite with coverage"""
+    (
+        Asdf(parallel=False)
+        .install(session, "pytest-cov")
+        .test(
+            session,
+            "--cov",
+            "--cov-config",
+            "pyproject.toml",
+            "--cov-report",
+            "term-missing",
+            "--cov-report",
+            "xml",
+        )
+    )
+
+
+@nox.session(tags=["test", "core"], python=["3.10", "3.11", "3.12", "3.13", "3.14"])
+def devdeps(session):
+    """Run asdf tests against latest unstable versions of asdf dependencies"""
+    (
+        Asdf(parallel=True)
+        .install(session, "-r", "requirements-dev.txt")
+        .test(session, "-W", "ignore::asdf_standard.exceptions.UnstableCoreSchemasWarning")
+    )
+
+
+@nox.session(tags=["test", "core"], python="3.12")
+def mocks3(session):
+    """Set up AWS mocks and run S3 integration tests"""
+    (
+        Asdf(parallel=False)
+        .install(session, *nox.project.dependency_groups(PYPROJECT, "mocks3"))
+        .test(session, "integration_tests/mocks3/")
+    )
+
+
+@nox.session(tags=["test", "core"], python="3.11")
+def compatibility(session):
+    """Run asdf compatibility integration tests"""
+    Asdf(parallel=False).install(session, "virtualenv").test(session, "integration_tests/compatibility/")
+
+
+@nox.session(tags=["test", "core"], python="3.12")
+def jsonschema(session):
+    """Run asdf jsonschema tests"""
+    Asdf(parallel=False).install(session).test(session, "--jsonschema")
+
+
+@nox.session(
+    tags=["test", "core"],
+    python="3.10",
+    # This test doesn't work with the uv backend
+    # Probably due to differences in build isolation
+    venv_backend="virtualenv",
+)
+def oldestdeps(session):
+    """Run asdf tests against oldest supported dependency versions"""
+    (Asdf(parallel=True).install(session).install_oldest_deps(session).test(session))
+
+
+@nox.session(tags=["test", "core"], python=["3.14", "3.15"])
+def pytestdev(session):
+    """Run asdf tests using latest unstable pytest version"""
+    Asdf(parallel=True).install(session, "git+https://github.com/pytest-dev/pytest").test(session)
