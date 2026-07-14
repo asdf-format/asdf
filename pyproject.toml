@@ -40,7 +40,7 @@ docs = [
 http = ["fsspec[http]>=2022.8.2"]
 lz4 = ["lz4>=0.10"]
 tests = ["asdf[all]", "psutil", "pytest>=8", "syrupy>=5.1"]
-typing = ["pyrefly==1.1.1", "types-PyYAML", "types-jmespath"]
+typing = ["pyrefly==1.1.1", "types-PyYAML", "types-jmespath", "nox"]
 
 benchmark = ["asdf[tests]", "pytest-benchmark"]
 test = ["asdf[tests]"]
@@ -220,7 +220,6 @@ issue_format = "`#{issue} <https://github.com/asdf-format/asdf/pull/{issue}>`_"
 [tool.pyrefly]
 project-excludes = ["asdf/_jsonschema/"]
 search-path = [".", "integration_tests/compatibility"]
-ignore-missing-imports = ["nox"]
 baseline = ".pyrefly-baseline.json"
 
 [tool.pyrefly.errors]
