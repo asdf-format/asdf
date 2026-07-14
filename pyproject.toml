@@ -59,6 +59,7 @@ asdf_extensions = { builtin = "asdf.extension._legacy:BuiltinExtension" }
 asdftool = "asdf._commands.main:main"
 
 [dependency-groups]
+# Used for S3 integration testing
 mocks3 = ["boto", "fsspec", "moto[s3,server]", "s3fs>2023.12.1"]
 
 [build-system]
