@@ -17,6 +17,7 @@ on:
       - synchronize
       - labeled
 
+permissions: {}
 
 # Only cancel in-progress jobs or runs for the current workflow
 #   This cancels the already triggered workflows for a specific PR without canceling
@@ -30,21 +31,25 @@ jobs:
   pre-commit:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v7
-    - uses: actions/setup-python@v6
-    - uses: j178/prek-action@v2
+    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      with:
+        persist-credentials: false
+    - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+    - uses: j178/prek-action@e98a699c41eb69ab013a45817a0406469a748f8d # v2.0.5
   type-checking:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v7
-    - uses: actions/setup-python@v6
+    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      with:
+        persist-credentials: false
+    - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
       with:
         # Run type checking against the oldest supported version
         python-version: "3.10"
     - run: pip install -e ".[all,tests,typing]"
     - run: pyrefly check --output-format=github
   core:
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v2
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@afacbe8ebafa67b369e1f605b4f6989284ba2e87 # v2.6.5
     with:
       submodules: false
       envs: |
@@ -66,26 +71,15 @@ jobs:
       coverage: codecov
 
   jsonschema:
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v2
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@afacbe8ebafa67b369e1f605b4f6989284ba2e87 # v2.6.5
     if: (github.repository == 'asdf-format/asdf' && (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'jsonschema')))
     with:
       submodules: false
       envs: |
         - linux: jsonschema
           python-version: 3.12
-
-  asdf-schemas:
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v2
-    with:
-      submodules: false
-      envs: |
-        - linux: asdf-standard
-          python-version: 3.12
-        - linux: asdf-transform-schemas
-          python-version: 3.12
-
   test:
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v2
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@afacbe8ebafa67b369e1f605b4f6989284ba2e87 # v2.6.5
     with:
       submodules: false
       envs: |
@@ -93,7 +87,7 @@ jobs:
         - windows: py311-parallel
 
   dev:
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v2
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@afacbe8ebafa67b369e1f605b4f6989284ba2e87 # v2.6.5
     with:
       submodules: false
       envs: |
@@ -109,14 +103,14 @@ jobs:
       coverage: codecov
 
   oldest:
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v2
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@afacbe8ebafa67b369e1f605b4f6989284ba2e87 # v2.6.5
     with:
       submodules: false
       envs: |
         - linux: py310-oldestdeps-parallel
 
   compatibility:
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v2
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@afacbe8ebafa67b369e1f605b4f6989284ba2e87 # v2.6.5
     with:
       submodules: false
       envs: |
@@ -124,7 +118,7 @@ jobs:
           python-version: 3.11
 
   mocks3:
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v2
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@afacbe8ebafa67b369e1f605b4f6989284ba2e87 # v2.6.5
     with:
       submodules: false
       envs: |

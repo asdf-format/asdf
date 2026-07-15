@@ -58,3 +58,10 @@ repos:
     - id: tombi-lint
       args: ["--offline"]
       language_version: ">=3.10"
+- repo: https://github.com/zizmorcore/zizmor-pre-commit
+  # Zizmor version.
+  rev: v1.26.1
+  hooks:
+    # Run the linter.
+    - id: zizmor
+      args: [--no-progress, --fix]

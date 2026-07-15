@@ -6,9 +6,11 @@ on:
     types: [released]
   workflow_dispatch:
 
+permissions: {}
+
 jobs:
   build:
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish_pure_python.yml@v2
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish_pure_python.yml@afacbe8ebafa67b369e1f605b4f6989284ba2e87 # v2.6.5
     with:
       upload_to_pypi: ${{ (github.event_name == 'release') && (github.event.action == 'released') }}
       test_extras: tests

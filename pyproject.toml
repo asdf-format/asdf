@@ -215,7 +215,7 @@ issue_format = "`#{issue} <https://github.com/asdf-format/asdf/pull/{issue}>`_"
 [tool.towncrier.fragment.general]
 
 [tool.pyrefly]
-project-excludes = ["asdf/_jsonschema/"]
+project-excludes = ["asdf/_jsonschema/", "noxfile.py"]
 search-path = [".", "integration_tests/compatibility"]
 baseline = ".pyrefly-baseline.json"
 
