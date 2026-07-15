@@ -158,12 +158,24 @@ CRDS_ENV: dict[str, str] = {
 DOWNSTREAM: list[Package] = [
     ### asdf ###
     Package(
+        "asdf-standard",
+        "https://github.com/asdf-format/asdf-standard.git",
+        tags=["asdf-schemas"],
+        extras=["test"],
+    ),
+    Package(
         "asdf-compression",
         "https://github.com/asdf-format/asdf-compression.git",
         tags=["asdf"],
         extras=["tests", "all"],
     ),
     Package("asdf-zarr", "https://github.com/asdf-format/asdf-zarr.git", tags=["asdf"], extras=["tests"]),
+    Package(
+        "asdf-transform-schemas",
+        "https://github.com/asdf-format/asdf-transform-schemas.git",
+        tags=["asdf-schemas"],
+        extras=["test"],
+    ),
     Package("asdf-wcs-schemas", "https://github.com/asdf-format/asdf-wcs-schemas.git", tags=["asdf"], extras=["test"]),
     Package(
         "asdf-coordinates-schemas",
