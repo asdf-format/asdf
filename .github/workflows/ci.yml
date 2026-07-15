@@ -107,7 +107,7 @@ jobs:
     - uses: | # v8.3.2 # zizmor: ignore[cache-poisoning] this workflow doesn't publish any artifacts
         astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990
     - uses: wntrblm/nox@3284968a16fa5bd7fc0cc64a69a531404ccb4756 # 2026.07.11
-    - run: nox -v -s "core-3.11"
+    - run: nox -v -s "core-3.12"
   jsonschema:
     if: (github.repository == 'asdf-format/asdf' && (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'jsonschema')))
     runs-on: ubuntu-latest
