@@ -63,7 +63,7 @@ jobs:
   core:
     # For mac/windows jobs set the name to "{session}-{os}"
     # For linux just use the session name to avoid clutter
-    name: ${{ case(matrix.os == "ubuntu-latest", matrix.session, format('{0}-{1}', matrix.session, matrix.os)) }}
+    name: ${{ case(matrix.os == 'ubuntu-latest', matrix.session, join([matrix.session, matrix.os], '-')) }}
     needs: [core-generate-jobs]
     strategy:
       fail-fast: false
