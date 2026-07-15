@@ -312,6 +312,17 @@ def coverage(session: Session) -> None:
 @nox.session(tags=["test", "core"], python=["3.10", "3.11", "3.12", "3.13", "3.14"])
 def devdeps(session: Session) -> None:
     """Run asdf tests against latest unstable versions of asdf dependencies"""
+    session.virtualenv.env.update(
+        {
+            "ASDF_UNSTABLE_CORE_SCHEMAS": "1",
+            "PIP_EXTRA_INDEX_URL": "https://pypi.anaconda.org/scientific-python-nightly-wheels/simple",
+            "UV_INDEX": "https://pypi.anaconda.org/scientific-python-nightly-wheels/simple",
+            # Change uv index resolution to match pip
+            "UV_INDEX_STRATEGY": "unsafe-best-match",
+            # Change uv prerelease resolution to match pip
+            "UV_PRERELEASE": "allow",
+        }
+    )
     (
         Asdf(parallel=True)
         .install(session, "-r", "requirements-dev.txt")
