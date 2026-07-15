@@ -294,7 +294,7 @@ def core(session: Session) -> None:
 def coverage(session: Session) -> None:
     """Run asdf test suite with coverage"""
     (
-        Asdf(parallel=False)
+        Asdf(parallel=True)
         .install(session, "pytest-cov")
         .test(
             session,
