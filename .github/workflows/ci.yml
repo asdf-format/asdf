@@ -61,7 +61,7 @@ jobs:
       shell: bash
       run: echo session=$(nox --json -l -t core | jq -c '[.[].session]') | tee --append $GITHUB_OUTPUT
   core:
-    name: ${{ matrix.session }}-${{ matrix.os }}
+    name: ${{ matrix.session }}-${{ runner.os }}
     needs: [core-generate-jobs]
     strategy:
       fail-fast: false
@@ -83,6 +83,7 @@ jobs:
         astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990
     - uses: wntrblm/nox@3284968a16fa5bd7fc0cc64a69a531404ccb4756 # 2026.07.11
     - run: nox -v -s "${MATRIX_SESSION}"
+      shell: bash
       env:
         MATRIX_SESSION: ${{ matrix.session }}
     - if: ${{ contains(matrix.session, 'coverage') }}
