@@ -61,7 +61,9 @@ jobs:
       shell: bash
       run: echo session=$(nox --json -l -t core | jq -c '[.[].session]') | tee --append $GITHUB_OUTPUT
   core:
-    name: ${{ matrix.session }}-${{ runner.os }}
+    # For mac/windows jobs set the name to "{session}-{os}"
+    # For linux just use the session name to avoid clutter
+    name: ${{ case(matrix.os == "ubuntu-latest", matrix.session, format('{0}-{1}', matrix.session, matrix.os)) }}
     needs: [core-generate-jobs]
     strategy:
       fail-fast: false
