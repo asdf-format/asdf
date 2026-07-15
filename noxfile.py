@@ -290,7 +290,7 @@ def core(session: Session) -> None:
     Asdf(parallel=True).install(session).test(session)
 
 
-@nox.session(tags=["test", "coverage"], python="3.14")
+@nox.session(tags=["test", "coverage", "core"], python="3.14")
 def coverage(session: Session) -> None:
     """Run asdf test suite with coverage"""
     (
@@ -346,7 +346,7 @@ def compatibility(session: Session) -> None:
     Asdf(parallel=False).install(session, "virtualenv").test(session, "integration_tests/compatibility/")
 
 
-@nox.session(tags=["test"], python="3.12")
+@nox.session(tags=["test", "core"], python="3.12")
 def jsonschema(session: Session) -> None:
     """Run asdf jsonschema tests"""
     Asdf(parallel=False).install(session).test(session, "--jsonschema")
