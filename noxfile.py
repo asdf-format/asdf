@@ -160,7 +160,7 @@ DOWNSTREAM: list[Package] = [
     Package(
         "asdf-standard",
         "https://github.com/asdf-format/asdf-standard.git",
-        tags=["asdf-schemas"],
+        tags=["asdf"],
         extras=["test"],
     ),
     Package(
@@ -173,7 +173,7 @@ DOWNSTREAM: list[Package] = [
     Package(
         "asdf-transform-schemas",
         "https://github.com/asdf-format/asdf-transform-schemas.git",
-        tags=["asdf-schemas"],
+        tags=["asdf"],
         extras=["test"],
     ),
     Package("asdf-wcs-schemas", "https://github.com/asdf-format/asdf-wcs-schemas.git", tags=["asdf"], extras=["test"]),
