@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import KW_ONLY, dataclass, field
+from dataclasses import KW_ONLY, dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -35,7 +35,7 @@ class Package:
     name: str
     repo: str
     _: KW_ONLY
-    tags: list[str] = field(default_factory=list)
+    category: str | None = None
     extras: list[str] | None = None
     env: dict[str, str] | None = None
     parallel: bool = False
@@ -44,7 +44,8 @@ class Package:
 
     def as_param(self) -> nox.param:
         """Build a nox `param` from the package configuration."""
-        return nox.param(self, tags=self.tags, id=self.name)
+        tags = [self.category] if self.category is not None else []
+        return nox.param(self, tags=tags, id=self.name)
 
     def download_and_install(self, session: Session) -> Path:
         """Clone and install the package repo and its dependencies.
@@ -160,79 +161,86 @@ DOWNSTREAM: list[Package] = [
     Package(
         "asdf-standard",
         "https://github.com/asdf-format/asdf-standard.git",
-        tags=["asdf"],
+        category="asdf",
         extras=["test"],
     ),
     Package(
         "asdf-compression",
         "https://github.com/asdf-format/asdf-compression.git",
-        tags=["asdf"],
+        category="asdf",
         extras=["tests", "all"],
     ),
-    Package("asdf-zarr", "https://github.com/asdf-format/asdf-zarr.git", tags=["asdf"], extras=["tests"]),
+    Package(
+        "asdf-zarr",
+        "https://github.com/asdf-format/asdf-zarr.git",
+        category="asdf",
+        extras=["tests"],
+    ),
     Package(
         "asdf-transform-schemas",
         "https://github.com/asdf-format/asdf-transform-schemas.git",
-        tags=["asdf"],
+        category="asdf",
         extras=["test"],
     ),
-    Package("asdf-wcs-schemas", "https://github.com/asdf-format/asdf-wcs-schemas.git", tags=["asdf"], extras=["test"]),
+    Package(
+        "asdf-wcs-schemas", "https://github.com/asdf-format/asdf-wcs-schemas.git", category="asdf", extras=["test"]
+    ),
     Package(
         "asdf-coordinates-schemas",
         "https://github.com/asdf-format/asdf-coordinates-schemas.git",
-        tags=["asdf"],
+        category="asdf",
         extras=["test"],
     ),
     ### astropy ###
     Package(
         "asdf-astropy",
         "https://github.com/astropy/asdf-astropy.git",
-        tags=["astropy"],
+        category="astropy",
         extras=["test"],
     ),
     Package(
         "specutils",
         "https://github.com/astropy/specutils.git",
-        tags=["astropy"],
+        category="astropy",
         extras=["test"],
     ),
     ### stsci ###
     Package(
         "astrocut",
         "https://github.com/spacetelescope/astrocut.git",
-        tags=["stsci"],
+        category="stsci",
         extras=["test"],
         pytest_args=["--pyargs", "astrocut"],
     ),
     Package(
         "gwcs",
         "https://github.com/spacetelescope/gwcs.git",
-        tags=["stsci"],
+        category="stsci",
         extras=["test"],
     ),
     Package(
         "jwst",
         "https://github.com/spacetelescope/jwst.git",
-        tags=["stsci"],
+        category="stsci",
         extras=["test"],
         env=CRDS_ENV,
     ),
     Package(
         "stdatamodels",
         "https://github.com/spacetelescope/stdatamodels.git",
-        tags=["stsci"],
+        category="stsci",
         extras=["test"],
         env=CRDS_ENV,
     ),
-    Package("stpipe", "https://github.com/spacetelescope/stpipe.git", tags=["stsci"], extras=["test"]),
+    Package("stpipe", "https://github.com/spacetelescope/stpipe.git", category="stsci", extras=["test"]),
     Package(
-        "roman_datamodels", "https://github.com/spacetelescope/roman_datamodels.git", tags=["stsci"], extras=["test"]
+        "roman_datamodels", "https://github.com/spacetelescope/roman_datamodels.git", category="stsci", extras=["test"]
     ),
     ### third-party ###
     Package(
         "weldx",
         "https://github.com/BAMWelDX/weldx.git",
-        tags=["third-party"],
+        category="third-party",
         extras=["test", "media"],
         pytest_paths=["weldx/tests/asdf_tests", "weldx/schemas"],
         pytest_args=["--asdf-tests"],
@@ -240,21 +248,21 @@ DOWNSTREAM: list[Package] = [
     Package(
         "sunpy",
         "https://github.com/sunpy/sunpy.git",
-        tags=["third-party"],
+        category="third-party",
         extras=["tests", "all"],
         pytest_paths=["sunpy/io"],
     ),
     Package(
         "dkist",
         "https://github.com/DKISTDC/dkist.git",
-        tags=["third-party"],
+        category="third-party",
         extras=["tests"],
         pytest_args=["--benchmark-skip"],
     ),
     Package(
         "dkist-inventory",
         "https://bitbucket.org/dkistdc/dkist-inventory.git",
-        tags=["third-party"],
+        category="third-party",
         extras=["test"],
         parallel=True,
     ),
@@ -262,7 +270,7 @@ DOWNSTREAM: list[Package] = [
     Package(
         "abacusutils",
         "https://github.com/abacusorg/abacusutils.git",
-        tags=["third-party"],
+        category="third-party",
         pytest_paths=["tests/test_data.py"],
     ),
 ]
