@@ -397,7 +397,7 @@ def pytestdev(session: Session) -> None:
     Asdf(parallel=True).install(session, "git+https://github.com/pytest-dev/pytest").test(session)
 
 
-@nox.session(tags=["core", "type-checking"], python="3.10")
+@nox.session(name="type-checking", tags=["core", "type-checking"], python="3.10")
 def type_checking(session: Session) -> None:
     # Install asdf with typing dependencies
     Asdf(parallel=False, extras=["all", "tests", "typing"]).install(session)
