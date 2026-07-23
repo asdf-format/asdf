@@ -113,7 +113,7 @@ class Package:
 class Asdf:
     """Helper class for managing ASDF installation and testing options."""
 
-    parallel: bool
+    parallel: bool = False
     show_slowest: int | None = 10
     extras: list[str] = field(default_factory=lambda: ["all", "tests"])
 
@@ -402,9 +402,30 @@ def type_checking(session: Session) -> None:
     """Run pyrefly type-checking."""
 
     # Install asdf with typing dependencies
-    Asdf(parallel=False, extras=["all", "tests", "typing"]).install(session)
+    Asdf(extras=["all", "tests", "typing"]).install(session)
     # If running in CI, set Github output format unless output format is manually set
     if not any(arg.startswith("--output-format") for arg in session.posargs) and is_ci():
         session.posargs.append("--output-format=github")
 
     session.run("pyrefly", "check", *session.posargs)
+
+
+@nox.session(tags=["docs"], python="3.14", default=False)
+def docs(session: Session) -> None:
+    """Build sphinx documentation.
+
+    If the environment hasn't changed, you can speed up the build by using nox's `-R` flag
+    to reuse the virtual environment and skip reinstalling dependencies, e.g. `nox -R -s docs`.
+    """
+    Asdf(extras=[]).install(session, *nox.project.dependency_groups(PYPROJECT, "docs"))
+
+    session.run(
+        "sphinx-build",
+        "-E",
+        "-T",
+        "-W",
+        "--keep-going",
+        "docs",
+        "build/html",
+        *session.posargs,
+    )
