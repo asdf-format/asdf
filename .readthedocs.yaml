@@ -23,10 +23,10 @@ sphinx:
 
 python:
   install:
-    - method: pip
+    - method: uv
+      command: sync
+      groups: docs
       path: .
-      extra_requirements:
-        - docs
 
 # No extra formats
 formats: []
