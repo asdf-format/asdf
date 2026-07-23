@@ -414,8 +414,8 @@ def type_checking(session: Session) -> None:
 def docs(session: Session) -> None:
     """Build sphinx documentation.
 
-    If the environment hasn't changed, you can speed up the build by using nox's `-N` flag
-    to reuse the virtual environment and skip reinstalling dependencies, e.g. `nox -N -s docs`.
+    If the environment hasn't changed, you can speed up the build by using nox's `-R` flag
+    to reuse the virtual environment and skip reinstalling dependencies, e.g. `nox -R -s docs`.
     """
     Asdf(extras=[]).install(session, *nox.project.dependency_groups(PYPROJECT, "docs"))
 
