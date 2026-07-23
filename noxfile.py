@@ -399,6 +399,8 @@ def pytestdev(session: Session) -> None:
 
 @nox.session(name="type-checking", tags=["core", "type-checking"], python="3.10")
 def type_checking(session: Session) -> None:
+    """Run pyrefly type-checking."""
+
     # Install asdf with typing dependencies
     Asdf(parallel=False, extras=["all", "tests", "typing"]).install(session)
     # If running in CI, set Github output format unless output format is manually set
