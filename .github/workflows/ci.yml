@@ -36,18 +36,6 @@ jobs:
         persist-credentials: false
     - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
     - uses: j178/prek-action@e98a699c41eb69ab013a45817a0406469a748f8d # v2.0.5
-  type-checking:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-      with:
-        persist-credentials: false
-    - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
-      with:
-        # Run type checking against the oldest supported version
-        python-version: "3.10"
-    - run: pip install -e ".[all,tests,typing]"
-    - run: pyrefly check --output-format=github
   core-generate-jobs:
     runs-on: ubuntu-latest
     outputs:

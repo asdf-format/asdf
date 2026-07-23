@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import KW_ONLY, dataclass
+import json
+import os
+from dataclasses import KW_ONLY, dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -26,6 +28,17 @@ def log_dependencies(session: Session) -> None:
         session.run_install("uv", "pip", "freeze", silent=True)
     else:
         session.run_install("pip", "freeze", silent=True)
+
+
+def is_ci() -> bool:
+    """Returns `True` if nox is currently running in a CI environment."""
+    ci = os.environ.get("CI", "")
+    try:
+        # Parse as JSON so that `"true"`, `"1"`, etc register as `True`
+        # `"false"`, `"0"`, or any invalid value registers as `False`
+        return bool(json.loads(ci))
+    except json.JSONDecodeError:
+        return False
 
 
 @dataclass(frozen=True)
@@ -69,7 +82,7 @@ class Package:
     def test(self, session: Session) -> None:
         """Run the package's test suite."""
         log_dependencies(session)
-        session.run(*self._generate_pytest_command(), env=self.env)
+        session.run(*self._pytest_args(), *session.posargs, env=self.env)
 
     def _installer_spec(self, dir: Path) -> str:
         """Get the full dependency spec for installing the package which can be passed to pip.
@@ -79,7 +92,7 @@ class Package:
         extras = f"[{','.join(self.extras)}]" if self.extras else ""
         return f"{dir}{extras}"
 
-    def _generate_pytest_command(self):
+    def _pytest_args(self):
         """Get the full pytest command for testing this package.
 
         Returns a generator that yields the pytest command followed by all arguments.
@@ -102,6 +115,7 @@ class Asdf:
 
     parallel: bool
     show_slowest: int | None = 10
+    extras: list[str] = field(default_factory=lambda: ["all", "tests"])
 
     def install(self, session: Session, *extra_deps: str) -> Asdf:
         """Install local version of ASDF and its dependencies.
@@ -111,7 +125,12 @@ class Asdf:
         if self.parallel:
             session.install("pytest-xdist")
 
-        session.install("-e", ".[all,tests]")
+        if self.extras:
+            extras = f"[{','.join(self.extras)}]"
+        else:
+            extras = ""
+
+        session.install("-e", f".{extras}")
 
         if extra_deps:
             session.install(*extra_deps)
@@ -124,7 +143,7 @@ class Asdf:
         Arguments passed to `extra_args` are forwarded to pytest.
         """
         log_dependencies(session)
-        session.run(*self._pytest_args(), *extra_args)
+        session.run(*self._pytest_args(), *extra_args, *session.posargs)
         return self
 
     def install_oldest_deps(self, session: Session) -> Asdf:
@@ -376,3 +395,16 @@ def oldestdeps(session: Session) -> None:
 def pytestdev(session: Session) -> None:
     """Run asdf tests using latest unstable pytest version"""
     Asdf(parallel=True).install(session, "git+https://github.com/pytest-dev/pytest").test(session)
+
+
+@nox.session(name="type-checking", tags=["core", "type-checking"], python="3.10")
+def type_checking(session: Session) -> None:
+    """Run pyrefly type-checking."""
+
+    # Install asdf with typing dependencies
+    Asdf(parallel=False, extras=["all", "tests", "typing"]).install(session)
+    # If running in CI, set Github output format unless output format is manually set
+    if not any(arg.startswith("--output-format") for arg in session.posargs) and is_ci():
+        session.posargs.append("--output-format=github")
+
+    session.run("pyrefly", "check", *session.posargs)
