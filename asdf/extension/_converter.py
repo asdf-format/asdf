@@ -3,12 +3,24 @@ Support for Converter, the new API for serializing custom
 types.  Will eventually replace the `asdf.types` module.
 """
 
+from __future__ import annotations
+
 import abc
+from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
 from asdf.util import get_class_name, uri_match
 
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
-class Converter(abc.ABC):
+    from asdf.extension import ExtensionProxy, SerializationContext
+    from asdf.typing import TreeKey
+
+    YamlNode = dict[TreeKey, Any] | list[Any] | str
+
+
+@runtime_checkable
+class Converter(Protocol):
     """
     Abstract base class for plugins that convert nodes from the
     parsed YAML tree into custom objects, and vice versa.
@@ -44,6 +56,13 @@ class Converter(abc.ABC):
     information about that object to display during ``AsdfFile.info``.
     """
 
+    # This is a hacky workaround for a limitation of Python protocols.
+    #
+    # @runtime_checkable protocols always support issubclass() but only support isinstance()
+    # if all of the class members are methods (i.e. no attributes or properties)
+    #
+    # Converter being a protocol makes it work with type checkers and issubclass().
+    # This __subclasshook__ makes it also work with isinstance().
     @classmethod
     def __subclasshook__(cls, class_):
         if cls is Converter:
@@ -57,7 +76,7 @@ class Converter(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def tags(self):
+    def tags(self) -> Iterable[str]:
         """
         Get the YAML tags that this converter is capable of
         handling.  URI patterns are permitted, see
@@ -68,10 +87,11 @@ class Converter(abc.ABC):
         iterable of str
             Tag URIs or URI patterns.
         """
+        ...
 
     @property
     @abc.abstractmethod
-    def types(self):
+    def types(self) -> Iterable[str | type]:
         """
         Get the Python types that this converter is capable of
         handling.
@@ -81,9 +101,10 @@ class Converter(abc.ABC):
         iterable of str or type
             If str, the fully qualified class name of the type.
         """
+        ...
 
     @abc.abstractmethod
-    def to_yaml_tree(self, obj, tag, ctx):
+    def to_yaml_tree(self, obj: Any, tag: str, ctx: SerializationContext) -> YamlNode:
         """
         Convert an object into a node suitable for YAML serialization.
         This method is not responsible for writing actual YAML; rather, it
@@ -117,9 +138,10 @@ class Converter(abc.ABC):
         dict or list or str
             The YAML node representation of the object.
         """
+        ...
 
     @abc.abstractmethod
-    def from_yaml_tree(self, node, tag, ctx):
+    def from_yaml_tree(self, node: YamlNode, tag: str, ctx: SerializationContext) -> Any:
         """
         Convert a YAML node into an instance of a custom type.
 
@@ -152,6 +174,7 @@ class Converter(abc.ABC):
             An instance of one of the types listed in the `types` property,
             or a generator that yields such an instance.
         """
+        ...
 
 
 class ConverterProxy(Converter):
@@ -160,7 +183,7 @@ class ConverterProxy(Converter):
     implementations of optional methods.
     """
 
-    def __init__(self, delegate, extension):
+    def __init__(self, delegate: Converter, extension: ExtensionProxy):
         if not isinstance(delegate, Converter):
             msg = "Converter must implement the asdf.extension.Converter interface"
             raise TypeError(msg)
@@ -201,7 +224,7 @@ class ConverterProxy(Converter):
                 raise TypeError(msg)
 
     @property
-    def lazy(self):
+    def lazy(self) -> bool:
         """
         Boolean indicating if this Converter supports "lazy" node objects
 
@@ -212,7 +235,7 @@ class ConverterProxy(Converter):
         return getattr(self._delegate, "lazy", False)
 
     @property
-    def tags(self):
+    def tags(self) -> list[str]:
         """
         Get the list of tag URIs that this converter is capable of
         handling.
@@ -224,7 +247,7 @@ class ConverterProxy(Converter):
         return self._tags
 
     @property
-    def types(self):
+    def types(self) -> list[str | type]:
         """
         Get the Python types that this converter is capable of
         handling.
@@ -235,7 +258,7 @@ class ConverterProxy(Converter):
         """
         return self._types
 
-    def select_tag(self, obj, ctx):
+    def select_tag(self, obj: Any, ctx: SerializationContext) -> str | None:
         """
         Select the tag to use when converting an object to YAML.
 
@@ -257,7 +280,7 @@ class ConverterProxy(Converter):
 
         return method(obj, self._tags, ctx)
 
-    def to_yaml_tree(self, obj, tag, ctx):
+    def to_yaml_tree(self, obj: Any, tag: str, ctx: SerializationContext) -> YamlNode:
         """
         Convert an object into a node suitable for YAML serialization.
 
@@ -278,7 +301,7 @@ class ConverterProxy(Converter):
         """
         return self._delegate.to_yaml_tree(obj, tag, ctx)
 
-    def from_yaml_tree(self, node, tag, ctx):
+    def from_yaml_tree(self, node: YamlNode, tag: str, ctx: SerializationContext) -> Any:
         """
         Convert a YAML node into an instance of a custom type.
 
@@ -297,7 +320,7 @@ class ConverterProxy(Converter):
         """
         return self._delegate.from_yaml_tree(node, tag, ctx)
 
-    def to_info(self, obj):
+    def to_info(self, obj: Any) -> Any:
         """
         Convert an object to a container with items further
         defining information about this node. This method
@@ -319,7 +342,7 @@ class ConverterProxy(Converter):
         return self._delegate.to_info(obj)
 
     @property
-    def delegate(self):
+    def delegate(self) -> Converter:
         """
         Get the wrapped converter instance.
 
@@ -330,7 +353,7 @@ class ConverterProxy(Converter):
         return self._delegate
 
     @property
-    def extension(self):
+    def extension(self) -> ExtensionProxy:
         """
         Get the extension that provided this converter.
 
@@ -341,7 +364,7 @@ class ConverterProxy(Converter):
         return self._extension
 
     @property
-    def package_name(self):
+    def package_name(self) -> str | None:
         """
         Get the name of the Python package of this converter's
         extension.  This may not be the same package that implements
@@ -355,7 +378,7 @@ class ConverterProxy(Converter):
         return self.extension.package_name
 
     @property
-    def package_version(self):
+    def package_version(self) -> str | None:
         """
         Get the version of the Python package of this converter's
         extension.  This may not be the same package that implements
@@ -369,7 +392,7 @@ class ConverterProxy(Converter):
         return self.extension.package_version
 
     @property
-    def class_name(self):
+    def class_name(self) -> str:
         """
         Get the fully qualified class name of this converter.
 
