@@ -360,7 +360,7 @@ class AsdfFile:
         return [e for e in get_config().extensions if self.version_string in e.asdf_standard_requirement]
 
     def _process_user_extensions(
-        self, extensions: None | ExtensionLike | Sequence[ExtensionLike]
+        self, extensions: ExtensionLike | Sequence[ExtensionLike] | None
     ) -> list[ExtensionProxy]:
         """
         Validate a list of extensions requested by the user
