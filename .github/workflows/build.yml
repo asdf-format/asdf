@@ -56,3 +56,6 @@ jobs:
           subject-path: "dist/*"
       # To upload to PyPI without a token, add this workflow file as a Trusted Publisher in the project settings on the PyPI website
       - uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
+        # TODO remove this when we verify a Trusted Publisher config exists on PyPI
+        with:
+          password: ${{ secrets.PYPI_PASSWORD_ASDF_MAINTAINER }} # zizmor: ignore[use-trusted-publishing] we need to get access to the PyPI project so we can set up Trusted Publishers
