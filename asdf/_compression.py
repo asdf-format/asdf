@@ -5,18 +5,23 @@ import struct
 import typing
 import warnings
 import zlib
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal, overload
 
 import numpy as np
+
+from asdf.extension import Compress, CompressionPlugin, Decompress
 
 from .config import get_config
 from .exceptions import AsdfWarning
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator
     from io import IOBase
 
+    from asdf.extension import ExtensionProxy
     from asdf.generic_io import GenericFile
-    from asdf.typing import ByteArray1D, Compression
+    from asdf.typing import ByteArray1D
+    from asdf.typing import Compression as CompressionLabel
 
 
 def validate(compression: str | bytes | None) -> str | None:
@@ -62,7 +67,9 @@ def validate(compression: str | bytes | None) -> str | None:
     return compression
 
 
-class Lz4Compressor:
+class Lz4Compressor(Compress, Decompress):
+    label = b"lz4"
+
     def __init__(self):
         try:
             import lz4.block
@@ -76,7 +83,7 @@ class Lz4Compressor:
 
         self._api = lz4.block
 
-    def compress(self, data, **kwargs):
+    def compress(self, data: memoryview, **kwargs) -> Iterator[bytes]:
         kwargs["mode"] = kwargs.get("mode", "default")
         compression_block_size = kwargs.pop("compression_block_size", 1 << 22)
 
@@ -86,14 +93,14 @@ class Lz4Compressor:
             header = struct.pack("!I", len(_output))
             yield header + _output
 
-    def decompress(self, blocks, out, **kwargs):
+    def decompress(self, data: Iterable[bytes], out, **kwargs) -> int:
         _size = 0
         _pos = 0
         _partial_len = b""
         _buffer = None
         bytesout = 0
 
-        for block in blocks:
+        for block in data:
             cast = "c"
             blk = memoryview(block).cast(cast)  # don't copy on slice
 
@@ -149,39 +156,57 @@ class Lz4Compressor:
         return bytesout
 
 
-class ZlibCompressor:
-    def compress(self, data, **kwargs):
+class ZlibCompressor(Compress, Decompress):
+    label = b"zlib"
+
+    def compress(self, data: memoryview, **kwargs) -> Iterator[bytes]:
         comp = zlib.compress(data, **kwargs)
         yield comp
 
-    def decompress(self, blocks, out, **kwargs):
+    def decompress(self, data: Iterable[bytes], out, **kwargs) -> int:
         decompressor = zlib.decompressobj(**kwargs)
 
         i = 0
-        for block in blocks:
+        for block in data:
             decomp = decompressor.decompress(block)
             out[i : i + len(decomp)] = decomp
             i += len(decomp)
         return i
 
 
-class Bzp2Compressor:
-    def compress(self, data, **kwargs):
+class Bzp2Compressor(Compress, Decompress):
+    label = b"bzp2"
+
+    def compress(self, data: memoryview, **kwargs) -> Iterator[bytes]:
         comp = bz2.compress(data, **kwargs)
         yield comp
 
-    def decompress(self, blocks, out, **kwargs):
+    def decompress(self, data: Iterable[bytes], out, **kwargs) -> int:
         decompressor = bz2.BZ2Decompressor(**kwargs)
 
         i = 0
-        for block in blocks:
+        for block in data:
             decomp = decompressor.decompress(block)
             out[i : i + len(decomp)] = decomp
             i += len(decomp)
         return i
 
 
-def _get_compressor_from_extensions(compression, return_extension=False):
+@overload
+def _get_compressor_from_extensions(
+    compression: bytes | str | None, return_extension: Literal[True]
+) -> tuple[CompressionPlugin, ExtensionProxy] | None: ...
+@overload
+def _get_compressor_from_extensions(
+    compression: bytes | str | None, return_extension: Literal[False]
+) -> CompressionPlugin | None: ...
+@overload
+def _get_compressor_from_extensions(compression: bytes | str | None) -> CompressionPlugin | None: ...
+
+
+def _get_compressor_from_extensions(
+    compression: bytes | str | None, return_extension: bool = False
+) -> CompressionPlugin | tuple[CompressionPlugin, ExtensionProxy] | None:
     """
     Look at the loaded ASDF extensions and return the first one (if any)
     that can handle this type of compression.
@@ -202,7 +227,7 @@ def _get_compressor_from_extensions(compression, return_extension=False):
     return None
 
 
-def _get_all_compression_extension_labels():
+def _get_all_compression_extension_labels() -> list[str]:
     """
     Get the list of compression labels supported via extensions
     """
@@ -215,12 +240,12 @@ def _get_all_compression_extension_labels():
     return labels
 
 
-def _get_compressor(label: str) -> Any:
+def _get_compressor(label: str) -> CompressionPlugin:
     ext_comp = _get_compressor_from_extensions(label)
 
     if ext_comp is not None:
         # Use an extension before builtins
-        comp = ext_comp
+        return ext_comp
     elif label == "zlib":
         comp = ZlibCompressor()
     elif label == "bzp2":
@@ -234,7 +259,7 @@ def _get_compressor(label: str) -> Any:
     return comp
 
 
-def to_compression_header(compression: Compression) -> bytes:
+def to_compression_header(compression: CompressionLabel) -> bytes:
     """
     Converts a compression string to the four byte field in a block
     header.
@@ -281,6 +306,10 @@ def decompress(
 
     compression = typing.cast("str", validate(compression))
     decoder = _get_compressor(compression)
+    if not isinstance(decoder, Decompress):
+        msg = f"Compression plugin {decoder.label} does not implement decompress() function"
+        raise TypeError(msg)
+
     if config is None:
         config = {}
 
@@ -320,6 +349,10 @@ def compress(
     """
     compression = typing.cast("str", validate(compression))
     encoder = _get_compressor(compression)
+    if not isinstance(encoder, Compress):
+        msg = f"Compression plugin {encoder.label} does not implement compress() function"
+        raise TypeError(msg)
+
     if config is None:
         config = {}
 
@@ -335,12 +368,12 @@ def compress(
     # get a 1D array that preserves byteorder
     # Note: in Python < 3.12 numpy typing doesn't correctly reflect that arrays support buffer protocol
     # See also: https://github.com/numpy/numpy/issues/26783
-    view = memoryview(np.frombuffer(view, dtype=view.format))  # pyrefly: ignore[bad-argument-type]
+    view: memoryview = memoryview(np.frombuffer(view, dtype=view.format))  # pyrefly: ignore[bad-argument-type]
     if not view.contiguous:
         # the data will be contiguous by construction, but better safe than sorry!
         raise ValueError(view.contiguous)
 
-    compressed = encoder.compress(data, **config)
+    compressed = encoder.compress(view, **config)
     # Write block by block
     for comp in compressed:
         fd.write(comp)

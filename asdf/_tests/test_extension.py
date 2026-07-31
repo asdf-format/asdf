@@ -452,13 +452,15 @@ def test_converter():
         tags = []
         types = []
 
-        def to_yaml_tree(self, *args):
+        def to_yaml_tree(self, obj, tag, ctx):
             pass
 
-        def from_yaml_tree(self, *args):
+        def from_yaml_tree(self, node, tag, ctx):
             pass
 
-    assert issubclass(ConverterNoSubclass, Converter)
+    # Have to use isinstance instead of issubclass
+    # issubclass isn't supported for Protocols with non-function attributes
+    assert isinstance(ConverterNoSubclass(), Converter)
 
 
 def test_converter_proxy():

@@ -1,8 +1,15 @@
+from __future__ import annotations
+
 import re
-from collections import namedtuple
+from typing import TYPE_CHECKING, Any
+
+from typing_extensions import NamedTuple
 
 from .schema import load_schema
 from .treeutil import get_children, is_container
+
+if TYPE_CHECKING:
+    from asdf.typing import TreeKey
 
 
 def _filter_tree(info, filters):
@@ -231,10 +238,7 @@ def _make_traversable(node, extension_manager):
     return extension_manager.get_converter_for_type(node_type).to_info(node), False, True
 
 
-_SchemaInfo = namedtuple("SchemaInfo", ["info", "value"])
-
-
-class SchemaInfo(_SchemaInfo):
+class SchemaInfo(NamedTuple):
     """
     A class to hold the schema info and the value of the node.
 
@@ -245,6 +249,9 @@ class SchemaInfo(_SchemaInfo):
     value : object
         The value of the node.
     """
+
+    info: dict[TreeKey, Any]
+    value: Any
 
     def __repr__(self):
         return f"{self.info}"

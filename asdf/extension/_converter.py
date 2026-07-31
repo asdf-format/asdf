@@ -6,21 +6,24 @@ types.  Will eventually replace the `asdf.types` module.
 from __future__ import annotations
 
 import abc
-from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Any, Generic, Protocol, runtime_checkable
 
+from typing_extensions import TypeVar
+
+from asdf.typing import YamlNode
 from asdf.util import get_class_name, uri_match
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from asdf.extension import ExtensionProxy, SerializationContext
-    from asdf.typing import TreeKey
 
-    YamlNode = dict[TreeKey, Any] | list[Any] | str
+_T = TypeVar("_T")
+_Node = TypeVar("_Node", default=YamlNode)
 
 
 @runtime_checkable
-class Converter(Protocol):
+class Converter(Protocol[_T, _Node]):
     """
     Abstract base class for plugins that convert nodes from the
     parsed YAML tree into custom objects, and vice versa.
@@ -56,24 +59,6 @@ class Converter(Protocol):
     information about that object to display during ``AsdfFile.info``.
     """
 
-    # This is a hacky workaround for a limitation of Python protocols.
-    #
-    # @runtime_checkable protocols always support issubclass() but only support isinstance()
-    # if all of the class members are methods (i.e. no attributes or properties)
-    #
-    # Converter being a protocol makes it work with type checkers and issubclass().
-    # This __subclasshook__ makes it also work with isinstance().
-    @classmethod
-    def __subclasshook__(cls, class_):
-        if cls is Converter:
-            return (
-                hasattr(class_, "tags")
-                and hasattr(class_, "types")
-                and hasattr(class_, "to_yaml_tree")
-                and hasattr(class_, "from_yaml_tree")
-            )
-        return NotImplemented  # pragma: no cover
-
     @property
     @abc.abstractmethod
     def tags(self) -> Iterable[str]:
@@ -104,7 +89,7 @@ class Converter(Protocol):
         ...
 
     @abc.abstractmethod
-    def to_yaml_tree(self, obj: Any, tag: str, ctx: SerializationContext) -> YamlNode:
+    def to_yaml_tree(self, obj: _T, tag: str, ctx: SerializationContext) -> _Node:
         """
         Convert an object into a node suitable for YAML serialization.
         This method is not responsible for writing actual YAML; rather, it
@@ -141,7 +126,7 @@ class Converter(Protocol):
         ...
 
     @abc.abstractmethod
-    def from_yaml_tree(self, node: YamlNode, tag: str, ctx: SerializationContext) -> Any:
+    def from_yaml_tree(self, node: _Node, tag: str, ctx: SerializationContext) -> _T:
         """
         Convert a YAML node into an instance of a custom type.
 
@@ -177,13 +162,13 @@ class Converter(Protocol):
         ...
 
 
-class ConverterProxy(Converter):
+class ConverterProxy(Generic[_T, _Node], Converter[_T, _Node]):
     """
     Proxy that wraps a `Converter` and provides default
     implementations of optional methods.
     """
 
-    def __init__(self, delegate: Converter, extension: ExtensionProxy):
+    def __init__(self, delegate: Converter[_T, _Node], extension: ExtensionProxy):
         if not isinstance(delegate, Converter):
             msg = "Converter must implement the asdf.extension.Converter interface"
             raise TypeError(msg)
@@ -258,7 +243,7 @@ class ConverterProxy(Converter):
         """
         return self._types
 
-    def select_tag(self, obj: Any, ctx: SerializationContext) -> str | None:
+    def select_tag(self, obj: _T, ctx: SerializationContext) -> str | None:
         """
         Select the tag to use when converting an object to YAML.
 
@@ -280,7 +265,7 @@ class ConverterProxy(Converter):
 
         return method(obj, self._tags, ctx)
 
-    def to_yaml_tree(self, obj: Any, tag: str, ctx: SerializationContext) -> YamlNode:
+    def to_yaml_tree(self, obj: _T, tag: str, ctx: SerializationContext) -> _Node:
         """
         Convert an object into a node suitable for YAML serialization.
 
@@ -301,7 +286,7 @@ class ConverterProxy(Converter):
         """
         return self._delegate.to_yaml_tree(obj, tag, ctx)
 
-    def from_yaml_tree(self, node: YamlNode, tag: str, ctx: SerializationContext) -> Any:
+    def from_yaml_tree(self, node: _Node, tag: str, ctx: SerializationContext) -> _T:
         """
         Convert a YAML node into an instance of a custom type.
 
@@ -320,7 +305,7 @@ class ConverterProxy(Converter):
         """
         return self._delegate.from_yaml_tree(node, tag, ctx)
 
-    def to_info(self, obj: Any) -> Any:
+    def to_info(self, obj: _T) -> Any:
         """
         Convert an object to a container with items further
         defining information about this node. This method
@@ -342,7 +327,7 @@ class ConverterProxy(Converter):
         return self._delegate.to_info(obj)
 
     @property
-    def delegate(self) -> Converter:
+    def delegate(self) -> Converter[_T, _Node]:
         """
         Get the wrapped converter instance.
 

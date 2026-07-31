@@ -19,7 +19,8 @@ from .resource import ResourceManager, ResourceMappingProxy
 if TYPE_CHECKING:
     from collections.abc import Generator, Mapping
 
-    from asdf.typing import ArrayStorage, Compression, ExtensionLike
+    from asdf.extension import ExtensionLike
+    from asdf.typing import ArrayStorage, Compression
 
 __all__ = ["AsdfConfig", "config_context", "get_config"]
 

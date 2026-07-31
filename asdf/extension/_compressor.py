@@ -9,27 +9,26 @@ binary array blocks, while Converter is designed for serialization
 of custom Python types into the YAML tree.
 """
 
+from __future__ import annotations
+
 import abc
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator
 
 
-class Compressor(abc.ABC):
+@runtime_checkable
+class CompressionPlugin(Protocol):
+    """A compression plugin with an associated label.
+
+    For implementations of the actual compress/decompress methods,
+    see the `Compress` and `Decompress` protocols.
     """
-    Abstract base class for plugins that compress binary data.
-
-    Implementing classes must provide the ``labels`` property, and
-    at least one of the `compress()` and `decompress()` methods.
-    May also provide a constructor.
-    """
-
-    @classmethod
-    def __subclasshook__(cls, class_):
-        if cls is Compressor:
-            return hasattr(class_, "label") and (hasattr(class_, "compress") or hasattr(class_, "decompress"))
-        return NotImplemented  # pragma: no cover
 
     @property
     @abc.abstractmethod
-    def label(self):
+    def label(self) -> bytes:
         """
         Get the 4-byte label identifying this compression
 
@@ -38,8 +37,14 @@ class Compressor(abc.ABC):
         label : bytes
             The compression label
         """
+        ...
 
-    def compress(self, data, **kwargs):
+
+@runtime_checkable
+class Compress(CompressionPlugin, Protocol):
+    """A compression plugin that implements ``compress``."""
+
+    def compress(self, data: memoryview, **kwargs) -> Iterator[bytes]:
         """
         Compress ``data``, yielding the results. The yield may be
         block-by-block, or all at once.
@@ -60,7 +65,12 @@ class Compressor(abc.ABC):
         """
         raise NotImplementedError
 
-    def decompress(self, data, out, **kwargs):
+
+@runtime_checkable
+class Decompress(CompressionPlugin, Protocol):
+    """A compression plugin that implements ``decompress``."""
+
+    def decompress(self, data: Iterable[bytes], out: memoryview, **kwargs) -> int:
         """
         Decompress ``data``, writing the result into ``out``.
 
@@ -82,3 +92,19 @@ class Compressor(abc.ABC):
             The number of bytes written to ``out``
         """
         raise NotImplementedError
+
+
+class Compressor(Compress, Decompress):
+    """
+    Abstract base class for plugins that compress binary data.
+
+    Implementing classes must provide the ``labels`` property, and
+    at least one of the `compress()` and `decompress()` methods.
+    May also provide a constructor.
+    """
+
+    @classmethod
+    def __subclasshook__(cls, class_):
+        if cls is Compressor:
+            return hasattr(class_, "label") and (hasattr(class_, "compress") or hasattr(class_, "decompress"))
+        return NotImplemented  # pragma: no cover

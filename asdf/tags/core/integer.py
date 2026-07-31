@@ -1,4 +1,16 @@
+from __future__ import annotations
+
 from numbers import Integral
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    import numpy as np
+
+    from asdf.typing import ArrayStorage
+
+    # Using a custom definition because Integral doesn't work with type-checking
+    # and numbers._IntegralLike doesn't support comparison operations
+    _IntegerLike = int | np.integer[Any]
 
 
 class IntegerType:
@@ -38,13 +50,13 @@ class IntegerType:
     ...     assert aa["largeval"] == largeval
     """
 
-    def __init__(self, value, storage_type="internal"):
+    def __init__(self, value: _IntegerLike, storage_type: ArrayStorage = "internal"):
         if storage_type not in ["internal", "inline"]:
             msg = f"storage_type '{storage_type}' is not a recognized storage type"
             raise ValueError(msg)
-        self._value = value
-        self._sign = "-" if value < 0 else "+"
-        self._storage = storage_type
+        self._value: _IntegerLike = value
+        self._sign: str = "-" if value < 0 else "+"
+        self._storage: ArrayStorage = storage_type
 
     def __int__(self):
         return int(self._value)

@@ -17,14 +17,16 @@ class Validator(abc.ABC):
     in ASDF schemas.
     """
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def schema_property(self) -> str:
         """
         Name of the schema property used to invoke this validator.
         """
         ...
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def tags(self) -> Iterable[str]:
         """
         Get the YAML tags that are appropriate to this validator.

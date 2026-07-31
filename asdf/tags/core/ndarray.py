@@ -3,6 +3,7 @@ from __future__ import annotations
 import mmap
 import sys
 import typing
+from typing import Any
 
 import numpy as np
 from numpy import ma
@@ -11,6 +12,8 @@ from asdf import util
 from asdf._jsonschema import ValidationError
 
 if typing.TYPE_CHECKING:
+    import numpy.typing as npt
+
     from asdf.typing import NDArray
 
 _STRUCTURED_DATATYPE_KEYS = {"name", "datatype", "byteorder", "shape"}
@@ -283,7 +286,7 @@ class NDArrayType:
         self._strides = strides
         self._order = order
 
-    def _make_array(self):
+    def _make_array(self) -> npt.NDArray[Any]:
         # If the ASDF file has been updated in-place, then there's
         # a chance that the block's original data object has been
         # closed and replaced.  We need to check here and re-generate
@@ -303,29 +306,32 @@ class NDArrayType:
                         self._array = None
                     del fd
 
-        if self._array is None:
-            if isinstance(self._source, str):
-                # we need to keep _source as a str to allow stdatamodels to
-                # support AsdfInFits
-                data = self._data_callback()
-            else:
-                # cached data is used here so that multiple NDArrayTypes will all use
-                # the same base array
-                data = self._data_callback(_attr="cached_data")
+        if self._array is not None:
+            return self._array
 
-            if hasattr(data, "base") and isinstance(data.base, mmap.mmap) and data.base.closed:
-                msg = "ASDF file has already been closed. Can not get the data."
-                raise OSError(msg)
+        if isinstance(self._source, str):
+            # we need to keep _source as a str to allow stdatamodels to
+            # support AsdfInFits
+            data = self._data_callback()
+        else:
+            # cached data is used here so that multiple NDArrayTypes will all use
+            # the same base array
+            data = self._data_callback(_attr="cached_data")
 
-            # compute shape (streaming blocks have '0' data size in the block header)
-            shape = self.get_actual_shape(
-                self._shape,
-                self._strides,
-                self._dtype,
-                data.size,
-            )
-            self._array = np.ndarray(shape, self._dtype, data, self._offset, self._strides, self._order)
-            self._array = self._apply_mask(self._array, self._mask)
+        if hasattr(data, "base") and isinstance(data.base, mmap.mmap) and data.base.closed:
+            msg = "ASDF file has already been closed. Can not get the data."
+            raise OSError(msg)
+
+        # compute shape (streaming blocks have '0' data size in the block header)
+        shape = self.get_actual_shape(
+            self._shape,
+            self._strides,
+            self._dtype,
+            data.size,
+        )
+        self._array = np.ndarray(shape, self._dtype, data, self._offset, self._strides, self._order)
+        self._array = self._apply_mask(self._array, self._mask)
+
         return self._array
 
     def _apply_mask(self, array, mask):

@@ -15,7 +15,14 @@ class TagDefinition:
         Long description of the tag.
     """
 
-    def __init__(self, tag_uri, *, schema_uris=None, title=None, description=None):
+    def __init__(
+        self,
+        tag_uri: str,
+        *,
+        schema_uris: str | None = None,
+        title: str | None = None,
+        description: str | None = None,
+    ):
         if "*" in tag_uri:
             msg = "URI patterns are not permitted in TagDefinition"
             raise ValueError(msg)
@@ -35,7 +42,7 @@ class TagDefinition:
         self._description = description
 
     @property
-    def tag_uri(self):
+    def tag_uri(self) -> str:
         """
         Get the tag URI.
 
@@ -46,7 +53,7 @@ class TagDefinition:
         return self._tag_uri
 
     @property
-    def schema_uris(self):
+    def schema_uris(self) -> list[str]:
         """
         Get the URIs of the schemas that should be used to validate
         objects with this tag.
@@ -58,7 +65,7 @@ class TagDefinition:
         return self._schema_uris
 
     @property
-    def title(self):
+    def title(self) -> str | None:
         """
         Get the short description of the tag.
 
@@ -69,7 +76,7 @@ class TagDefinition:
         return self._title
 
     @property
-    def description(self):
+    def description(self) -> str | None:
         """
         Get the long description of the tag.
 
@@ -79,5 +86,5 @@ class TagDefinition:
         """
         return self._description
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<TagDefinition URI: {self.tag_uri}>"

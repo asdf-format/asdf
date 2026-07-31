@@ -1,9 +1,30 @@
+from typing import Any, Literal
+
 import numpy as np
+from typing_extensions import TypedDict
 
-from asdf.extension import Converter
+from asdf.extension import Converter, SerializationContext
+from asdf.tags.core.ndarray import NDArrayType
+from asdf.tags.core.stream import Stream
+from asdf.typing import NDArray
 
 
-class NDArrayConverter(Converter):
+class NdArrayMap(TypedDict, total=False):
+    source: str | int
+    data: Any
+    datatype: str
+    shape: list[str | int]
+    byteorder: Literal["little", "big"]
+    offset: int
+    strides: list[int]
+    mask: Any
+
+
+_NdArray = NDArray | Stream
+_NdArrayNode = NdArrayMap | list[Any]
+
+
+class NDArrayConverter(Converter[_NdArray, _NdArrayNode]):
     tags = [
         "tag:stsci.edu:asdf/core/ndarray-1.0.0",
         "tag:stsci.edu:asdf/core/ndarray-1.1.0",
@@ -17,22 +38,20 @@ class NDArrayConverter(Converter):
         "asdf.tags.core.stream.Stream",
     ]
 
-    def to_yaml_tree(self, obj, tag, ctx):
-        import numpy as np
+    def to_yaml_tree(self, obj: _NdArray, tag: str, ctx: SerializationContext) -> _NdArrayNode:
         from numpy import ma
 
         from asdf import config, util
         from asdf._block.options import Options
-        from asdf.tags.core.ndarray import NDArrayType, numpy_array_to_list, numpy_dtype_to_asdf_datatype
-        from asdf.tags.core.stream import Stream
+        from asdf.tags.core.ndarray import numpy_array_to_list, numpy_dtype_to_asdf_datatype
 
         data = obj
+        result: NdArrayMap = {}
 
-        if isinstance(obj, Stream):
+        if isinstance(data, Stream):
             # previously, stream never passed on data, we can do that here
             ctx._blocks.set_streamed_write_block(data._array, data)
 
-            result = {}
             result["source"] = -1
             result["shape"] = ["*", *data._shape]
             result["datatype"] = data._datatype
@@ -98,8 +117,6 @@ class NDArrayConverter(Converter):
             include_byteorder=(options.storage_type != "inline"),
         )
 
-        result = {}
-
         result["shape"] = list(shape)
         if options.storage_type == "streamed":
             result["shape"][0] = "*"
@@ -134,7 +151,7 @@ class NDArrayConverter(Converter):
 
         return result
 
-    def from_yaml_tree(self, node, tag, ctx):
+    def from_yaml_tree(self, node: _NdArrayNode, tag: str, ctx: SerializationContext) -> _NdArray:
         import sys
         import weakref
 
@@ -194,5 +211,5 @@ class NDArrayConverter(Converter):
         msg = "Invalid ndarray description."
         raise TypeError(msg)
 
-    def to_info(self, obj):
+    def to_info(self, obj: NDArray) -> dict[str, Any]:
         return {"shape": obj.shape, "dtype": obj.dtype}

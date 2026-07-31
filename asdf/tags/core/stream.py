@@ -34,4 +34,4 @@ class Stream:
         return f"Stream({self._shape}, {self._datatype}, strides={self._strides})"
 
     def __str__(self):
-        return str(self.__repr__())
+        return self.__repr__()
