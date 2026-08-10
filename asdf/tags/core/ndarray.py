@@ -241,7 +241,7 @@ def numpy_array_to_list(array):
     return ascii_to_unicode(tolist(array))
 
 
-def inline_array_relax_empty_shape(array: NDArray, shape: None | tuple[int | str, ...]) -> NDArray:
+def inline_array_relax_empty_shape(array: NDArray, shape: tuple[int | str, ...] | None) -> NDArray:
     if shape is None or any(isinstance(s, str) for s in shape):
         return array
 
