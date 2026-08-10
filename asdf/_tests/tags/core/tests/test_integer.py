@@ -1,10 +1,15 @@
 import random
+from typing import TYPE_CHECKING
 
 import pytest
 
 import asdf
+import asdf.util
 from asdf import IntegerType
 from asdf.testing.helpers import roundtrip_object
+
+if TYPE_CHECKING:
+    from asdf.typing import ArrayStorage
 
 # Make sure tests are deterministic
 random.seed(0)
@@ -34,7 +39,8 @@ def test_integer_value(value, sign):
 def test_integer_storage(tmp_path, inline):
     tmpfile = str(tmp_path / "integer.asdf")
 
-    kwargs = {}
+    # This typing is a little hacky but whatever
+    kwargs: dict[str, ArrayStorage] = {}
     if inline:
         kwargs["storage_type"] = "inline"
 
@@ -63,5 +69,5 @@ def test_integer_conversion():
 
     integer = asdf.IntegerType(value)
     assert integer == value
-    assert int(integer) == int(value)
+    assert int(integer) == value
     assert float(integer) == float(value)

@@ -19,7 +19,7 @@ class TagDefinition:
         self,
         tag_uri: str,
         *,
-        schema_uris: str | None = None,
+        schema_uris: list[str] | str | None = None,
         title: str | None = None,
         description: str | None = None,
     ):

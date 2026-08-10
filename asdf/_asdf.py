@@ -328,7 +328,7 @@ class AsdfFile:
                 package_description = f"{package_name}=={package_version}"
                 installed_version = None
                 for mapping in get_config().resource_manager._resource_mappings:
-                    if mapping.package_name == package_name:
+                    if mapping.package_name == package_name and mapping.package_version is not None:
                         installed_version = Version(mapping.package_version)
                         break
                 msg = None

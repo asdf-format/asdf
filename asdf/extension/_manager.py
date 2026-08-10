@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from typing import Any
 
     from asdf.exceptions import ValidationError
-    from asdf.extension import Converter, Extension, TagDefinition, Validator
+    from asdf.extension import ConverterProxy, Extension, ExtensionLike, TagDefinition, Validator
     from asdf.typing import TreeKey
 
 _T_contra = TypeVar("_T_contra", contravariant=True)
@@ -71,7 +71,7 @@ class ExtensionManager:
         in the list take precedence.
     """
 
-    def __init__(self, extensions: Iterable[Extension | ExtensionProxy]):
+    def __init__(self, extensions: Iterable[ExtensionLike]):
         self._extensions = [ExtensionProxy.maybe_wrap(e) for e in extensions]
 
         self._tag_defs_by_tag = {}
@@ -225,7 +225,7 @@ class ExtensionManager:
             msg = f"No support available for YAML tag '{tag}'.  You may need to install a missing extension."
             raise KeyError(msg) from None
 
-    def get_converter_for_tag(self, tag: str) -> Converter[Any]:
+    def get_converter_for_tag(self, tag: str) -> ConverterProxy[Any]:
         """
         Get the converter for the specified tag.
 
@@ -249,7 +249,7 @@ class ExtensionManager:
             msg = f"No support available for YAML tag '{tag}'.  You may need to install a missing extension."
             raise KeyError(msg) from None
 
-    def get_converter_for_type(self, typ: type[_T_contra]) -> Converter[_T_contra]:
+    def get_converter_for_type(self, typ: type[_T_contra]) -> ConverterProxy[_T_contra]:
         """
         Get the converter for the specified Python type.
 
@@ -298,7 +298,7 @@ class ExtensionManager:
         return self._validator_manager
 
 
-def get_cached_extension_manager(extensions: Iterable[Extension | ExtensionProxy]) -> ExtensionManager:
+def get_cached_extension_manager(extensions: Iterable[ExtensionLike]) -> ExtensionManager:
     """
     Get a previously created ExtensionManager for the specified
     extensions, or create and cache one if necessary.  Building
@@ -313,8 +313,6 @@ def get_cached_extension_manager(extensions: Iterable[Extension | ExtensionProxy
     -------
     asdf.extension.ExtensionManager
     """
-    from ._extension import ExtensionProxy
-
     # The tuple makes the extensions hashable so that we
     # can pass them to the lru_cache method.  The ExtensionProxy
     # overrides __hash__ to return the hashed object id of the wrapped

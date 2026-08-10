@@ -37,7 +37,7 @@ def test_config_context_nested():
 def test_config_context_threaded():
     assert get_config().validate_on_read is True
 
-    thread_value = None
+    thread_value: bool | None = None
 
     def worker():
         nonlocal thread_value
