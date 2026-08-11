@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
-from typing import Any, Literal, TypeAlias
+from typing import Any, Literal, Protocol, TypeAlias, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -70,11 +70,27 @@ NDArray: TypeAlias = npt.NDArray[Any] | NDArrayType
 #: A 1-D byte numpy array used to read and write block data
 ByteArray1D: TypeAlias = np.ndarray[tuple[int], np.dtype[np.uint8]]
 
-_Array = TypeVar("_Array", default=NDArray)
+NotSetType = Literal[_NOT_SET_TYPE.NOT_SET]
 
-#: A callback that returns a numpy array
-ArrayCallback = Callable[[], _Array]
+_Array_co = TypeVar("_Array_co", default=NDArray, covariant=True)
+
+
+class ArrayCallback(Protocol[_Array_co]):
+    """A callback that returns a numpy array"""
+
+    def __call__(self) -> _Array_co: ...
+
+
 #: A callback that returns a `ByteArray1D`
 BlockDataCallback = ArrayCallback[ByteArray1D]
 
-NotSetType = Literal[_NOT_SET_TYPE.NOT_SET]
+
+class BlockAttrCallback(ArrayCallback[ByteArray1D], Protocol):
+    """A data callback that provides access to low-level block attributes."""
+
+    @overload
+    def __call__(self) -> ByteArray1D: ...
+    @overload
+    def __call__(self, _attr: str) -> Any: ...
+
+    def __call__(self, _attr: str | None = None) -> ByteArray1D | Any: ...

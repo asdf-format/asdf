@@ -9,9 +9,10 @@ from asdf.extension._extension import ExtensionProxy
 
 if TYPE_CHECKING:
     from asdf import AsdfFile
+    from asdf._block.callback import DataCallback
     from asdf._block.manager import Manager as BlockManager
     from asdf.extension import ExtensionLike, ExtensionManager
-    from asdf.typing import ArrayStorage, BlockDataCallback, Compression, NDArray
+    from asdf.typing import ArrayStorage, BlockAttrCallback, BlockDataCallback, Compression, NDArray
     from asdf.versioning import AsdfVersion
 
 
@@ -97,7 +98,7 @@ class SerializationContext:
         """
         return self.__extensions_used
 
-    def get_block_data_callback(self, index: int, key: BlockKey | None = None) -> BlockDataCallback:
+    def get_block_data_callback(self, index: int, key: BlockKey | None = None) -> BlockAttrCallback:
         """
         Generate a callable that when called will read data
         from an ASDF block at the provided index.
@@ -318,7 +319,7 @@ class ReadBlocksContext(SerializationContext):
         # assigned object
         self.assign_object(None)
 
-    def get_block_data_callback(self, index: int, key: BlockKey | None = None) -> BlockDataCallback:
+    def get_block_data_callback(self, index: int, key: BlockKey | None = None) -> DataCallback:
         if key is None:
             if self._cb is not None:
                 # this operation has already accessed a block without using

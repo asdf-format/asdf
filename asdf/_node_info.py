@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import typing
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
@@ -317,7 +318,7 @@ class NodeSchemaInfo:
 
     key: str
     parent: NodeSchemaInfo | None
-    identifier: str
+    identifier: str | int
     node: Any
     depth: int
     recursive: bool = False
@@ -450,7 +451,7 @@ class NodeSchemaInfo:
 
         return root_info
 
-    def collect_info(self, preserve_list: bool = True) -> dict[str, Any] | list[Any]:
+    def collect_info(self, preserve_list: bool = True) -> dict[str, Any]:
         """
         Collect the information from the NodeSchemaInfo tree, and return it as nested dict.
 
@@ -460,10 +461,14 @@ class NodeSchemaInfo:
         preserve_list : bool
             If True, then lists are preserved. Otherwise, they are turned into dicts.
         """
+        # The root node can't be a list but this is hard to encode in the type system
+        return typing.cast("dict[str, Any]", self._collect_info(preserve_list))
+
+    def _collect_info(self, preserve_list: bool = True) -> dict[str | int, Any] | list[Any]:
         if preserve_list and isinstance(self.node, (list, tuple)) and self.info is None:
             return [c_info for child in self.visible_children if len(c_info := child.collect_info(preserve_list)) > 0]
 
-        info: dict[str, Any] = {
+        info: dict[str | int, Any] = {
             child.identifier: c_info
             for child in self.visible_children
             if len(c_info := child.collect_info(preserve_list)) > 0

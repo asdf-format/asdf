@@ -21,7 +21,9 @@ from asdf.testing import helpers
 def ndarray_tag():
     af = asdf.AsdfFile()
     cvt = af.extension_manager.get_converter_for_type(np.ndarray)
-    full_tag = cvt.select_tag(np.zeros(0), af)
+    full_tag = cvt.select_tag(np.zeros(0), af._create_serialization_context())
+    assert full_tag is not None
+
     return full_tag.removeprefix("tag:stsci.edu:asdf/")
 
 
