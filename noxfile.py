@@ -426,6 +426,6 @@ def docs(session: Session) -> None:
         "-W",
         "--keep-going",
         "docs",
-        "build/html",
+        "docs/_build/html",
         *session.posargs,
     )
