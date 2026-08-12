@@ -1,0 +1,1 @@
+Deprecated `asdf.extension.Compressor` class in favor of new compression protocols.
