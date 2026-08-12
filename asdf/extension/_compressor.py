@@ -99,7 +99,7 @@ class Compressor(Compress, Decompress):
     Abstract base class for plugins that compress binary data.
 
     Implementing classes must provide the ``labels`` property, and
-    at least one of the `compress()` and `decompress()` methods.
+    at least one of the ``compress()`` and ``decompress()`` methods.
     May also provide a constructor.
     """
 

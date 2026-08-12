@@ -43,7 +43,7 @@ class Extension(ExtensionLike):
     """
     Abstract base class defining an extension to ASDF.
 
-    Implementing classes must provide the `extension_uri`.
+    Implementing classes must provide the ``extension_uri``.
     Other properties are optional.
     """
 

@@ -16,8 +16,10 @@ from asdf.util import _NOT_SET_TYPE
 from asdf.versioning import AsdfVersion
 
 __all__ = [
+    "ArrayCallback",
     "ArrayStorage",
     "AsdfVersionLike",
+    "BlockAttrCallback",
     "BlockDataCallback",
     "ByteArray1D",
     "Compression",
