@@ -5,9 +5,9 @@ from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
 from packaging.specifiers import SpecifierSet
 
+from asdf.extension import Compress, CompressionPlugin, Decompress
 from asdf.util import get_class_name
 
-from ._compressor import Compressor
 from ._converter import ConverterProxy
 from ._tag import TagDefinition
 from ._validator import Validator
@@ -104,14 +104,14 @@ class Extension(ExtensionLike):
         return []
 
     @property
-    def compressors(self) -> Iterable[Compressor]:
+    def compressors(self) -> Iterable[CompressionPlugin]:
         """
-        Get the `asdf.extension.Compressor` instances for
+        Get the `asdf.extension.CompressionPlugin` instances for
         compression schemes supported by this extension.
 
         Returns
         -------
-        iterable of asdf.extension.Compressor
+        iterable of asdf.extension.CompressionPlugin
         """
         return []
 
@@ -216,7 +216,7 @@ class ExtensionProxy(ExtensionLike):
         self._compressors = []
         if hasattr(self._delegate, "compressors"):
             for compressor in self._delegate.compressors:
-                if not isinstance(compressor, Compressor):
+                if not isinstance(compressor, (Compress, Decompress)):
                     msg = "Extension property 'compressors' must contain instances of asdf.extension.Compressor"
                     raise TypeError(msg)
                 self._compressors.append(compressor)
@@ -279,13 +279,13 @@ class ExtensionProxy(ExtensionLike):
         return self._converters
 
     @property
-    def compressors(self) -> list[Compressor]:
+    def compressors(self) -> list[CompressionPlugin]:
         """
         Get the extension's compressors.
 
         Returns
         -------
-        list of asdf.extension.Compressor
+        list of asdf.extension.CompressionPlugin
         """
         return self._compressors
 

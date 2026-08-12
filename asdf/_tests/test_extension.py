@@ -11,7 +11,7 @@ import asdf
 from asdf import AsdfFile, config_context
 from asdf.exceptions import AsdfManifestURIMismatchWarning, AsdfSerializationError, ValidationError
 from asdf.extension import (
-    Compressor,
+    Compress,
     Converter,
     ConverterProxy,
     Extension,
@@ -112,7 +112,7 @@ class FullConverter(MinimumConverter):
         return "select_tag result"
 
 
-class MinimalCompressor(Compressor):
+class MinimalCompressor(Compress):
     @staticmethod
     def compress(data):
         return b""

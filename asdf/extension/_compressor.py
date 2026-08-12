@@ -14,6 +14,8 @@ from __future__ import annotations
 import abc
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
+from typing_extensions import deprecated
+
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
 
@@ -94,6 +96,7 @@ class Decompress(CompressionPlugin, Protocol):
         raise NotImplementedError
 
 
+@deprecated("Use Compress and Decompress protocols instead")
 class Compressor(Compress, Decompress):
     """
     Abstract base class for plugins that compress binary data.

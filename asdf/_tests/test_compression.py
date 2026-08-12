@@ -10,7 +10,7 @@ import pytest
 import asdf
 from asdf import _compression, config_context
 from asdf._tests import _helpers as helpers
-from asdf.extension import Compressor, Extension
+from asdf.extension import Compress, Decompress, Extension
 
 if typing.TYPE_CHECKING:
     from asdf.generic_io import GenericFile
@@ -208,15 +208,15 @@ def test_nonnative_endian_compression(tmp_path):
     _roundtrip(tmp_path, {"ledata": ledata, "bedata": bedata}, "lz4")
 
 
-class LzmaCompressor(Compressor):
+class LzmaCompressor(Compress, Decompress):
     def compress(self, data, **kwargs):
         comp = lzma.compress(data, **kwargs)
         yield comp
 
-    def decompress(self, blocks, out, **kwargs):
+    def decompress(self, data, out, **kwargs):
         decompressor = lzma.LZMADecompressor(**kwargs)
         i = 0
-        for block in blocks:
+        for block in data:
             decomp = decompressor.decompress(block)
             out[i : i + len(decomp)] = decomp
             i += len(decomp)
