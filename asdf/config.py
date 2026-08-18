@@ -11,6 +11,8 @@ import threading
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any
 
+from asdf.util import changing_default
+
 from . import _entry_points, util, versioning
 from ._helpers import validate_version
 from .extension import ExtensionProxy
@@ -405,12 +407,20 @@ class AsdfConfig:
             raise ValueError(msg)
         self._all_array_compression_kwargs = value
 
+    @changing_default(False)
     @property
     def default_array_save_base(self) -> bool:
         """
         Option to control if when saving arrays the base array should be
         saved (so views of the same array will refer to offsets/strides of the
         same block).
+
+        Warnings
+        --------
+        In a future release the default value will change from `True` to `False`.
+        Currently this field will emit a `asdf.exceptions.ChangingDefaultArraySaveBaseWarning`
+        if not explicitly set. To silence the warning, explicitly set ``default_array_save_base``
+        to either `True` or `False`.
         """
         return self._default_array_save_base
 
