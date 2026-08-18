@@ -153,6 +153,7 @@ l: &id002 !some/tag-1.0.0
     assert tree["l"] is tree["l"][0]
 
 
+# Need to enable ChangingDefaultWarning exceptions since they are off by default
 @pytest.mark.filterwarnings("error::asdf.exceptions.ChangingDefaultWarning")
 def test_changing_default():
     """Test that changing_default works as expected."""
