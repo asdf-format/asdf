@@ -6,6 +6,8 @@ import pytest
 
 import asdf
 from asdf import generic_io, util
+from asdf.exceptions import ChangingDefaultWarning
+from asdf.util import changing_default
 
 
 def test_not_set():
@@ -149,3 +151,54 @@ l: &id002 !some/tag-1.0.0
     tree = util.load_yaml(io.BytesIO(contents), tagged=tagged)
     assert tree["o"] is tree["o"]["inverse"]["inverse"]
     assert tree["l"] is tree["l"][0]
+
+
+@pytest.mark.filterwarnings("error::asdf.exceptions.ChangingDefaultWarning")
+def test_changing_default():
+    """Test that changing_default works as expected."""
+
+    class CustomWarning(ChangingDefaultWarning): ...
+
+    class Config:
+        def __init__(self):
+            self._value = 1
+            self._other = None
+
+        @changing_default(2, CustomWarning)
+        @property
+        def value(self) -> int:
+            return self._value
+
+        @value.setter
+        def value(self, value: int) -> None:
+            self._value = value
+
+        @value.deleter
+        def value(self) -> None:
+            self._value = 1
+
+        @changing_default("foo")
+        @property
+        def other(self) -> str | None:
+            return self._other
+
+        @other.setter
+        def other(self, value: str) -> None:
+            self._other = value
+
+    cfg = Config()
+
+    # Verify accessing the value emits the custom warning
+    with pytest.warns(CustomWarning):
+        assert cfg.value == 1
+
+    # Verify accessing the value with no warning specified falls back to the default warning
+    with pytest.warns(ChangingDefaultWarning):
+        assert cfg.other is None
+
+    cfg.value = 2
+    cfg.other = "bar"
+
+    # Verify accessing the values once they've been manually set doesn't emit a warning
+    assert cfg.value == 2
+    assert cfg.other == "bar"
