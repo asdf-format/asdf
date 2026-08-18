@@ -417,6 +417,9 @@ class _ChangingDefault(Generic[_T]):
 def changing_default(new_default: _T, warning: type[ChangingDefaultWarning] = ChangingDefaultWarning):
     """Wrap a property to indicate that its default value will change in a future update.
 
+    When the wrapped property is accessed, it will emit a warning if the property value hasn't been manually set.
+    If the value has been manually set, this decorator has no effect.
+
     Parameters
     ----------
     new_default:
