@@ -11,6 +11,8 @@ __all__ = [
     "AsdfProvisionalAPIWarning",
     "AsdfSerializationError",
     "AsdfWarning",
+    "ChangingDefaultArraySaveBaseWarning",
+    "ChangingDefaultWarning",
     "DelimiterNotFoundError",
     "ValidationError",
 ]
@@ -64,7 +66,7 @@ class AsdfPackageVersionWarning(AsdfWarning):
 
 class AsdfManifestURIMismatchWarning(AsdfWarning):
     """
-    A warning indicaing that an extension registered with a manifest
+    A warning indicating that an extension registered with a manifest
     contains a id that does not match the uri of the manifest.
     """
 
@@ -84,3 +86,10 @@ class AsdfSerializationError(RepresenterError):
     that the object does not have a supporting asdf Converter and needs to
     be manually converted to a supported type.
     """
+
+
+class ChangingDefaultWarning(AsdfWarning, DeprecationWarning):
+    """A warning indicating that a default argument or configuration option will change in a future release."""
+
+
+class ChangingDefaultArraySaveBaseWarning(ChangingDefaultWarning): ...

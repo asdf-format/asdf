@@ -3,11 +3,15 @@ import importlib.util
 import math
 import re
 import struct
+import warnings
 from functools import lru_cache
-from typing import Final
+from typing import Final, Generic
 
 import numpy as np
 import yaml
+from typing_extensions import TypeVar
+
+from asdf.exceptions import ChangingDefaultWarning
 
 from . import constants
 
@@ -32,6 +36,7 @@ __all__ = [
     "FileType",
     "NotSet",
     "calculate_padding",
+    "changing_default",
     "get_array_base",
     "get_base_uri",
     "get_class_name",
@@ -348,3 +353,108 @@ class FileType(enum.Enum):
     ASDF = 1
     FITS = 2
     UNKNOWN = 3
+
+
+_T = TypeVar("_T")
+
+
+# Adapted from https://docs.python.org/3/howto/descriptor.html#properties
+class _ChangingDefault(Generic[_T]):
+    """See `changing_default`."""
+
+    def __init__(
+        self,
+        prop,
+        new_default: _T,
+        warning: type[ChangingDefaultWarning],
+    ):
+        self._prop = prop
+        self.__doc__ = self._prop.__doc__
+        self.new_default = new_default
+        self.warning = warning
+
+        self.is_set = False
+
+    def __set_name__(self, owner, name):
+        self.__name__ = name
+
+    def __get__(self, obj, objtype=None):
+        value = self._prop.__get__(obj, objtype)
+
+        if not self.is_set:
+            old_default = value
+            # Using the actual class here so if the name changes it doesn't get missed
+            cls = ChangingDefaultWarning.__name__
+            msg = (
+                f"In the future the default for {self.__name__} will be {self.new_default} "
+                f"instead of the current default of {old_default}. "
+                f"Explicitly pass {self.new_default} or {old_default} to silence this warning, "
+                f'or use warnings.simplefilter("ignore", {cls}) to silence all changing default warnings.'
+            )
+            warnings.warn(msg, self.warning, stacklevel=2)
+        return value
+
+    def __set__(self, obj, value):
+        self.is_set = True
+        return self._prop.__set__(obj, value)
+
+    def __delete__(self, obj):
+        self._prop.__delete__(obj)
+
+    def getter(self, fget):
+        self._prop = type(self._prop)(fget, self._prop.fset, self._prop.fdel, self.__doc__)
+        return self
+
+    def setter(self, fset):
+        self._prop = type(self._prop)(self._prop.fget, fset, self._prop.fdel, self.__doc__)
+        return self
+
+    def deleter(self, fdel):
+        self._prop = type(self._prop)(self._prop.fget, self._prop.fset, fdel, self.__doc__)
+        return self
+
+
+def changing_default(new_default: _T, warning: type[ChangingDefaultWarning] = ChangingDefaultWarning):
+    """Wrap a property to indicate that its default value will change in a future update.
+
+    Parameters
+    ----------
+    new_default:
+        New value that will become the default in the future.
+    warning:
+        Warning class to emit when the value isn't manually set.
+        Must be a subclass of `asdf.exceptions.ChangingDefaultWarning`.
+
+    Examples
+    --------
+    When planning to change the default value of a property simply add the ``@changing_default``
+    decorator after the ``@property`` decorator::
+
+        >>> class Config:
+        ...    def __init__(self):
+        ...        self._value = 1
+        ...
+        ...    @changing_default(2)
+        ...    @property  # Make sure to still include the property decorator
+        ...    def value(self) -> int:
+        ...        return self._value
+        ...
+        ...    @value.setter  # Setter is defined as usual
+        ...    def value(self, value: int) -> None:
+        ...        self._value = value
+        >>> cfg = Config()
+        >>> cfg.value # doctest: +SKIP
+        asdf.exceptions.ChangingDefaultWarning: In the future the default for value will
+            be 2 instead of the current default of 1. Explicitly pass 1 or 2 to silence
+            this warning, or use warnings.simplefilter("ignore", ChangingDefaultWarning)
+            to silence all changing default warnings.
+        1
+        >>> cfg.value = 3
+        >>> cfg.value
+        3
+    """
+
+    def inner(prop):
+        return _ChangingDefault(prop, new_default, warning)
+
+    return inner
