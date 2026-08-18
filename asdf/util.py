@@ -36,7 +36,6 @@ __all__ = [
     "FileType",
     "NotSet",
     "calculate_padding",
-    "changing_default",
     "get_array_base",
     "get_base_uri",
     "get_class_name",
