@@ -1,2 +1,2 @@
-`AsdfConfig.default_array_save_base`'s default value will change from `True` to `False` in a future release.
+The default value of ``default_array_save_base`` in `AsdfConfig` will change from `True` to `False` in a future release.
 The property now emits a warning when accessed unless its value is set manually.
