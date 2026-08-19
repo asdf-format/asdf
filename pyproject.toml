@@ -109,7 +109,7 @@ filterwarnings = [
   # This should really be the more specific asdf.exceptions.ChangingDefaultWarning
   # Unfortunately we can't register that warning without breaking devdeps
   # See: https://github.com/asdf-format/asdf/pull/2117#issuecomment-5333331813
-  "ignore:In the future the default for:DeprecationWarning",
+  "ignore:In the future the default for*:DeprecationWarning",
 ]
 addopts = [
   "--doctest-modules",
