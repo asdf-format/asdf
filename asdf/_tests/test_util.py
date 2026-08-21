@@ -203,3 +203,17 @@ def test_changing_default():
     # Verify accessing the values once they've been manually set doesn't emit a warning
     assert cfg.value == 2
     assert cfg.other == "bar"
+
+    # Verify warning doesn't trigger even if value is deleted
+    del cfg.value
+    assert cfg.value == 1
+
+    class Subconfig(Config):
+        @Config.value.getter
+        def value(self) -> int:  # pyrefly: ignore [bad-override]
+            return self._value + 1
+
+    # Verify that overriding property getters works correctly
+    cfg = Subconfig()
+    cfg.value = 3
+    assert cfg.value == 4
