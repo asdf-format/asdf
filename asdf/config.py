@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 __all__ = ["AsdfConfig", "config_context", "get_config"]
 
 
-DEFAULT_VALIDATE_ON_READ = True
+DEFAULT_VALIDATE_ON_READ = False
 DEFAULT_DEFAULT_VERSION = str(versioning.default_version)
 DEFAULT_LEGACY_FILL_SCHEMA_DEFAULTS = True
 DEFAULT_IO_BLOCK_SIZE = -1  # auto
