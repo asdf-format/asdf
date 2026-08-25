@@ -11,6 +11,8 @@ import threading
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any
 
+from asdf.util import tracked_property
+
 from . import _entry_points, util, versioning
 from ._helpers import validate_version
 from .extension import ExtensionProxy
@@ -464,7 +466,7 @@ class AsdfConfig:
     def lazy_tree(self, value: bool) -> None:
         self._lazy_tree = value
 
-    @property
+    @tracked_property
     def warn_on_failed_conversion(self) -> bool:
         """
         Get configuration that controls if errors during
@@ -476,6 +478,13 @@ class AsdfConfig:
         Returns
         -------
         bool
+
+        Warnings
+        --------
+        In a future release the default value will change from `False` to `True`.
+        Currently, if a conversion fails and this field hasn't been set then ASDF will
+        emit an `asdf.exceptions.AsdfFutureWarning` *before* raising an exception.
+        Manually set the field to either `True` or `False` to silence this warning.
         """
         return self._warn_on_failed_conversion
 

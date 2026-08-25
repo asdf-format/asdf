@@ -1,13 +1,17 @@
+from __future__ import annotations
+
 import enum
 import importlib.util
 import math
 import re
 import struct
+from dataclasses import dataclass
 from functools import lru_cache
-from typing import Final
+from typing import Any, Final, Generic, final
 
 import numpy as np
 import yaml
+from typing_extensions import TypeVar
 
 from . import constants
 
@@ -348,3 +352,69 @@ class FileType(enum.Enum):
     ASDF = 1
     FITS = 2
     UNKNOWN = 3
+
+
+_T = TypeVar("_T")
+
+
+@final
+class is_set(Generic[_T]):
+    __slots__ = ("_inner",)
+
+    def __init__(self, inner: _T):
+        self._inner = inner
+
+    def __dir__(self):
+        return dir(self._inner)
+
+    def __getattr__(self, name: str) -> bool:
+        cache = self._inner.__dict__
+
+        try:
+            attr = cache[name]
+        except KeyError:
+            # This will raise an AttributeError if the attribute doesn't exist on the inner type
+            prop = getattr(self._inner.__class__, name)
+            if isinstance(prop, tracked_property):
+                attr = _get_attr(self._inner, name)
+            else:
+                attr = None
+
+        if not isinstance(attr, _IsSetAttr):
+            msg = f"{name} is not a tracked_property"
+            raise TypeError(msg)
+
+        return attr.is_set
+
+
+class tracked_property(property):
+    def __set_name__(self, owner: type[Any], name: str) -> None:
+        self.__name__ = name
+
+    def __set__(self, instance: object, value: Any) -> None:
+        _get_attr(instance, self.__name__).is_set = True
+        return super().__set__(instance, value)
+
+
+@dataclass(slots=True)
+class _IsSetAttr:
+    """Class that stores attribute metadata for is_set/tracked_property."""
+
+    is_set: bool = False
+
+
+def _get_attr(obj: object, attr: str) -> _IsSetAttr:
+    """Helper that gets or creates the `_IsSetAttr` corresponding to an attribute."""
+    # This function uses the same semantics as functools.cached_property
+    # where `_IsSetAttr` is stored in the instance __dict__ under the corresponding property name.
+    # This works because the property is only part of the class-level __dict__
+    # so the key should be empty in the instance __dict__.
+    try:
+        cache = obj.__dict__
+    except AttributeError:
+        msg = f"No '__dict__' attribute on {type(obj).__name__} instanceto store tracked_property metadata"
+        raise TypeError(msg) from None
+    if attr not in cache:
+        cache[attr] = _IsSetAttr()
+
+    return cache[attr]

@@ -84,3 +84,7 @@ class AsdfSerializationError(RepresenterError):
     that the object does not have a supporting asdf Converter and needs to
     be manually converted to a supported type.
     """
+
+
+class AsdfFutureWarning(AsdfWarning, FutureWarning):
+    """Warning about a future change in ASDF behavior."""
