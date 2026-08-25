@@ -6,8 +6,11 @@ import pytest
 import asdf
 from asdf import get_config
 from asdf._core._integration import get_json_schema_resource_mappings
+from asdf.config import config_context
+from asdf.exceptions import AsdfConversionWarning, AsdfFutureWarning
 from asdf.extension import ExtensionProxy
 from asdf.resource import ResourceMappingProxy
+from asdf.testing import helpers
 
 
 def test_config_context():
@@ -353,3 +356,68 @@ def test_invalid_set_default_array_save_base(value):
     with asdf.config_context() as config:
         with pytest.raises(ValueError, match="default_array_save_base must be a bool"):
             config.default_array_save_base = value
+
+
+class NeverConverter:
+    tags = ["asdf://example.com/tags/never-1.0.0"]
+    types = []
+
+    def to_yaml_tree(self, obj, tag, ctx):
+        return {}
+
+    def from_yaml_tree(self, node, tag, ctx):
+        msg = "This type always fails"
+        raise RuntimeError(msg)
+
+
+class NeverExtension:
+    tags = NeverConverter.tags
+    extension_uri = "asdf://example.com/extensions/never-1.0.0"
+    converters = [NeverConverter()]
+
+
+def test_warn_on_failed_conversion_default_warn():
+    """Test that when a node conversion fails a FutureWarning is emitted before the error
+    if warn_on_failed_conversion hasn't been manually set.
+
+    This test can be removed once the default for warn_on_failed_conversion changes.
+    """
+    with config_context() as cfg:
+        cfg.add_extension(NeverExtension())
+        buff = helpers.yaml_to_asdf(f"data: !<{NeverConverter.tags[0]}> {{}}")
+
+        with pytest.raises(RuntimeError), pytest.warns(AsdfFutureWarning):
+            with asdf.open(buff) as af:
+                af["data"]
+
+
+def test_warn_on_failed_conversion_false_no_warn():
+    """Test that when a node conversion fails no extra warning is emitted if
+    warn_on_failed_conversion has been set to False.
+
+    This test can be removed once the default for warn_on_failed_conversion changes.
+    """
+    with config_context() as cfg:
+        cfg.add_extension(NeverExtension())
+        buff = helpers.yaml_to_asdf(f"data: !<{NeverConverter.tags[0]}> {{}}")
+
+        cfg.warn_on_failed_conversion = False
+        with pytest.raises(RuntimeError):
+            with asdf.open(buff) as af:
+                af["data"]
+
+
+def test_warn_on_failed_conversion_true_no_warn():
+    """Test that when a node conversion fails no extra warning is emitted if
+    warn_on_failed_conversion has been set to True.
+
+    This test can be removed once the default for warn_on_failed_conversion changes.
+    """
+    with config_context() as cfg:
+        cfg.add_extension(NeverExtension())
+        buff = helpers.yaml_to_asdf(f"data: !<{NeverConverter.tags[0]}> {{}}")
+
+        cfg.warn_on_failed_conversion = True
+        with pytest.warns(AsdfConversionWarning):
+            with asdf.open(buff) as af:
+                af["data"]
