@@ -5,6 +5,7 @@ from asdf._jsonschema import ValidationError
 __all__ = [
     "AsdfConversionWarning",
     "AsdfDeprecationWarning",
+    "AsdfFutureWarning",
     "AsdfLazyReferenceError",
     "AsdfManifestURIMismatchWarning",
     "AsdfPackageVersionWarning",
