@@ -5,7 +5,9 @@ import numpy as np
 import pytest
 
 import asdf
+import asdf.tagged
 from asdf import generic_io, util
+from asdf.util import is_set, tracked_property
 
 
 def test_not_set():
@@ -149,3 +151,59 @@ l: &id002 !some/tag-1.0.0
     tree = util.load_yaml(io.BytesIO(contents), tagged=tagged)
     assert tree["o"] is tree["o"]["inverse"]["inverse"]
     assert tree["l"] is tree["l"][0]
+
+
+class Tracked:
+    bar = None
+
+    def __init__(self):
+        self._value = 1
+        self.baz = None
+
+    @tracked_property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, value):
+        self._value = value
+
+
+def test_is_set_attr_error():
+    """Test that trying to access a non-existent property via `is_set` raises an `AttributeError`."""
+    x = Tracked()
+    with pytest.raises(AttributeError):
+        is_set(x).foo
+
+
+def test_is_set_type_error():
+    """Test that trying to access a property via `is_set` that isn't a `tracked_property` raises a `TypeError`."""
+    x = Tracked()
+    with pytest.raises(TypeError):
+        # Check class attribute
+        is_set(x).bar
+
+    with pytest.raises(TypeError):
+        # Check instance attribute
+        is_set(x).baz
+
+
+def test_tracked_property_slots_error():
+    """Test that using `tracked_property` on a class with `__slots__` (and no `__dict__`) raises a `TypeError`."""
+
+    class WithSlots:
+        __slots__ = ("_value",)
+
+        def __init__(self):
+            self._value = "foo"
+
+        @tracked_property
+        def value(self):
+            return self._value
+
+        @value.setter
+        def value(self, value):
+            self._value = value
+
+    with pytest.raises(TypeError):
+        WithSlots().value = "bar"
