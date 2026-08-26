@@ -40,9 +40,13 @@ __all__ = [
     "get_base_uri",
     "get_class_name",
     "get_file_type",
+    "is_set",
     "load_yaml",
+    "tracked_property",
     "uri_match",
 ]
+
+_T = TypeVar("_T")
 
 
 def load_yaml(init, tagged=False):
@@ -354,11 +358,13 @@ class FileType(enum.Enum):
     UNKNOWN = 3
 
 
-_T = TypeVar("_T")
-
-
 @final
 class is_set(Generic[_T]):
+    """Can be passed an object with `tracked_property` attributes to check if a property has been set.
+
+    See `tracked_property` for usage examples.
+    """
+
     __slots__ = ("_inner",)
 
     def __init__(self, inner: _T):
@@ -388,6 +394,34 @@ class is_set(Generic[_T]):
 
 
 class tracked_property(property):
+    """Extension to `property` that allows tracking whether a property's value has been
+    manually set after being initialized (even if set to its original value).
+
+    The decorated attribute behaves like a normal property when accessed from its parent object.
+    Passing the parent object to `is_set` returns a wrapper that reports whether each tracked
+    attribute has been manually set.
+
+    Examples
+    --------
+        >>> class Config:
+        ...     def __init__(self):
+        ...         self._value = 1
+        ...
+        ...     @tracked_property
+        ...     def value(self):
+        ...         return self._value
+        ...
+        ...     @value.setter
+        ...     def value(self, value):
+        ...         self._value = value
+        >>> cfg = Config()
+        >>> is_set(cfg).value
+        False
+        >>> cfg.value = 2
+        >>> is_set(cfg).value
+        True
+    """
+
     def __set_name__(self, owner: type[Any], name: str) -> None:
         self.__name__ = name
 
@@ -398,7 +432,7 @@ class tracked_property(property):
 
 @dataclass(slots=True)
 class _IsSetAttr:
-    """Class that stores attribute metadata for is_set/tracked_property."""
+    """Class that stores attribute metadata for `is_set`/`tracked_property`."""
 
     is_set: bool = False
 
@@ -412,7 +446,7 @@ def _get_attr(obj: object, attr: str) -> _IsSetAttr:
     try:
         cache = obj.__dict__
     except AttributeError:
-        msg = f"No '__dict__' attribute on {type(obj).__name__} instanceto store tracked_property metadata"
+        msg = f"No '__dict__' attribute on {type(obj).__name__} instance to store tracked_property metadata"
         raise TypeError(msg) from None
     if attr not in cache:
         cache[attr] = _IsSetAttr()
