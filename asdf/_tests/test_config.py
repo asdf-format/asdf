@@ -361,6 +361,7 @@ def test_invalid_set_default_array_save_base(value):
 class NeverConverter:
     tags = ["asdf://example.com/tags/never-1.0.0"]
     types = []
+    lazy = True
 
     def to_yaml_tree(self, obj, tag, ctx):
         return {}
@@ -376,13 +377,15 @@ class NeverExtension:
     converters = [NeverConverter()]
 
 
-def test_warn_on_failed_conversion_default_warn():
+@pytest.mark.parametrize("lazy", [True, False])
+def test_warn_on_failed_conversion_default_warn(lazy: bool):
     """Test that when a node conversion fails a FutureWarning is emitted before the error
     if warn_on_failed_conversion hasn't been manually set.
 
     This test can be removed once the default for warn_on_failed_conversion changes.
     """
     with config_context() as cfg:
+        cfg.lazy_tree = lazy
         cfg.add_extension(NeverExtension())
         buff = helpers.yaml_to_asdf(f"data: !<{NeverConverter.tags[0]}> {{}}")
 
@@ -391,13 +394,15 @@ def test_warn_on_failed_conversion_default_warn():
                 af["data"]
 
 
-def test_warn_on_failed_conversion_false_no_warn():
+@pytest.mark.parametrize("lazy", [True, False])
+def test_warn_on_failed_conversion_false_no_warn(lazy: bool):
     """Test that when a node conversion fails no extra warning is emitted if
     warn_on_failed_conversion has been set to False.
 
     This test can be removed once the default for warn_on_failed_conversion changes.
     """
     with config_context() as cfg:
+        cfg.lazy_tree = lazy
         cfg.add_extension(NeverExtension())
         buff = helpers.yaml_to_asdf(f"data: !<{NeverConverter.tags[0]}> {{}}")
 
@@ -407,13 +412,15 @@ def test_warn_on_failed_conversion_false_no_warn():
                 af["data"]
 
 
-def test_warn_on_failed_conversion_true_no_warn():
+@pytest.mark.parametrize("lazy", [True, False])
+def test_warn_on_failed_conversion_true_no_warn(lazy: bool):
     """Test that when a node conversion fails no extra warning is emitted if
     warn_on_failed_conversion has been set to True.
 
     This test can be removed once the default for warn_on_failed_conversion changes.
     """
     with config_context() as cfg:
+        cfg.lazy_tree = lazy
         cfg.add_extension(NeverExtension())
         buff = helpers.yaml_to_asdf(f"data: !<{NeverConverter.tags[0]}> {{}}")
 
