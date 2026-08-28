@@ -2,9 +2,23 @@
 Helpers for writing unit tests of ASDF support.
 """
 
+from contextlib import contextmanager
 from io import BytesIO
 
 import asdf
+
+
+@contextmanager
+def config(**kwargs):
+    """Temporarily set config values via keyword argument.
+
+    Can be used as a context manager or as a function decorator.
+    """
+
+    with asdf.config_context() as cfg:
+        for key, val in kwargs.items():
+            setattr(cfg, key, val)
+        yield cfg
 
 
 def roundtrip_object(obj, version=None):
