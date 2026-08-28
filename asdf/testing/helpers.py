@@ -7,6 +7,8 @@ from io import BytesIO
 
 import asdf
 
+__all__ = ["config", "roundtrip_object", "yaml_to_asdf"]
+
 
 @contextmanager
 def config(**kwargs):
