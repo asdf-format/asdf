@@ -423,7 +423,7 @@ class AsdfConfig:
             raise ValueError(msg)
         self._default_array_save_base = value
 
-    @property
+    @tracked_property
     def validate_on_read(self) -> bool:
         """
         Get configuration that controls schema validation of
