@@ -14,14 +14,13 @@ from packaging.version import Version
 from typing_extensions import Reader, Writer, deprecated
 
 from asdf.exceptions import AsdfFutureWarning, ValidationError
-from asdf.util import is_set
 
 from . import _compression as mcompression
 from . import _display as display
 from . import _io, constants, generic_io, lazy_nodes, reference, schema, treeutil, util, versioning, yamlutil
 from . import _node_info as node_info
 from ._block.manager import Manager as BlockManager
-from ._helpers import validate_version
+from ._helpers import is_set, validate_version
 from .config import config_context, get_config
 from .exceptions import (
     AsdfManifestURIMismatchWarning,
