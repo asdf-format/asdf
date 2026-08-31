@@ -212,6 +212,12 @@ a custom object are caught and turned into warnings. It may be helpful to
 enable this option when opening old files with tags that are no longer supported
 in the current environment.
 
+.. warning::
+  In a future release the default value will change from `False` to `True`.
+  Currently, if a conversion fails and this field hasn't been set then ASDF will
+  emit an `asdf.exceptions.AsdfFutureWarning` *before* raising an exception.
+  Manually set the field to either `True` or `False` to silence this warning.
+
 Additional AsdfConfig features
 ==============================
 

@@ -9,9 +9,9 @@ import warnings
 import weakref
 
 from asdf.exceptions import AsdfFutureWarning
-from asdf.util import is_set
 
 from . import tagged, treeutil, yamlutil
+from ._helpers import is_set
 from .config import get_config
 from .exceptions import AsdfConversionWarning, AsdfLazyReferenceError
 from .extension._serialization_context import BlockAccess
