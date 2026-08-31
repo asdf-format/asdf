@@ -7,7 +7,7 @@ import pytest
 import asdf
 import asdf.tagged
 from asdf import generic_io, util
-from asdf.util import is_set, tracked_property
+from asdf._helpers import is_set, tracked_property
 
 
 def test_not_set():

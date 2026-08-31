@@ -9,9 +9,9 @@ import numpy as np
 import yaml
 
 from asdf.exceptions import AsdfFutureWarning
-from asdf.util import is_set
 
 from . import schema, tagged, treeutil, util
+from ._helpers import is_set
 from .config import get_config
 from .constants import STSCI_SCHEMA_TAG_BASE, YAML_TAG_PREFIX
 from .exceptions import AsdfConversionWarning, AsdfSerializationError

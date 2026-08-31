@@ -11,10 +11,8 @@ import threading
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any
 
-from asdf.util import tracked_property
-
 from . import _entry_points, util, versioning
-from ._helpers import validate_version
+from ._helpers import tracked_property, validate_version
 from .extension import ExtensionProxy
 from .resource import ResourceManager, ResourceMappingProxy
 
