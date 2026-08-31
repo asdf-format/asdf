@@ -394,6 +394,7 @@ def test_warn_on_failed_conversion_default_warn(lazy: bool):
                 af["data"]
 
 
+@pytest.mark.filterwarnings("error:AsdfFutureWarning")
 @pytest.mark.parametrize("lazy", [True, False])
 def test_warn_on_failed_conversion_false_no_warn(lazy: bool):
     """Test that when a node conversion fails no extra warning is emitted if
@@ -412,6 +413,7 @@ def test_warn_on_failed_conversion_false_no_warn(lazy: bool):
                 af["data"]
 
 
+@pytest.mark.filterwarnings("error:AsdfFutureWarning")
 @pytest.mark.parametrize("lazy", [True, False])
 def test_warn_on_failed_conversion_true_no_warn(lazy: bool):
     """Test that when a node conversion fails no extra warning is emitted if
