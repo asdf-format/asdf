@@ -1539,7 +1539,7 @@ def open_asdf(
             try:
                 instance._validate(tree, reading=True)
             except ValidationError:
-                if not is_set(get_config()).validate_on_read:
+                if not is_set(get_config(), "validate_on_read"):
                     warnings.warn(
                         (
                             "In the future validation on read will be off by default. "
