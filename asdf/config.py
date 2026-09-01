@@ -12,7 +12,7 @@ from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any
 
 from . import _entry_points, util, versioning
-from ._helpers import tracked_property, validate_version
+from ._helpers import _IsSet, validate_version
 from .extension import ExtensionProxy
 from .resource import ResourceManager, ResourceMappingProxy
 
@@ -37,7 +37,7 @@ DEFAULT_LAZY_TREE = False
 DEFAULT_WARN_ON_FAILED_CONVERSION = False
 
 
-class AsdfConfig:
+class AsdfConfig(_IsSet):
     """
     Container for ASDF configuration options.  Users are not intended to
     construct this object directly; instead, use the `asdf.get_config` and
@@ -45,6 +45,7 @@ class AsdfConfig:
     """
 
     def __init__(self):
+        super().__init__()
         self._resource_mappings = None
         self._resource_manager = None
         self._extensions = None
@@ -464,7 +465,7 @@ class AsdfConfig:
     def lazy_tree(self, value: bool) -> None:
         self._lazy_tree = value
 
-    @tracked_property
+    @property
     def warn_on_failed_conversion(self) -> bool:
         """
         Get configuration that controls if errors during

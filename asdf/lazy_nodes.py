@@ -224,7 +224,7 @@ class _AsdfNode:
                             warnings.warn(f"A node failed to convert with: {err}", AsdfConversionWarning)
                             obj = _to_lazy_node(value, self._af_ref)
                         else:
-                            if not is_set(get_config()).warn_on_failed_conversion:
+                            if not is_set(get_config(), "warn_on_failed_conversion"):
                                 # Only emit a warning if warn_on_failed_conversion hasn't been manually set
                                 # This branch can be removed once the default for warn_on_failed_conversion is changed
                                 warnings.warn(
