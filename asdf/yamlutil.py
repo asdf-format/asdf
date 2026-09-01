@@ -354,7 +354,7 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False, _serialization_
                     warnings.warn(f"A node failed to convert with: {err}", AsdfConversionWarning)
                     obj = node
                 else:
-                    if not is_set(get_config()).warn_on_failed_conversion:
+                    if not is_set(get_config(), "warn_on_failed_conversion"):
                         # Only emit a warning if warn_on_failed_conversion hasn't been manually set
                         warnings.warn(
                             (
