@@ -192,3 +192,9 @@ def test_is_set_attr_error():
     x = Tracked()
     with pytest.raises(AttributeError):
         is_set(x, "foo")
+
+
+def test_is_set_type_error():
+    with pytest.raises(TypeError):
+        # pyrefly: ignore [bad-argument-type]
+        is_set(object(), "foo")
