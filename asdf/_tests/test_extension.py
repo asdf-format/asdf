@@ -9,9 +9,13 @@ from packaging.specifiers import SpecifierSet
 
 import asdf
 from asdf import AsdfFile, config_context
-from asdf.exceptions import AsdfManifestURIMismatchWarning, AsdfSerializationError, ValidationError
+from asdf.exceptions import (
+    AsdfManifestURIMismatchWarning,
+    AsdfSerializationError,
+    DeprecatedCompressorWarning,
+    ValidationError,
+)
 from asdf.extension import (
-    Compress,
     Converter,
     ConverterProxy,
     Extension,
@@ -112,7 +116,9 @@ class FullConverter(MinimumConverter):
         return "select_tag result"
 
 
-class MinimalCompressor(Compress):
+# Intentionally not inheriting from `Compressor`.
+# Since this class implements `compress` but not `decompress` it should still work but raise a deprecation warning.
+class MinimalCompressor:
     @staticmethod
     def compress(data):
         return b""
@@ -213,7 +219,8 @@ def test_extension_proxy():
         tags=["asdf://somewhere.org/extensions/full/tags/foo-1.0"],
         legacy_class_names=["foo.extensions.SomeOldExtensionClass"],
     )
-    proxy = ExtensionProxy(extension, package_name="foo", package_version="1.2.3")
+    with pytest.warns(DeprecatedCompressorWarning):
+        proxy = ExtensionProxy(extension, package_name="foo", package_version="1.2.3")
 
     assert proxy.extension_uri == "asdf://somewhere.org/extensions/full-1.0"
     assert proxy.legacy_class_names == {"foo.extensions.SomeOldExtensionClass"}
@@ -685,7 +692,8 @@ tags:
         assert extension.tags[1].title == "Baz title"
         assert extension.tags[1].description == "Bar description"
 
-        proxy = ExtensionProxy(extension)
+        with pytest.warns(DeprecatedCompressorWarning):
+            proxy = ExtensionProxy(extension)
         assert proxy.extension_uri == "asdf://somewhere.org/extensions/foo"
         assert proxy.legacy_class_names == {"foo.extension.LegacyExtension"}
         assert proxy.asdf_standard_requirement == SpecifierSet(">=1.6.0,<2.0.0")

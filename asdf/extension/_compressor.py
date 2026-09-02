@@ -14,20 +14,12 @@ from __future__ import annotations
 import abc
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
-from typing_extensions import deprecated
-
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
 
 
 @runtime_checkable
-class CompressionPlugin(Protocol):
-    """A compression plugin with an associated label.
-
-    For implementations of the actual compress/decompress methods,
-    see the `Compress` and `Decompress` protocols.
-    """
-
+class _CompressionPlugin(Protocol):
     @property
     @abc.abstractmethod
     def label(self) -> bytes:
@@ -43,9 +35,7 @@ class CompressionPlugin(Protocol):
 
 
 @runtime_checkable
-class Compress(CompressionPlugin, Protocol):
-    """A compression plugin that implements ``compress``."""
-
+class _Compress(_CompressionPlugin, Protocol):
     def compress(self, data: memoryview, **kwargs) -> Iterator[bytes]:
         """
         Compress ``data``, yielding the results. The yield may be
@@ -69,9 +59,7 @@ class Compress(CompressionPlugin, Protocol):
 
 
 @runtime_checkable
-class Decompress(CompressionPlugin, Protocol):
-    """A compression plugin that implements ``decompress``."""
-
+class _Decompress(_CompressionPlugin, Protocol):
     def decompress(self, data: Iterable[bytes], out: memoryview, **kwargs) -> int:
         """
         Decompress ``data``, writing the result into ``out``.
@@ -96,18 +84,6 @@ class Decompress(CompressionPlugin, Protocol):
         raise NotImplementedError
 
 
-@deprecated("Use Compress and Decompress protocols instead")
-class Compressor(Compress, Decompress):
-    """
-    Abstract base class for plugins that compress binary data.
-
-    Implementing classes must provide the ``labels`` property, and
-    at least one of the ``compress()`` and ``decompress()`` methods.
-    May also provide a constructor.
-    """
-
-    @classmethod
-    def __subclasshook__(cls, class_):
-        if cls is Compressor:
-            return hasattr(class_, "label") and (hasattr(class_, "compress") or hasattr(class_, "decompress"))
-        return NotImplemented  # pragma: no cover
+@runtime_checkable
+class Compressor(_Compress, _Decompress, Protocol):
+    """Protocol for compression extensions."""

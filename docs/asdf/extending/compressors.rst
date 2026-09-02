@@ -20,35 +20,40 @@ a Compressor in an extension.
 The Compressor interface
 ========================
 
-The Compressor interface is expressed through three related protocols:
+Compressor implementations must provide one required property
+and two required methods:
 
-`CompressionPlugin.label` - A 4-byte compression code.  This code is used
-by users to select a compression algorithm and also stored in the
-binary block header to identify the algorithm that was applied to
-the block's data.
+- `Compressor.label` - A 4-byte compression code.  This code is used
+  by users to select a compression algorithm and also stored in the
+  binary block header to identify the algorithm that was applied to
+  the block's data.
+- `Compressor.compress` - The method that transforms the block's bytes
+  before they are written to an ASDF file.  The positional argument
+  is a `memoryview` object which is guaranteed to be 1D and contiguous.
+  Compressors must be prepared to handle `memoryview.itemsize` > 1.
+  Any keyword arguments are passed through from the user and may be used
+  to tune the compression algorithm.  ``compress`` methods have no return
+  value and instead are expected to yield bytes-like values until the
+  input data has been fully compressed.
+- `Compressor.decompress` - The method that transforms the block's bytes
+  after they are read from an ASDF file.  The first positional argument
+  is an `~collections.abc.Iterable` of bytes-like objects that each
+  contain a chunk of the compressed input data.  The second positional
+  argument is a pre-allocated output array where the decompressed
+  bytes should be written.  The method is expected to return the
+  number of bytes written to the output array.
 
-`Compress.compress` - The method that transforms the block's bytes
-before they are written to an ASDF file.  The positional argument
-is a `memoryview` object which is guaranteed to be 1D and contiguous.
-Compressors must be prepared to handle `memoryview.itemsize` > 1.
-Any keyword arguments are passed through from the user and may be used
-to tune the compression algorithm.  ``compress`` methods have no return
-value and instead are expected to yield bytes-like values until the
-input data has been fully compressed.
+`Compressor` is a Python protocol, which means that implementing the required
+methods is sufficient to be considered a subclass. However, classes can
+also explicitly inherit from `Compressor` to opt-in to function signature verification.
 
-`Decompress.decompress` - The method that transforms the block's bytes
-after they are read from an ASDF file.  The first positional argument
-is an `~collections.abc.Iterable` of bytes-like objects that each
-contain a chunk of the compressed input data.  The second positional
-argument is a pre-allocated output array where the decompressed
-bytes should be written.  The method is expected to return the
-number of bytes written to the output array.
+.. warning::
+    Previously compressor plugins were only required to implement one of
+    ``compress`` or ``decompress``, but this pattern is deprecated.
+    In the future plugins will be required to provide both methods.
+    If an implementation for one of the methods is not desired or not possible,
+    the plugin should provide the method but raise a `NotImplementedError`.
 
-Implementing `CompressionPlugin` is required, along with at least one of
-`Compress` or `Decompress`.
-As with all Python protocols, implementing the required methods is sufficient
-to be considered a subclass. However, classes can also explicitly inherit from
-`Compress` and/or `Decompress` to opt-in to function signature verification.
 
 Entry point performance considerations
 ======================================
@@ -60,6 +65,6 @@ compressor module or ``__init__`` method that lingers will introduce a delay
 to the initial call to `asdf.open`.  For that reason, we recommend that compressor
 authors minimize the number of imports that occur in the module containing the
 Compressor implementation, and defer imports of compression libraries to inside
-the `Compress.compress` and `Decompress.decompress` methods.  This will
+the `Compressor.compress` and `Compressor.decompress` methods.  This will
 prevent the library from ever being imported when reading ASDF files that
 do not utilize the Compressor's algorithm.

@@ -3,7 +3,7 @@ Support for plugins that extend asdf to serialize
 additional custom types.
 """
 
-from ._compressor import Compress, CompressionPlugin, Compressor, Decompress
+from ._compressor import Compressor
 from ._converter import Converter, ConverterProxy
 from ._extension import Extension, ExtensionLike, ExtensionProxy
 from ._manager import ExtensionManager, get_cached_extension_manager
@@ -13,13 +13,9 @@ from ._tag import TagDefinition
 from ._validator import Validator
 
 __all__ = [
-    # New API
-    "Compress",
-    "CompressionPlugin",
     "Compressor",
     "Converter",
     "ConverterProxy",
-    "Decompress",
     "Extension",
     "ExtensionLike",
     "ExtensionManager",

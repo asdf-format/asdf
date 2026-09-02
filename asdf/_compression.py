@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any, Literal, overload
 
 import numpy as np
 
-from asdf.extension import Compress, CompressionPlugin, Decompress
+from asdf.extension import Compressor
 
 from .config import get_config
 from .exceptions import AsdfWarning
@@ -67,7 +67,7 @@ def validate(compression: str | bytes | None) -> str | None:
     return compression
 
 
-class Lz4Compressor(Compress, Decompress):
+class Lz4Compressor(Compressor):
     label = b"lz4"
 
     def __init__(self):
@@ -156,7 +156,7 @@ class Lz4Compressor(Compress, Decompress):
         return bytesout
 
 
-class ZlibCompressor(Compress, Decompress):
+class ZlibCompressor(Compressor):
     label = b"zlib"
 
     def compress(self, data: memoryview, **kwargs) -> Iterator[bytes]:
@@ -174,7 +174,7 @@ class ZlibCompressor(Compress, Decompress):
         return i
 
 
-class Bzp2Compressor(Compress, Decompress):
+class Bzp2Compressor(Compressor):
     label = b"bzp2"
 
     def compress(self, data: memoryview, **kwargs) -> Iterator[bytes]:
@@ -195,18 +195,18 @@ class Bzp2Compressor(Compress, Decompress):
 @overload
 def _get_compressor_from_extensions(
     compression: bytes | str | None, return_extension: Literal[True]
-) -> tuple[CompressionPlugin, ExtensionProxy] | None: ...
+) -> tuple[Compressor, ExtensionProxy] | None: ...
 @overload
 def _get_compressor_from_extensions(
     compression: bytes | str | None, return_extension: Literal[False]
-) -> CompressionPlugin | None: ...
+) -> Compressor | None: ...
 @overload
-def _get_compressor_from_extensions(compression: bytes | str | None) -> CompressionPlugin | None: ...
+def _get_compressor_from_extensions(compression: bytes | str | None) -> Compressor | None: ...
 
 
 def _get_compressor_from_extensions(
     compression: bytes | str | None, return_extension: bool = False
-) -> CompressionPlugin | tuple[CompressionPlugin, ExtensionProxy] | None:
+) -> Compressor | tuple[Compressor, ExtensionProxy] | None:
     """
     Look at the loaded ASDF extensions and return the first one (if any)
     that can handle this type of compression.
@@ -240,7 +240,7 @@ def _get_all_compression_extension_labels() -> list[str]:
     return labels
 
 
-def _get_compressor(label: str) -> CompressionPlugin:
+def _get_compressor(label: str) -> Compressor:
     ext_comp = _get_compressor_from_extensions(label)
 
     if ext_comp is not None:
@@ -306,9 +306,6 @@ def decompress(
 
     compression = typing.cast("str", validate(compression))
     decoder = _get_compressor(compression)
-    if not isinstance(decoder, Decompress):
-        msg = f"Compression plugin {decoder.label} does not implement decompress() function"
-        raise TypeError(msg)
 
     if config is None:
         config = {}
@@ -349,9 +346,6 @@ def compress(
     """
     compression = typing.cast("str", validate(compression))
     encoder = _get_compressor(compression)
-    if not isinstance(encoder, Compress):
-        msg = f"Compression plugin {encoder.label} does not implement compress() function"
-        raise TypeError(msg)
 
     if config is None:
         config = {}

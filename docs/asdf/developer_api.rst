@@ -13,6 +13,7 @@ to create their own custom ASDF types and extensions.
     :allowed-package-names: jsonschema, asdf
 
 .. automodapi:: asdf.extension
+    :inherited-members:
 
 .. automodapi:: asdf.resource
 
