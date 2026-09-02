@@ -3,6 +3,7 @@ Commands for validating ASDF files
 """
 
 import asdf
+from asdf.config import config_context
 
 from .main import Command
 
@@ -44,15 +45,19 @@ class Validate(Command):
 
 def validate(filename, custom_schema, skip_block_validation):
     # if we are skipping checksums we can lazy load, otherwise don't
-    with asdf.open(
-        filename,
-        custom_schema=custom_schema,
-        validate_checksums=not skip_block_validation,
-        lazy_load=skip_block_validation,
-    ) as af:  # noqa: F841
-        msg = f"{filename} is valid"
-        if custom_schema:
-            msg += f", conforms to {custom_schema}"
-        if not skip_block_validation:
-            msg += ", and block checksums match contents"
-        print(msg)
+    with config_context() as cfg:
+        # Manually set validate_on_read since in the future it will be off by default
+        cfg.validate_on_read = True
+
+        with asdf.open(
+            filename,
+            custom_schema=custom_schema,
+            validate_checksums=not skip_block_validation,
+            lazy_load=skip_block_validation,
+        ) as _af:
+            msg = f"{filename} is valid"
+            if custom_schema:
+                msg += f", conforms to {custom_schema}"
+            if not skip_block_validation:
+                msg += ", and block checksums match contents"
+            print(msg)

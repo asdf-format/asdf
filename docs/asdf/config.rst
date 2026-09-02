@@ -198,6 +198,13 @@ improve performance.
 
 Defaults to True.
 
+.. warning::
+  In a future release the default value will change from `True` to `False`.
+  Currently, if a validation error occurs while loading a file and this field hasn't
+  been manually set then ASDF will emit an `asdf.exceptions.AsdfFutureWarning`
+  *before* raising an exception.
+  Manually set the field to either `True` or `False` to silence this warning.
+
 lazy_tree
 ---------
 
