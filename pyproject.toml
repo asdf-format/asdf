@@ -32,7 +32,7 @@ all = ["asdf[lz4]", "asdf[http]"]
 http = ["fsspec[http]>=2022.8.2"]
 lz4 = ["lz4>=0.10"]
 tests = ["asdf[all]", "psutil", "pytest>=8", "syrupy>=5.1"]
-typing = ["pyrefly==1.1.1", "types-PyYAML", "types-jmespath", "nox"]
+typing = ["pyrefly==1.2.0", "types-PyYAML", "types-jmespath", "nox"]
 
 benchmark = ["asdf[tests]", "pytest-benchmark"]
 test = ["asdf[tests]"]

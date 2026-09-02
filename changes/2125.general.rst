@@ -1,0 +1,4 @@
+In a future release the default value for `asdf.config.AsdfConfig.warn_on_failed_conversion` will change from `False` to `True`.
+Currently if ASDF raises an exception due to a conversion error it will now *also* emit a warning regarding the change in behavior.
+To silence the warning you can either set ``warn_on_failed_conversion`` to `True` to opt into the new behavior
+or to `False` to retain the old behavior.

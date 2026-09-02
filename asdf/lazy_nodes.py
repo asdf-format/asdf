@@ -8,7 +8,10 @@ import inspect
 import warnings
 import weakref
 
+from asdf.exceptions import AsdfFutureWarning
+
 from . import tagged, treeutil, yamlutil
+from ._helpers import is_set
 from .config import get_config
 from .exceptions import AsdfConversionWarning, AsdfLazyReferenceError
 from .extension._serialization_context import BlockAccess
@@ -221,6 +224,17 @@ class _AsdfNode:
                             warnings.warn(f"A node failed to convert with: {err}", AsdfConversionWarning)
                             obj = _to_lazy_node(value, self._af_ref)
                         else:
+                            if not is_set(get_config(), "warn_on_failed_conversion"):
+                                # Only emit a warning if warn_on_failed_conversion hasn't been manually set
+                                # This branch can be removed once the default for warn_on_failed_conversion is changed
+                                warnings.warn(
+                                    (
+                                        "In the future failed node conversion will by default generate a warning "
+                                        "instead of an error. Set AsdfConfig.warn_on_failed_conversion to True to "
+                                        "opt-in to the new behavior, or to False to silence this warning."
+                                    ),
+                                    AsdfFutureWarning,
+                                )
                             raise
                     sctx.assign_object(obj)
                     sctx.assign_blocks()

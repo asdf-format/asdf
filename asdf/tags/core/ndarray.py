@@ -14,8 +14,6 @@ from asdf._jsonschema import ValidationError
 if typing.TYPE_CHECKING:
     from collections.abc import Sequence
 
-    import numpy.typing as npt
-
     from asdf.typing import BlockAttrCallback, NDArray
 
 _STRUCTURED_DATATYPE_KEYS = {"name", "datatype", "byteorder", "shape"}
@@ -272,7 +270,7 @@ class NDArrayType:
     ):
         self._source = source
         self._data_callback = data_callback
-        self._array = None
+        self._array: NDArray | None = None
         self._mask = mask
 
         if isinstance(source, list):
@@ -298,7 +296,7 @@ class NDArrayType:
         self._strides = strides
         self._order = order
 
-    def _make_array(self) -> npt.NDArray[Any]:
+    def _make_array(self) -> NDArray:
         # If the ASDF file has been updated in-place, then there's
         # a chance that the block's original data object has been
         # closed and replaced.  We need to check here and re-generate

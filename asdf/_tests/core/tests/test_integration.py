@@ -11,13 +11,13 @@ from asdf._core._integration import get_extensions, get_json_schema_resource_map
         "http://json-schema.org/draft-04/schema",
     ],
 )
-def test_get_resource_mappings(uri):
+def test_get_resource_mappings(uri: str):
     mappings = get_json_schema_resource_mappings()
 
     mapping = next(m for m in mappings if uri in m)
-    assert mapping is not None
+    assert mapping is not None and (resource := mapping[uri]) is not None
 
-    assert uri.encode("utf-8") in mapping[uri]
+    assert uri.encode("utf-8") in resource
 
 
 def test_get_extensions():
