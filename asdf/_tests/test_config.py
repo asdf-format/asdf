@@ -435,3 +435,40 @@ def test_warn_on_failed_conversion_true_no_warn(lazy: bool):
         with pytest.warns(AsdfConversionWarning):
             with asdf.open(buff) as af:
                 af["data"]
+
+
+def test_validate_on_read_default_warn():
+    """Test that when a ValidationError occurs while loading a file a FutureWarning is
+    emitted before the error if validate_on_read hasn't been manually set.
+
+    This test can be removed once the default for validate_on_read changes.
+    """
+    buff = helpers.yaml_to_asdf(r"invalid: !core/software-1.0.0 {version: 3}")
+    with pytest.raises(asdf.ValidationError), pytest.warns(AsdfFutureWarning):
+        with asdf.open(buff) as _af:
+            pass
+
+
+@helpers.config(validate_on_read=True)
+@pytest.mark.filterwarnings("error:AsdfFutureWarning")
+def test_validate_on_read_true_no_warn():
+    """Test that when a ValidationError occurs while loading a file no extra warning is
+    emitted if validate_on_read has been manually set to True.
+
+    This test can be removed once the default for validate_on_read changes.
+    """
+    buff = helpers.yaml_to_asdf(r"invalid: !core/software-1.0.0 {version: 3}")
+    with pytest.raises(asdf.ValidationError):
+        with asdf.open(buff) as _af:
+            pass
+
+
+@helpers.config(validate_on_read=False)
+@pytest.mark.filterwarnings("error:AsdfFutureWarning")
+def test_validate_on_read_false_no_warn():
+    """Test that when validate_on_read is set to False loading an invalid file produces
+    no errors and no warnings.
+    """
+    buff = helpers.yaml_to_asdf(r"invalid: !core/software-1.0.0 {version: 3}")
+    with asdf.open(buff) as _af:
+        pass

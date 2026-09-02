@@ -11,6 +11,7 @@ from numpy import ma
 from numpy.testing import assert_array_equal
 
 import asdf
+import asdf.constants
 from asdf.exceptions import AsdfFutureWarning, ValidationError
 from asdf.extension import Converter, Extension, TagDefinition
 from asdf.tags.core import ndarray
@@ -648,6 +649,7 @@ arr: !{ndarray_tag}
         pass
 
 
+@helpers.config(validate_on_read=True)
 def test_invalid_mask_datatype(ndarray_tag):
     content = f"""
 arr: !{ndarray_tag}
@@ -667,6 +669,7 @@ arr: !{ndarray_tag}
         pass
 
 
+@helpers.config(validate_on_read=True)
 @with_custom_extension()
 def test_ndim_validation(ndarray_tag):
     content = f"""
@@ -741,6 +744,7 @@ obj: !<tag:nowhere.org:custom/ndim-1.0.0>
         pass
 
 
+@helpers.config(validate_on_read=True)
 @with_custom_extension()
 def test_datatype_validation(ndarray_tag):
     content = f"""
@@ -827,6 +831,7 @@ obj: !<tag:nowhere.org:custom/datatype-1.0.0>
         pass
 
 
+@helpers.config(validate_on_read=True)
 @with_custom_extension()
 def test_structured_datatype_validation(ndarray_tag):
     content = f"""
