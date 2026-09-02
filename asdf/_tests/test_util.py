@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 
 import asdf
+import asdf.tagged
 from asdf import generic_io, util
 
 

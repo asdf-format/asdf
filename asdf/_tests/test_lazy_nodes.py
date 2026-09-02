@@ -8,6 +8,10 @@ import numpy as np
 import pytest
 
 import asdf
+import asdf.lazy_nodes
+import asdf.tagged
+import asdf.tags.core
+import asdf.treeutil
 from asdf.lazy_nodes import AsdfDictNode, AsdfListNode, AsdfOrderedDictNode, _resolve_af_ref, _to_lazy_node
 
 
