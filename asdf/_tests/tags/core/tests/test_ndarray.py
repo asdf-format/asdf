@@ -11,7 +11,7 @@ from numpy import ma
 from numpy.testing import assert_array_equal
 
 import asdf
-from asdf.exceptions import ValidationError
+from asdf.exceptions import AsdfFutureWarning, ValidationError
 from asdf.extension import Converter, Extension, TagDefinition
 from asdf.tags.core import ndarray
 from asdf.testing import helpers
@@ -954,8 +954,9 @@ arr: !{ndarray_tag}
 
     buff = helpers.yaml_to_asdf(content)
     with pytest.raises(ValueError, match=r"inline data doesn't match the given shape"):
-        with asdf.open(buff) as af:
-            af["arr"]
+        with pytest.warns(AsdfFutureWarning):
+            with asdf.open(buff) as af:
+                af["arr"]
 
 
 def test_broadcasted_array():

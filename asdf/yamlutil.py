@@ -8,7 +8,10 @@ from typing import TYPE_CHECKING
 import numpy as np
 import yaml
 
+from asdf.exceptions import AsdfFutureWarning
+
 from . import schema, tagged, treeutil, util
+from ._helpers import is_set
 from .config import get_config
 from .constants import STSCI_SCHEMA_TAG_BASE, YAML_TAG_PREFIX
 from .exceptions import AsdfConversionWarning, AsdfSerializationError
@@ -351,6 +354,16 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False, _serialization_
                     warnings.warn(f"A node failed to convert with: {err}", AsdfConversionWarning)
                     obj = node
                 else:
+                    if not is_set(get_config(), "warn_on_failed_conversion"):
+                        # Only emit a warning if warn_on_failed_conversion hasn't been manually set
+                        warnings.warn(
+                            (
+                                "In the future failed node conversion will by default generate a warning "
+                                "instead of an error. Set AsdfConfig.warn_on_failed_conversion to True to opt-in "
+                                "to the new behavior, or to False to silence this warning."
+                            ),
+                            AsdfFutureWarning,
+                        )
                     raise
             _serialization_context.assign_object(obj)
             _serialization_context.assign_blocks()
