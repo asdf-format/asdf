@@ -1,1 +1,1 @@
-Added new type-checkable protocols for compression plugins: `asdf.extension.CompressionPlugin`, `asdf.extension.Compress`, and `asdf.extension.Decompress`.
+Changed `asdf.extension.Compressor` from an abstract class to a type-checkable protocol.

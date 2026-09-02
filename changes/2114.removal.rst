@@ -1,1 +1,2 @@
-Deprecated `asdf.extension.Compressor` class in favor of new compression protocols.
+Compression plugins are now required to implement both ``compress`` and ``decompress`` methods.
+Plugins that only implement one or the other will continue to work but will generate a deprecation warning.

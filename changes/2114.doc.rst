@@ -1,1 +1,1 @@
-Updated documentation on writing compression plugins to reference new protocols.
+Updated documentation on writing compression plugins to reflect changes to the interface.
