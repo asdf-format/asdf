@@ -10,6 +10,7 @@ from typing import Final
 
 import numpy as np
 import yaml
+from typing_extensions import sentinel
 
 from . import constants
 
@@ -265,17 +266,10 @@ def get_class_name(obj, instance=True):
     return f"{typ.__module__}.{typ.__qualname__}"
 
 
-class _NOT_SET_TYPE(enum.Enum):
-    NOT_SET = "NotSet"
-
-    def __repr__(self) -> str:
-        return str(self.value)
-
-
 #: Special value indicating that a parameter is not set.
 #: Distinct from None, which may for example be a value of interest in a search.
-NOT_SET: Final = _NOT_SET_TYPE.NOT_SET
-NotSet: Final = NOT_SET
+NOT_SET = sentinel("NOT_SET", repr="NotSet")
+NotSet: Final[NOT_SET] = NOT_SET
 
 
 def uri_match(pattern, uri):

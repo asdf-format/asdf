@@ -12,7 +12,6 @@ from typing_extensions import Reader, TypeVar, Writer
 
 from asdf.generic_io import GenericFile
 from asdf.tags.core import NDArrayType
-from asdf.util import _NOT_SET_TYPE
 from asdf.versioning import AsdfVersion
 
 __all__ = [
@@ -27,7 +26,6 @@ __all__ = [
     "FileMode",
     "FilterFn",
     "NDArray",
-    "NotSetType",
     "PathLike",
     "Reader",
     "TreeKey",
@@ -71,8 +69,6 @@ NDArray: TypeAlias = npt.NDArray[Any] | NDArrayType
 
 #: A 1-D byte numpy array used to read and write block data
 ByteArray1D: TypeAlias = np.ndarray[tuple[int], np.dtype[np.uint8]]
-
-NotSetType = Literal[_NOT_SET_TYPE.NOT_SET]
 
 _Array_co = TypeVar("_Array_co", default=NDArray, covariant=True)
 
