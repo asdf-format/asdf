@@ -3,7 +3,9 @@ from contextlib import nullcontext
 import pytest
 
 import asdf
+import asdf.tags.core
 from asdf.exceptions import ValidationError
+from asdf.testing import helpers
 
 # test cases with:
 # - custom schema path
@@ -59,6 +61,7 @@ def schema_name(request, test_data_path, as_pathlib):
     return as_pathlib(test_data_path / request.param)
 
 
+@helpers.config(validate_on_read=True)
 @pytest.mark.parametrize(
     "schema_name, tree, expected_error",
     TEST_CASES,
@@ -72,6 +75,7 @@ def test_custom_validation_write_to(tmp_path, schema_name, tree, expected_error)
         asdf.AsdfFile(tree, custom_schema=schema_name).write_to(asdf_file)
 
 
+@helpers.config(validate_on_read=True)
 @pytest.mark.parametrize(
     "schema_name, tree, expected_error",
     TEST_CASES,
@@ -113,6 +117,7 @@ def test_custom_validation_dumps(schema_name, tree, expected_error):
         asdf.dumps(tree, custom_schema=schema_name)
 
 
+@helpers.config(validate_on_read=True)
 @pytest.mark.parametrize(
     "schema_name, tree, expected_error",
     TEST_CASES,
@@ -142,6 +147,7 @@ def test_custom_validation_dump(tmp_path, schema_name, tree, expected_error):
         asdf.dump(tree, asdf_file, custom_schema=schema_name)
 
 
+@helpers.config(validate_on_read=True)
 @pytest.mark.parametrize(
     "schema_name, tree, expected_error",
     TEST_CASES,

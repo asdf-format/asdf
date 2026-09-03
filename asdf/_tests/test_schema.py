@@ -7,9 +7,11 @@ import pytest
 from numpy.testing import assert_array_equal
 
 import asdf
+import asdf.tags.core
 from asdf import config_context, constants, get_config, schema, tagged, util, yamlutil
 from asdf.exceptions import AsdfConversionWarning, AsdfWarning, ValidationError
-from asdf.extension import TagDefinition
+from asdf.extension import TagDefinition, get_cached_extension_manager
+from asdf.testing import helpers
 from asdf.testing.helpers import yaml_to_asdf
 
 
@@ -22,7 +24,7 @@ def tag_reference_extension():
 
     tag_uri = "tag:nowhere.org:custom/tag_reference-1.0.0"
     schema_uri = "http://nowhere.org/schemas/custom/tag_reference-1.0.0"
-    tag_def = asdf.extension.TagDefinition(tag_uri, schema_uris=schema_uri)
+    tag_def = TagDefinition(tag_uri, schema_uris=schema_uri)
 
     class TagReferenceConverter:
         tags = [tag_uri]
@@ -388,6 +390,7 @@ def test_property_order():
             last_index = index
 
 
+@helpers.config(validate_on_read=True)
 def test_invalid_nested():
     tag_uri = "http://nowhere.org/tags/custom/custom-1.0.0"
     schema_uri = "http://nowhere.org/schemas/custom/custom-1.0.0"
@@ -751,7 +754,7 @@ def test_foreign_tag_reference_validation():
 
     tag_uri = "tag:nowhere.org:custom/foreign_tag_reference-1.0.0"
     schema_uri = "http://nowhere.org/schemas/custom/foreign_tag_reference-1.0.0"
-    tag_def = asdf.extension.TagDefinition(tag_uri, schema_uris=schema_uri)
+    tag_def = TagDefinition(tag_uri, schema_uris=schema_uri)
 
     class ForeignTagReferenceConverter:
         tags = [tag_uri]
@@ -817,7 +820,7 @@ def test_self_reference_resolution(test_data_path):
 def test_schema_resolved_via_entry_points():
     """Test that entry points mappings to core schema works"""
     tag = "tag:stsci.edu:asdf/fits/fits-1.0.0"
-    extension_manager = asdf.extension.get_cached_extension_manager(get_config().extensions)
+    extension_manager = get_cached_extension_manager(get_config().extensions)
     schema_uris = extension_manager.get_tag_definition(tag).schema_uris
     assert len(schema_uris) > 0
     s = schema.load_schema(schema_uris[0])
@@ -1091,6 +1094,7 @@ tag: asdf://somewhere.org/tags/bar-*
             schema.validate(tagged.TaggedDict(tag="asdf://somewhere.org/tags/foo-1.0"), schema=schema_tree)
 
 
+@helpers.config(validate_on_read=True)
 def test_fail_under_combiner():
     """
     Test that a failed validation under a schema combiner that allows failures
