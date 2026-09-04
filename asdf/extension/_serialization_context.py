@@ -1,8 +1,19 @@
+from __future__ import annotations
+
 import enum
+from typing import TYPE_CHECKING, Any
 
 from asdf._block.key import Key as BlockKey
 from asdf._helpers import validate_version
 from asdf.extension._extension import ExtensionProxy
+
+if TYPE_CHECKING:
+    from asdf import AsdfFile
+    from asdf._block.callback import DataCallback
+    from asdf._block.manager import Manager as BlockManager
+    from asdf.extension import ExtensionLike, ExtensionManager
+    from asdf.typing import ArrayStorage, BlockAttrCallback, BlockDataCallback, Compression, NDArray
+    from asdf.versioning import AsdfVersion
 
 
 class SerializationContext:
@@ -14,7 +25,13 @@ class SerializationContext:
     classes (like Converters) via method arguments.
     """
 
-    def __init__(self, version, extension_manager, url, blocks):
+    def __init__(
+        self,
+        version: str | AsdfVersion,
+        extension_manager: ExtensionManager,
+        url: str | None,
+        blocks: BlockManager,
+    ):
         self._version = validate_version(version)
         self._extension_manager = extension_manager
         self._url = url
@@ -24,7 +41,7 @@ class SerializationContext:
         self.__extensions_used = set()
 
     @property
-    def url(self):
+    def url(self) -> str | None:
         """
         The URL (if any) of the file being read or written.
 
@@ -39,7 +56,7 @@ class SerializationContext:
         return self._url
 
     @property
-    def version(self):
+    def version(self) -> str:
         """
         Get the ASDF Standard version.
 
@@ -50,7 +67,7 @@ class SerializationContext:
         return self._version
 
     @property
-    def extension_manager(self):
+    def extension_manager(self) -> ExtensionManager:
         """
         Get the ExtensionManager for enabled extensions.
 
@@ -60,7 +77,7 @@ class SerializationContext:
         """
         return self._extension_manager
 
-    def _mark_extension_used(self, extension):
+    def _mark_extension_used(self, extension: ExtensionLike) -> None:
         """
         Note that an extension was used when reading or writing the file.
 
@@ -71,7 +88,7 @@ class SerializationContext:
         self.__extensions_used.add(ExtensionProxy.maybe_wrap(extension))
 
     @property
-    def _extensions_used(self):
+    def _extensions_used(self) -> set[ExtensionProxy]:
         """
         Get the set of extensions that were used when reading or writing the file.
 
@@ -81,7 +98,7 @@ class SerializationContext:
         """
         return self.__extensions_used
 
-    def get_block_data_callback(self, index, key=None):
+    def get_block_data_callback(self, index: int, key: BlockKey | None = None) -> BlockAttrCallback:
         """
         Generate a callable that when called will read data
         from an ASDF block at the provided index.
@@ -127,7 +144,7 @@ class SerializationContext:
         """
         raise NotImplementedError("abstract")
 
-    def generate_block_key(self):
+    def generate_block_key(self) -> BlockKey:
         """
         Generate a BlockKey used for Converters that wish to use
         multiple blocks
@@ -141,13 +158,13 @@ class SerializationContext:
         """
         raise NotImplementedError("abstract")
 
-    def assign_object(self, obj):
+    def assign_object(self, obj: Any) -> None:
         self._obj = obj
 
-    def assign_blocks(self):
+    def assign_blocks(self) -> None:
         pass
 
-    def set_array_storage(self, arr, array_storage):
+    def set_array_storage(self, arr: NDArray, array_storage: ArrayStorage) -> None:
         """
         Set the block type to use for the given array data.
 
@@ -171,7 +188,7 @@ class SerializationContext:
         """
         self._blocks._set_array_storage(arr, array_storage)
 
-    def get_array_storage(self, arr):
+    def get_array_storage(self, arr: NDArray) -> ArrayStorage:
         """
         Get the block type for the given array data.
 
@@ -181,7 +198,7 @@ class SerializationContext:
         """
         return self._blocks._get_array_storage(arr)
 
-    def set_array_compression(self, arr, compression, **compression_kwargs):
+    def set_array_compression(self, arr: NDArray, compression: Compression, **compression_kwargs) -> None:
         """
         Set the compression to use for the given array data.
 
@@ -209,7 +226,7 @@ class SerializationContext:
         """
         self._blocks._set_array_compression(arr, compression, **compression_kwargs)
 
-    def get_array_compression(self, arr):
+    def get_array_compression(self, arr: NDArray) -> Compression:
         """
         Get the compression type for the given array data.
 
@@ -223,11 +240,11 @@ class SerializationContext:
         """
         return self._blocks._get_array_compression(arr)
 
-    def get_array_compression_kwargs(self, arr):
+    def get_array_compression_kwargs(self, arr: NDArray) -> dict[str, Any]:
         """ """
         return self._blocks._get_array_compression_kwargs(arr)
 
-    def set_array_save_base(self, arr, save_base):
+    def set_array_save_base(self, arr: NDArray, save_base: bool | None) -> None:
         """
         Set the ``save_base`` option for ``arr``. When ``arr`` is
         written to a file, if ``save_base`` is ``True`` the base array
@@ -246,7 +263,7 @@ class SerializationContext:
         """
         self._blocks._set_array_save_base(arr, save_base)
 
-    def get_array_save_base(self, arr):
+    def get_array_save_base(self, arr: NDArray) -> bool | None:
         """
         Returns the ``save_base`` option for ``arr``. When ``arr`` is
         written to a file, if ``save_base`` is ``True`` the base array
@@ -279,13 +296,13 @@ class ReadBlocksContext(SerializationContext):
         super().__init__(*args, **kwargs)
         self.assign_object(None)
 
-    def assign_object(self, obj):
+    def assign_object(self, obj: Any) -> None:
         super().assign_object(obj)
         if obj is None:
             self._cb = None
             self._keys_to_assign = {}
 
-    def assign_blocks(self):
+    def assign_blocks(self) -> None:
         super().assign_blocks()
         if self._cb is not None:
             self._blocks._data_callbacks.assign_object(self._obj, self._cb)
@@ -302,7 +319,7 @@ class ReadBlocksContext(SerializationContext):
         # assigned object
         self.assign_object(None)
 
-    def get_block_data_callback(self, index, key=None):
+    def get_block_data_callback(self, index: int, key: BlockKey | None = None) -> DataCallback:
         if key is None:
             if self._cb is not None:
                 # this operation has already accessed a block without using
@@ -322,7 +339,7 @@ class ReadBlocksContext(SerializationContext):
         self._keys_to_assign[key] = cb
         return cb
 
-    def generate_block_key(self):
+    def generate_block_key(self) -> BlockKey:
         key = BlockKey()
         self._keys_to_assign[key] = None
         return key
@@ -339,12 +356,12 @@ class WriteBlocksContext(SerializationContext):
     being serialized.
     """
 
-    def find_available_block_index(self, data_callback, key=None):
+    def find_available_block_index(self, data_callback: BlockDataCallback, key: BlockKey | None = None) -> int | str:
         if key is None:
             key = self._obj
         return self._blocks.make_write_block(data_callback, None, key)
 
-    def generate_block_key(self):
+    def generate_block_key(self) -> BlockKey:
         return BlockKey(self._obj)
 
 
@@ -359,7 +376,7 @@ class BlockAccess(enum.Enum):
     READ = ReadBlocksContext
 
 
-def create(asdf_file, block_access=BlockAccess.NONE):
+def create(asdf_file: AsdfFile, block_access: BlockAccess = BlockAccess.NONE) -> SerializationContext:
     """
     Create a SerializationContext instance (or subclass) using
     an AsdfFile instance, asdf_file.

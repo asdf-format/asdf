@@ -54,8 +54,12 @@ nitpicky = True
 nitpick_ignore = [
     ("py:class", "yaml.representer.RepresenterError"),
     ("py:class", "yaml.error.YAMLError"),
-    # Ignore since its not part of the public API
+    # Ignore since they're not part of the public API
     ("py:attr", "asdf.util._NOT_SET_TYPE.NOT_SET"),
+    ("py:class", "BlockAttrCallback"),
+    ("py:class", "BlockManager"),
+    ("py:class", "BlockKey"),
+    ("py:class", "asdf._block.key.Key"),
     # Needed because sphinx breaks trying to process `asdf.typing.NDArray` for some reason
     ("py:class", "NDArray"),
     ("py:class", "ByteArray1D"),

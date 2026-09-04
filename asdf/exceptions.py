@@ -89,3 +89,14 @@ class AsdfSerializationError(RepresenterError):
 
 class AsdfFutureWarning(AsdfWarning, FutureWarning):
     """Warning about a future change in ASDF behavior."""
+
+
+class DeprecatedCompressorWarning(AsdfDeprecationWarning):
+    """Warning emitted when a compressor plugin only implements ``compress`` or ``decompress``."""
+
+    def __init__(self):
+        super().__init__(
+            "Compression plugins that only implement compress or decompress are deprecated. "
+            "In the future plugins will be required to implement both methods. "
+            "Consider inheriting from asdf.extension.Compressor."
+        )

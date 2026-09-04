@@ -1,0 +1,1 @@
+Changed `asdf.extension.Compressor` from an abstract class to a type-checkable protocol.

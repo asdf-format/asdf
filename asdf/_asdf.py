@@ -37,14 +37,13 @@ if TYPE_CHECKING:
     from collections.abc import Mapping, MutableMapping, Sequence
     from typing import Any
 
-    from asdf.extension import ExtensionManager, SerializationContext
+    from asdf.extension import ExtensionLike, ExtensionManager, SerializationContext
     from asdf.generic_io import GenericFile
     from asdf.tagged import Tagged
     from asdf.typing import (
         ArrayStorage,
         AsdfVersionLike,
         Compression,
-        ExtensionLike,
         FileLike,
         FileMode,
         FilterFn,
@@ -330,7 +329,7 @@ class AsdfFile:
                 package_description = f"{package_name}=={package_version}"
                 installed_version = None
                 for mapping in get_config().resource_manager._resource_mappings:
-                    if mapping.package_name == package_name:
+                    if mapping.package_name == package_name and mapping.package_version is not None:
                         installed_version = Version(mapping.package_version)
                         break
                 msg = None

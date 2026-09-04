@@ -3,13 +3,15 @@ import pytest
 
 import asdf
 from asdf import get_config
+from asdf._block.manager import Manager as BlockManager
 from asdf.extension import ExtensionManager
 from asdf.extension._serialization_context import BlockAccess, SerializationContext
 
 
-def test_serialization_context():
+def test_serialization_context() -> None:
     extension_manager = ExtensionManager([])
-    context = SerializationContext("1.4.0", extension_manager, "file://test.asdf", None)
+    blocks = BlockManager()
+    context = SerializationContext("1.4.0", extension_manager, "file://test.asdf", blocks)
     assert context.version == "1.4.0"
     assert context.extension_manager is extension_manager
     assert context._extensions_used == set()
@@ -25,10 +27,11 @@ def test_serialization_context():
     assert context.url == context._url == "file://test.asdf"
 
     with pytest.raises(TypeError, match=r"Extension must implement the Extension interface"):
+        # pyrefly: ignore [bad-argument-type]
         context._mark_extension_used(object())
 
     with pytest.raises(ValueError, match=r"ASDF Standard version .* is not supported by asdf==.*"):
-        SerializationContext("0.5.4", extension_manager, None, None)
+        SerializationContext("0.5.4", extension_manager, None, blocks)
 
 
 def test_get_block_data_callback(tmp_path):

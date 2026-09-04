@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
     from asdf._block.key import Key
     from asdf.generic_io import GenericFile
-    from asdf.typing import ArrayStorage, BlockDataCallback, ByteArray1D, Compression, NDArray
+    from asdf.typing import ArrayCallback, ArrayStorage, ByteArray1D, Compression, NDArray
 
 
 class ReadBlocks(collections.UserList[ReadBlock]):
@@ -402,7 +402,7 @@ class Manager:
                 af.write_to(f, include_block_index=False)
                 writer.write_blocks(f, [blk], write_checksums=write_checksums)
 
-    def make_write_block(self, data: ByteArray1D | BlockDataCallback, options: Options | None, obj: Any) -> int | str:
+    def make_write_block(self, data: NDArray | ArrayCallback, options: Options | None, obj: Any) -> int | str:
         """
         Make a WriteBlock with data and options and
         associate it with an object (obj).
@@ -465,7 +465,7 @@ class Manager:
         index = self._write_blocks.append_block(blk, obj)
         return index
 
-    def set_streamed_write_block(self, data: ByteArray1D | BlockDataCallback, obj: Any) -> None:
+    def set_streamed_write_block(self, data: NDArray | ArrayCallback | None, obj: Any) -> None:
         """
         Create a WriteBlock that will be written as an ASDF
         streamed block.
