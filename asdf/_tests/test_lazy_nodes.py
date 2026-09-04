@@ -12,6 +12,7 @@ import asdf.lazy_nodes
 import asdf.tagged
 import asdf.tags.core
 import asdf.treeutil
+from asdf import AsdfFile
 from asdf.lazy_nodes import AsdfDictNode, AsdfListNode, AsdfOrderedDictNode, _resolve_af_ref, _to_lazy_node
 
 
@@ -418,7 +419,8 @@ def test_lazy_generator_converter(tmp_path, lazy_generator_class):
         assert isinstance(af["obj"].data, dict)
 
 
-def test_lazy_copy(tmp_path):
+@pytest.mark.parametrize("copy_op", [copy.copy, copy.deepcopy, AsdfFile.copy])
+def test_lazy_copy(tmp_path, copy_op):
     """
     Test that copying an AsdfFile instance with a lazy
     tree doesn't result in the copy retaining references
@@ -426,16 +428,21 @@ def test_lazy_copy(tmp_path):
     """
     fn = tmp_path / "test.asdf"
     obj = asdf.tags.core.IntegerType(1)
-    tree: dict[str, Any] = {"a": {"b": obj}}
+    tree: dict[str, Any] = {
+        "a": {"b": obj},
+        "array": {"inner": np.arange(3)},
+    }
     # make a recursive structure
     tree["a"]["c"] = tree["a"]
 
     asdf.AsdfFile(tree).write_to(fn)
 
     with asdf.open(fn, lazy_tree=True) as af:
-        af2 = af.copy()
+        af2 = copy_op(af)
 
     del af
     gc.collect(2)
+
     assert af2["a"]["b"] == obj
     assert af2["a"]["c"]["b"] is af2["a"]["b"]
+    np.array_equal(af2["array"]["inner"][:], np.arange(3))

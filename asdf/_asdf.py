@@ -491,14 +491,17 @@ class AsdfFile:
         self._external_asdf_by_uri.clear()
         self._blocks.close()
 
-    def copy(self) -> AsdfFile:
+    def __deepcopy__(self, memo):
         return self.__class__(
-            copy.deepcopy(self._tree),
+            copy.deepcopy(self._tree, memo),
             self._blocks._uri,
             self._user_extensions,
         )
 
-    __copy__ = __deepcopy__ = copy
+    def copy(self) -> AsdfFile:
+        return copy.deepcopy(self)
+
+    __copy__ = copy
 
     @property
     def uri(self) -> str | None:
