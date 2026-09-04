@@ -4,6 +4,7 @@ lazy conversion of tagged ASDF tree nodes to custom objects.
 """
 
 import collections
+import copy
 import inspect
 import warnings
 import weakref
@@ -146,7 +147,7 @@ class _AsdfNode:
         return self.data
 
     def __deepcopy__(self, memo):
-        return treeutil.walk_and_modify(self, lambda n: n)
+        return copy.deepcopy(treeutil.walk_and_modify(self, lambda n: n), memo)
 
     def _convert_and_cache(self, value, key):
         """
