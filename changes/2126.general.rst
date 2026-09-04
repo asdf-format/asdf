@@ -1,5 +1,0 @@
-In a future release the default value for `asdf.config.AsdfConfig.validate_on_read` will change from `True` to `False`.
-Currently if a validation error occurs while reading a file ASDF will now *also* emit a warning regarding the change in behavior.
-To silence the warning you can either set ``validate_on_read`` to `False` to opt into the new behavior
-or to `True` to retain the old behavior.
-This change has no effect on manual calls to `asdf.AsdfFile.validate`.

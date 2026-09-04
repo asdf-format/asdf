@@ -1,1 +1,0 @@
-Fixed `copy.deepcopy` raising an exception when passed `asdf.AsdfFile`.

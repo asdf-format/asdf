@@ -1,3 +1,77 @@
+5.4.0 (2026-09-04)
+==================
+
+Bugfix
+------
+
+- Fixed files failing to load if their history section contains extension
+  entries without tags. (`#2068
+  <https://github.com/asdf-format/asdf/pull/2068>`_)
+- Fixed ndarrays with zero-length dimensions failing to round-trip correctly
+  when saved inline. (`#2072 <https://github.com/asdf-format/asdf/pull/2072>`_)
+- Fixed structured arrays with zero-length dimensions failing to round-trip
+  correctly when saved inline. (`#2083
+  <https://github.com/asdf-format/asdf/pull/2083>`_)
+- Fixed `asdf.AsdfFile.copy` failing for files created with ``lazy_tree=True``.
+  (`#2133 <https://github.com/asdf-format/asdf/pull/2133>`_)
+- Fixed `copy.deepcopy` raising an exception when passed `asdf.AsdfFile`.
+  (`#2133 <https://github.com/asdf-format/asdf/pull/2133>`_)
+
+
+Doc
+---
+
+- Remove some use of sphinx-asdf in docs. (`#2057
+  <https://github.com/asdf-format/asdf/pull/2057>`_)
+- Added link to AI policy in contributor guide. (`#2088
+  <https://github.com/asdf-format/asdf/pull/2088>`_)
+
+
+Feature
+-------
+
+- Added type hints to `AsdfFile` and `asdf.config.AsdfConfig`.
+  Added `asdf.typing` module containing new type aliases. (`#2031
+  <https://github.com/asdf-format/asdf/pull/2031>`_)
+- Change block index parsing to only check the first block header. This
+  improves IO performance (especially for remote files) by removing several
+  file seeks and reads. (`#2056
+  <https://github.com/asdf-format/asdf/pull/2056>`_)
+
+
+General
+-------
+
+- Added ``typing-extensions`` as a package dependency. (`#2040
+  <https://github.com/asdf-format/asdf/pull/2040>`_)
+- In a future release the default value for
+  `asdf.config.AsdfConfig.warn_on_failed_conversion` will change from `False`
+  to `True`.
+  Currently if ASDF raises an exception due to a conversion error it will now
+  *also* emit a warning regarding the change in behavior.
+  To silence the warning you can either set ``warn_on_failed_conversion`` to
+  `True` to opt into the new behavior
+  or to `False` to retain the old behavior. (`#2125
+  <https://github.com/asdf-format/asdf/pull/2125>`_)
+- In a future release the default value for
+  `asdf.config.AsdfConfig.validate_on_read` will change from `True` to `False`.
+  Currently if a validation error occurs while reading a file ASDF will now
+  *also* emit a warning regarding the change in behavior.
+  To silence the warning you can either set ``validate_on_read`` to `False` to
+  opt into the new behavior
+  or to `True` to retain the old behavior.
+  This change has no effect on manual calls to `asdf.AsdfFile.validate`.
+  (`#2126 <https://github.com/asdf-format/asdf/pull/2126>`_)
+
+
+Removal
+-------
+
+- Deprecated support for duck-typed files that aren't instances of ``IOBase``.
+  Deprecated reading from non-seekable files. (`#2059
+  <https://github.com/asdf-format/asdf/pull/2059>`_)
+
+
 5.3.1 (2026-06-08)
 ==================
 

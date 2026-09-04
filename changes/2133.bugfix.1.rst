@@ -1,1 +1,0 @@
-Fixed `asdf.AsdfFile.copy` failing for files created with ``lazy_tree=True``.
