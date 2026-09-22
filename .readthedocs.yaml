@@ -1,8 +1,6 @@
 version: 2
 
 build:
-  apt_packages:
-    - graphviz
   os: ubuntu-lts-latest
   tools:
     python: latest

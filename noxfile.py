@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 from dataclasses import KW_ONLY, dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -417,7 +418,12 @@ def docs(session: Session) -> None:
     If the environment hasn't changed, you can speed up the build by using nox's `-R` flag
     to reuse the virtual environment and skip reinstalling dependencies, e.g. `nox -R -s docs`.
     """
-    Asdf(extras=[]).install(session, *nox.project.dependency_groups(PYPROJECT, "docs"))
+    Asdf(extras=["http", "lz4", "typing"]).install(session, *nox.project.dependency_groups(PYPROJECT, "docs"))
+
+    cache = Path("docs/api")
+    if cache.is_dir():
+        session.log("clearing docs cache directory")
+        shutil.rmtree(cache)
 
     session.run(
         "sphinx-build",

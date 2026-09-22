@@ -269,6 +269,7 @@ def get_class_name(obj, instance=True):
 #: Special value indicating that a parameter is not set.
 #: Distinct from None, which may for example be a value of interest in a search.
 NOT_SET = sentinel("NOT_SET", repr="NotSet")
+#: Alias for `NOT_SET`. Will be deprecated in a future release.
 NotSet: Final[NOT_SET] = NOT_SET
 
 

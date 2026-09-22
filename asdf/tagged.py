@@ -1,7 +1,7 @@
 """
 This file manages a transient representation of the tree made up of
 simple Python data types (lists, dicts, scalars) wrapped inside of
-`Tagged` subclasses, which add a ``tag`` attribute to hold the
+`asdf.tagged.Tagged` subclasses, which add a ``tag`` attribute to hold the
 associated YAML tag.
 
 Below "basic data types" refers to the basic built-in data types

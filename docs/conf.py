@@ -1,6 +1,10 @@
 import datetime
 import sys
 from pathlib import Path
+import functools
+import importlib
+import inspect
+from collections import defaultdict
 
 if sys.version_info < (3, 11):
     import tomli as tomllib
@@ -50,19 +54,20 @@ man_pages = [("index", project.lower(), project + " Documentation", [author], 1)
 
 nitpicky = True
 
+suppress_warnings = ["config.cache"]
 # ignore a few pyyaml docs links since they don't appear to support intersphinx
 nitpick_ignore = [
     ("py:class", "yaml.representer.RepresenterError"),
     ("py:class", "yaml.error.YAMLError"),
     # Ignore since they're not part of the public API
-    ("py:attr", "asdf.util._NOT_SET_TYPE.NOT_SET"),
-    ("py:class", "BlockAttrCallback"),
     ("py:class", "BlockManager"),
     ("py:class", "BlockKey"),
     ("py:class", "asdf._block.key.Key"),
+    ("py:class", "asdf.extension._manager.ValidatorManager"),
     # Needed because sphinx breaks trying to process `asdf.typing.NDArray` for some reason
-    ("py:class", "NDArray"),
     ("py:class", "ByteArray1D"),
+    ("py:obj", "ByteArray1D"),
+    ("py:class", "numpy.uint8"),
     # Needed because `dict_keys` isn't documented
     ("py:class", "dict_keys"),
 ]
@@ -70,7 +75,7 @@ nitpick_ignore = [
 # Add intersphinx mappings
 intersphinx_mapping = {
     "numpy": ("https://numpy.org/doc/stable/", None),
-    "pypa-packaging": ("https://packaging.python.org/en/latest/", None),
+    "packaging": ("https://packaging.pypa.io/en/stable/", None),
     "pytest": ("https://docs.pytest.org/en/latest/", None),
     "python": ("https://docs.python.org/3/", None),
     "semantic_version": ("https://python-semanticversion.readthedocs.io/en/latest/", None),
@@ -97,20 +102,49 @@ intersphinx_mapping.update(subprojects)
 extensions = [
     # TODO clean these up, do we need them all?
     "sphinx_inline_tabs",
-    "sphinx.ext.intersphinx",
-    "sphinx.ext.extlinks",
-    "sphinx_asdf",
-    "sphinx.ext.autodoc",
     "sphinx.ext.coverage",
-    "sphinx.ext.inheritance_diagram",
     "sphinx.ext.mathjax",
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
-    "sphinxcontrib.jquery",
+    "sphinx.ext.extlinks",
+
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
     "numpydoc",
-    "sphinx_automodapi.automodapi",
-    "sphinx_automodapi.smart_resolver",
 ]
+
+
+# Don't show summaries of the members in each class along with the
+# class' docstring
+numpydoc_show_class_members = False
+autosummary_ignore_module_all = False
+# Class documentation should contain *both* the class docstring and
+# the __init__ docstring
+autoclass_content = "both"
+# autosummary custom templates
+templates_path = ["_templates"]
+
+
+# Skip these items when generating documentation
+AUTODOC_SKIP = [
+    # Exported elsewhere
+    "asdf.tags.core.ExternalArrayReference",
+    "asdf.tags.core.IntegerType",
+    "asdf.ValidationError",
+    "asdf.Stream",
+
+    # Breaks sphinx autodoc
+    "asdf.typing.ByteArray1D",
+]
+# Document inherited methods and attributes for classes in these modules
+# For all other classes, only document items defined in the class itself
+AUTODOC_SHOW_INHERITED = ["asdf", "asdf.extension"]
+# Mapping of item paths to correct public API paths
+# Needed because autodoc can't always determine the correct public path for base classes
+AUTODOC_REMAP_BASES = {
+    "semantic_version.base.Version": "semantic_version.Version",
+}
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -125,18 +159,6 @@ master_doc = "index"
 # The reST default role (used for this markup: `text`) to use for all
 # documents. Set to the "smart" one.
 default_role = "obj"
-
-# Don't show summaries of the members in each class along with the
-# class' docstring
-numpydoc_show_class_members = False
-
-autosummary_generate = True
-
-automodapi_toctreedirnm = "api"
-
-# Class documentation should contain *both* the class docstring and
-# the __init__ docstring
-autoclass_content = "both"
 
 html_theme = "furo"
 html_static_path = ["_static"]
@@ -167,18 +189,6 @@ html_theme_options = {
 pygments_style = "monokai"
 # NB Dark style pygments is furo-specific at this time
 pygments_dark_style = "monokai"
-# Render inheritance diagrams in SVG
-graphviz_output_format = "svg"
-
-graphviz_dot_args = [
-    "-Nfontsize=10",
-    "-Nfontname=Helvetica Neue, Helvetica, Arial, sans-serif",
-    "-Efontsize=10",
-    "-Efontname=Helvetica Neue, Helvetica, Arial, sans-serif",
-    "-Gbgcolor=white",
-    "-Gfontsize=10",
-    "-Gfontname=Helvetica Neue, Helvetica, Arial, sans-serif",
-]
 
 # -- Options for LaTeX output --------------------------------------------------
 
@@ -188,6 +198,80 @@ latex_documents = [("index", project + ".tex", project + " Documentation", autho
 
 latex_logo = "_static/images/logo-light-mode.png"
 
+def autodoc_remap_bases(app, name, obj, _unused, bases):
+    """Check if any of the object's base classes are in AUTODOC_REMAP_BASES and remap them.
+
+    Needed because autodoc can't always determine the correct public path for base classes.
+    """
+    for i, base in enumerate(bases):
+        qualname = f"{base.__module__}.{base.__name__}"
+        if qualname in AUTODOC_REMAP_BASES:
+            module, _, name = AUTODOC_REMAP_BASES[qualname].rpartition(".")
+            bases[i].__module__ = module
+            bases[i].__name__ = name
+            bases[i].__qualname__ = name
+
+
+def filter_private_symbols(app, domain, node):
+    """Ignore broken references to items starting with an underscore.
+
+    These items are assumed to not be public so we don't want them documented anyway.
+    """
+    target: str = node.get("reftarget", "")
+    mod, _, name = target.rpartition(".")
+
+    if name.startswith("_"):
+        # Ignore broken references to private symbols
+        return True
+
+
+def filter_inherited(qualname: str, members: list[str], inherited_members: list[str]):
+    """Filter list of class members to remove inherited members unless parent module is in SHOW_INHERITED."""
+    @functools.cache
+    def show_inherited(qualname: str):
+        module, _, cls = qualname.rpartition(".")
+        return any(module == m for m in AUTODOC_SHOW_INHERITED)
+
+    if show_inherited(qualname):
+        return members
+
+    return [m for m in members if m not in inherited_members]
+
+
+def filter_ignored(qualname: str, members: list[str]):
+    """Filter list of module members to remove any present in AUTODOC_SKIP."""
+    @functools.cache
+    def ignore_map():
+        ignore = defaultdict(set)
+        for item in AUTODOC_SKIP:
+            path, _, name = item.rpartition(".")
+            ignore[path].add(name)
+
+        return ignore
+
+    ignored = ignore_map()[qualname]
+    return [mem for mem in members if mem not in ignored]
+
+def is_property(modname, qualname, attr):
+    """Used by the autosummary class template to pick autoproperty vs autoattribute."""
+    obj = importlib.import_module(modname)
+    for part in qualname.split("."):
+        obj = getattr(obj, part)
+    try:
+        member = inspect.getattr_static(obj, attr)
+    except AttributeError:
+        return False
+    return isinstance(member, property)
+
+# Helper functions used in autosummary Jinja templates
+autosummary_context = {
+    "filter_inherited": filter_inherited,
+    "filter_ignored": filter_ignored,
+    "is_property": is_property,
+}
+
 
 def setup(app):
     app.add_css_file("css/globalnav.css")
+    app.connect("warn-missing-reference", filter_private_symbols)
+    app.connect("autodoc-process-bases", autodoc_remap_bases)
