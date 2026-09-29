@@ -64,7 +64,11 @@ markdown_extensions:
       pygments_lang_class: true
       line_spans: __span
   - pymdownx.inlinehilite
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: pycon
+          class: 'highlight'
+          format: !!python/name:asdf._doc.pycon.strip_doctest_flags
 
 plugins:
 - search
