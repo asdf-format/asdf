@@ -112,7 +112,7 @@ filterwarnings = [
 ]
 addopts = [
   "--doctest-modules",
-  "--doctest-glob=*.rst",
+  "--doctest-glob=docs/*.md",
   "--color=yes",
   "-rsxfE",
   "-p no:legacypath",
