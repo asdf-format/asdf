@@ -12,7 +12,7 @@ package. See `installation` for details.
 At its core, ASDF is a way of saving nested data structures to YAML.
 Here we save a `dict` with the key/value pair `'hello': 'world'`.
 
-``` python
+```pycon
 >>> from asdf import AsdfFile
 
 >>> # Make the tree structure, and create a AsdfFile from it.
@@ -24,6 +24,7 @@ Here we save a `dict` with the key/value pair `'hello': 'world'`.
 >>> ff = AsdfFile()
 >>> ff.tree['hello'] = 'world'
 >>> ff.write_to("test.asdf")
+
 ```
 
 ``` yaml
@@ -162,10 +163,10 @@ with asdf.open("example.asdf") as af:
 To get a quick overview of the data stored in the file, use the
 top-level [`AsdfFile.info()`][AsdfFile.info()] method:
 
-```
->>> import asdf
->>> af = asdf.open("example.asdf")
->>> af.info()
+```pycon
+>>> import asdf  # doctest: +SKIP
+>>> af = asdf.open("example.asdf")  # doctest: +SKIP
+>>> af.info()  # doctest: +SKIP
 root (AsdfObject)
 ├─asdf_library (Software)
 │ ├─author (str): The ASDF Developers
@@ -191,17 +192,17 @@ The [`AsdfFile`][AsdfFile] behaves like a Python
 [`dict`][dict], and nodes are accessed like any
 other dictionary entry:
 
-```
->>> af["name"]
+```pycon
+>>> af["name"]  # doctest: +SKIP
 'Monty'
->>> af["powers"]
+>>> af["powers"]  # doctest: +SKIP
 {'squares': <array (unloaded) shape: [100] dtype: int64>}
 ```
 
 Array data remains unloaded until it is explicitly accessed:
 
-```
->>> af["powers"]["squares"]
+```pycon
+>>> af["powers"]["squares"]  # doctest: +SKIP
 array([   0,    1,    4,    9,   16,   25,   36,   49,   64,   81,  100,
         121,  144,  169,  196,  225,  256,  289,  324,  361,  400,  441,
         484,  529,  576,  625,  676,  729,  784,  841,  900,  961, 1024,
@@ -213,14 +214,14 @@ array([   0,    1,    4,    9,   16,   25,   36,   49,   64,   81,  100,
        7744, 7921, 8100, 8281, 8464, 8649, 8836, 9025, 9216, 9409, 9604,
        9801])
 
->>> import numpy as np
->>> expected = [x**2 for x in range(100)]
->>> np.equal(af["powers"]["squares"], expected).all()
+>>> import numpy as np  # doctest: +SKIP
+>>> expected = [x**2 for x in range(100)]  # doctest: +SKIP
+>>> np.equal(af["powers"]["squares"], expected).all()  # doctest: +SKIP
 True
 ```
 
 Memory mapping can be enabled by providing `memmap=True` to \`open\`:
 
 ``` python
-af = asdf.open("example.asdf", memmap=True)
+af = asdf.open("example.asdf", memmap=True)  # doctest: +SKIP
 ```

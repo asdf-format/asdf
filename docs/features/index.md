@@ -236,7 +236,7 @@ syntax used in the file for this is called "JSON Pointer", but users of
 
 First, we'll create a ASDF file with a couple of arrays in it:
 
-``` python
+``` pycon
 >>> from asdf import AsdfFile
 >>> import numpy as np
 
@@ -247,6 +247,7 @@ First, we'll create a ASDF file with a couple of arrays in it:
 
 >>> target = AsdfFile(tree)
 >>> target.write_to("target.asdf")
+
 ```
 
 ``` yaml
@@ -283,7 +284,7 @@ method to generate a reference to array `a`. Second, we'll work at the
 lower level by manually writing a JSON Pointer to array `b`, which
 doesn't require loading or having access to the target file.
 
-``` python
+```pycon
 >>> import asdf
 >>> from asdf import AsdfFile
 >>> ff = AsdfFile()
@@ -293,6 +294,7 @@ doesn't require loading or having access to the target file.
 
 >>> ff.tree['my_ref_b'] = {'$ref': 'target.asdf#b'}
 >>> ff.write_to("source.asdf")
+
 ```
 
 ``` yaml
@@ -320,11 +322,12 @@ will look up all of the references so they can be used as if they were
 local to the tree. It doesn't actually move any of the data, and keeps
 the references as references.
 
-``` python
+```pycon
 >>> import asdf
 >>> with asdf.open('source.asdf') as ff:
 ...    ff.find_references()
 ...    assert ff.tree['my_ref_b'].shape == (10,)
+
 ```
 
 On the other hand, calling
@@ -333,10 +336,11 @@ all of the referenced content directly in the tree, so when we write it
 out again, all of the external references are gone, with the literal
 content in its place.
 
-``` python
+```pycon
 >>> import asdf
 >>> with asdf.open('source.asdf') as ff:
 ...    ff.resolve_references()
+
 ```
 
 ``` yaml
@@ -381,13 +385,14 @@ Anchors and aliases are handled automatically by
 recursive. For example here is a dictionary that is included twice in
 the same tree:
 
-``` python
+```pycon
 >>> from asdf import AsdfFile
 >>> d = {'foo': 'bar'}
 >>> d['baz'] = d
 >>> tree = {'d': d}
 
 >>> ff = AsdfFile(tree)
+
 ```
 
 ``` yaml
@@ -447,7 +452,7 @@ As an example, we will create a reference to an external CSV file. We
 will assume that one of the rows of the CSV file contains the array data
 we care about:
 
-```
+```pycon
 >>> import asdf
 
 >>> csv_data_row = 10 # The row of the CSV file containing the data we want
@@ -456,6 +461,7 @@ we care about:
 
 >>> tree = {'csv_data': extref}
 >>> af = asdf.AsdfFile(tree)
+
 ```
 
 ``` yaml
@@ -498,7 +504,7 @@ description of the change and optionally a description of the software
 (i.e. your software, not [`asdf`][asdf]) that
 performed the operation.
 
-``` python
+```pycon
 >>> from asdf import AsdfFile
 >>> import numpy as np
 
@@ -513,6 +519,7 @@ performed the operation.
 ...     'author': 'John Q. Public',
 ...     'homepage': 'http://github.com/asdf-format/asdf',
 ...     'version': '0.1'})
+
 ```
 
 ``` yaml
@@ -556,7 +563,7 @@ installed (see `extension_checking` for more details).
 The [`asdf.info`][asdf.info] function prints a
 representation of an ASDF tree to stdout. For example:
 
-```
+```pycon
 >>> asdf.info("path/to/some/file.asdf")  # doctest: +SKIP
 root (AsdfObject)
 ├─asdf_library (Software)
@@ -583,8 +590,9 @@ number of displayed lines. If `max_rows` is a tuple, then each member
 limits lines per node at the depth corresponding to its tuple index. For
 example, to show all top-level nodes and 5 of each's children:
 
-```
+```pycon
 >>> asdf.info("file.asdf", max_rows=(None, 5))  # doctest: +SKIP
+
 ```
 
 If the attribute is described in a schema, the info functionality will
@@ -615,7 +623,7 @@ the ASDF tree. We can search for nodes by key/index, type, or value.
 Initiate a search by calling
 [`AsdfFile.search`][AsdfFile.search] on an open file:
 
-```
+```pycon
 >>> af.search()  # doctest: +SKIP
 root (AsdfObject)
 ├─asdf_library (Software)
@@ -646,7 +654,7 @@ single-node search results, the
 [`AsdfSearchResult.path`][AsdfSearchResult.path] property contains
 the Python code required to reference that node directly:
 
-```python
+```pycon
 >>> af.search("example").path  # doctest: +SKIP
 "root['data']['example_key']"
 ```
@@ -654,7 +662,7 @@ the Python code required to reference that node directly:
 While the [`AsdfSearchResult.node`][AsdfSearchResult.node] property
 contains the actual value of the node:
 
-```python
+```pycon
 >>> af.search("example").node  # doctest: +SKIP
 'example value'
 ```
@@ -664,7 +672,7 @@ For searches with multiple matching nodes, use the
 [`AsdfSearchResult.nodes`][AsdfSearchResult.nodes] properties
 instead:
 
-```python
+```pycon
 >>> af.search("duplicate_key").paths  # doctest: +SKIP
 ["root['data']['duplicate_key']", "root['other_data']['duplicate_key']"]
 >>> af.search("duplicate_key").nodes  # doctest: +SKIP
@@ -674,7 +682,7 @@ instead:
 To replace matching nodes with a new value, use the
 [`AsdfSearchResult.replace`][AsdfSearchResult.replace] method:
 
-```
+```pycon
 >>> af.search("example").replace("replacement value")  # doctest: +SKIP
 >>> af.search("example").node  # doctest: +SKIP
 'replacement value'
@@ -690,7 +698,7 @@ The first argument to [`AsdfFile.search`][AsdfFile.search]
 searches by dict key or list/tuple index. We can also search by type,
 value, or any combination thereof:
 
-```
+```pycon
 >>> af.search("foo")  # Find nodes with key containing the string 'foo' # doctest: +SKIP
 >>> af.search(type_=int)  # Find nodes that are instances of int # doctest: +SKIP
 >>> af.search(value=10)  # Find nodes whose value is equal to 10 # doctest: +SKIP
@@ -707,7 +715,7 @@ search method, so it's possible to chain searches together. This is
 useful when you need to see intermediate results before deciding how to
 further narrow the search.
 
-```
+```pycon
 >>> af.search()  # See an overview of the entire ASDF tree # doctest: +SKIP
 >>> af.search().search(type_="NDArrayType")  # Find only ndarrays # doctest: +SKIP
 >>> af.search().search(type_="NDArrayType").search(
@@ -720,7 +728,7 @@ further narrow the search.
 Another way to narrow the search is to use the index operator to descend
 into a child node of the current tree root:
 
-```
+```pycon
 >>> af.search()["data"]  # Restrict search to the 'data' child # doctest: +SKIP
 >>> af.search()["data"].search(
 ...     type_=int
@@ -733,22 +741,23 @@ Any string argument to search is interpreted as a regular expression.
 For example, we can search for nodes whose keys start with a particular
 string:
 
-```
+```pycon
 >>> af.search("foo")  # Find nodes with 'foo' anywhere in the key # doctest: +SKIP
 >>> af.search("^foo")  # Find only nodes whose keys start with 'foo' # doctest: +SKIP
+
 ```
 
 Note that all node keys (even list indices) will be converted to string
 before the regular expression is matched:
 
-```
+```pycon
 >>> af.search("^7$")  # Returns all nodes with key '7' or index 7 # doctest: +SKIP
 ```
 
 When the `type_` argument is a string, the search compares against the
 fully-qualified class name of each node:
 
-```
+```pycon
 >>> af.search(
 ...     type_="asdf.tags.core.Software"
 ... )  # Find instances of ASDF's Software type # doctest: +SKIP
@@ -758,7 +767,7 @@ fully-qualified class name of each node:
 When the `value` argument is a string, the search compares against the
 string representation of each node's value.
 
-```
+```pycon
 >>> af.search(
 ...     value="^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
 ... )  # Find values that look like dates # doctest: +SKIP
@@ -772,7 +781,7 @@ parameter accepts a callable that receives the node under consideration,
 and returns `True` to keep it or `False` to reject it from the search
 results. For example, to search for NDArrayType with a particular shape:
 
-```
+```pycon
 >>> af.search(type_="NDArrayType", filter_=lambda n: n.shape[0] == 1024)  # doctest: +SKIP
 ```
 
@@ -789,7 +798,7 @@ content as a rendered tree with reasonable defaults for maximum number
 of lines and columns displayed. To change those values, we call
 \`AsdfSearchResult.format\`:
 
-```
+```pycon
 >>> af.search(type_=float)  # Displays limited rows # doctest: +SKIP
 >>> af.search(type_=float).format(max_rows=None)  # Show all matching rows # doctest: +SKIP
 ```
@@ -797,7 +806,7 @@ of lines and columns displayed. To change those values, we call
 Like [`AsdfSearchResult.search`][AsdfSearchResult.search], calls to
 format may be chained:
 
-```
+```pycon
 >>> af.search("time").format(max_rows=10).search(type_=str).format(
 ...     max_rows=None
 ... )  # doctest: +SKIP
@@ -838,7 +847,7 @@ information is stored under inside the schema; by default this is
 dot-separated string of the keys in the ASDF file that lead to the
 value(s) of interest. For example:
 
-```
+```pycon
 >>> af.schema_info("archive_catalog", "foo.bar")  # doctest: +SKIP
 {'thing1': {'archive_catalog': 'Thing 1 Archive catalog information'},
  'thing2': {'archive_catalog': 'Thing 2 Archive catalog information'}}
@@ -847,7 +856,7 @@ value(s) of interest. For example:
 Or one can provide a `path` as an
 [`asdf.search.AsdfSearchResult`][asdf.search.AsdfSearchResult] object:
 
-```
+```pycon
 >>> af.schema_info("archive_catalog", af.search("bar"))  # doctest: +SKIP
 {'thing1': {'archive_catalog': 'Thing 1 Archive catalog information'},
  'thing2': {'archive_catalog': 'Thing 2 Archive catalog information'}}

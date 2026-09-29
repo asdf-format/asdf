@@ -640,11 +640,11 @@ class AsdfFile:
         Examples
         --------
         For the given AsdfFile ``ff``, add an external reference to the data in
-        an external file::
+        an external file:
 
-            >>> import asdf
-            >>> flat = asdf.open("http://stsci.edu/reference_files/flat.asdf")  # doctest: +SKIP
-            >>> ff.tree['flat_field'] = flat.make_reference(['data'])  # doctest: +SKIP
+        >>> import asdf
+        >>> flat = asdf.open("http://stsci.edu/reference_files/flat.asdf")  # doctest: +SKIP
+        >>> ff.tree["flat_field"] = flat.make_reference(["data"])  # doctest: +SKIP
         """
         return reference.make_reference(self, [] if path is None else path)
 

@@ -11,13 +11,14 @@ resulting YAML output contains information about the structure (size and
 data type) of the array, but the actual array content is in a binary
 block.
 
-``` python
+```pycon
 >>> from asdf import AsdfFile
 >>> import numpy as np
 
 >>> tree = {'my_array': np.random.rand(8, 8)}
 >>> ff = AsdfFile(tree)
 >>> ff.write_to("array.asdf")
+
 ```
 
 !!! note
@@ -57,7 +58,7 @@ in the file. In this example an array and a subview on that same array
 are saved to the same file, resulting in only a single block of data
 being saved.
 
-``` python
+```pycon
 >>> from asdf import AsdfFile
 >>> import numpy as np
 
@@ -69,6 +70,7 @@ being saved.
 ... }
 >>> ff = AsdfFile(tree)
 >>> ff.write_to("array_with_subset.asdf")
+
 ```
 
 For circumstances where this is undesirable (such as saving a small view
@@ -124,7 +126,7 @@ values are `internal`, `external`, and `inline`.
   `exploded`).
 - `inline`: Store the data as YAML inline in the tree.
 
-``` python
+```pycon
 >>> from asdf import AsdfFile
 >>> import numpy as np
 
@@ -133,6 +135,7 @@ values are `internal`, `external`, and `inline`.
 >>> ff = AsdfFile(tree)
 >>> ff.set_array_storage(my_array, 'inline')
 >>> ff.write_to("inline_array.asdf")
+
 ```
 
 ``` yaml
@@ -210,7 +213,7 @@ Exploded form is useful in the following scenarios:
 
 To save a block in an external file, set its block type to `'external'`.
 
-``` python
+```pycon
 >>> from asdf import AsdfFile
 >>> import numpy as np
 
@@ -224,6 +227,7 @@ To save a block in an external file, set its block type to `'external'`.
 
 >>> # Or for every block:
 >>> ff.write_to("external.asdf", all_array_storage='external')
+
 ```
 
 ``` yaml
@@ -266,7 +270,7 @@ object which sets up the structure of the streamed data, but will not
 write out the actual content. The file handle's `write` method is then
 used to manually write out the binary data.
 
-``` python
+```pycon
 >>> from asdf import AsdfFile
 >>> from asdf.tags.core import Stream
 >>> import numpy as np
@@ -369,7 +373,7 @@ as `all_array_compression` to
 [`asdf.AsdfFile.write_to`][asdf.AsdfFile.write_to] will compress all
 blocks with the corresponding algorithm:
 
-``` python
+```pycon
 >>> from asdf import AsdfFile
 >>> import numpy as np
 
@@ -381,6 +385,7 @@ blocks with the corresponding algorithm:
 >>> target = AsdfFile(tree)
 >>> target.write_to('target.asdf', all_array_compression='zlib')
 >>> target.write_to('target.asdf', all_array_compression='bzp2')
+
 ```
 
 ``` yaml
