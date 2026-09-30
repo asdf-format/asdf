@@ -56,9 +56,14 @@ not_in_nav: |
 #   anchors: warn  # New in MkDocs 1.6
 
 markdown_extensions:
+  - toc:
+      permalink: true
   - admonition
   - footnotes
   - pymdownx.details
+  - pymdownx.snippets:
+      base_path:
+        - README.md
   - pymdownx.superfences
   - pymdownx.highlight:
       anchor_linenums: true
@@ -107,6 +112,7 @@ plugins:
             warn_missing_types: true
             warn_unknown_params: true
             warnings: true
+          inherited_members: true
           separate_signature: true
           show_signature_annotations: true
           show_signature_type_parameters: true
