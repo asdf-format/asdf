@@ -17,7 +17,6 @@ next-generation interchange format for scientific data. This package
 contains the Python implementation of the ASDF specification. More
 information on the ASDF file format including the specification can be
 found [here](https://asdf-standard.readthedocs.io).
-<!-- --8<-- [end:summary] -->
 
 The ASDF format has the following features:
 
@@ -29,14 +28,11 @@ The ASDF format has the following features:
   Schema](http://json-schema.org))
 - Native and transparent support for most basic Python data types, with
   an extension API to add support for any custom Python object.
-
-<div id="end-summary-text">
+<!-- --8<-- [end:summary] -->
 
 ASDF is under active development [on
 github](https://github.com/asdf-format/asdf). More information on
 contributing can be found below.
-
-</div>
 
 # Overview
 
@@ -45,14 +41,11 @@ and reading ASDF files.
 
 ## Creating a file
 
-<div id="begin-create-file-text">
-
+<!-- --8<-- [start:create-file] -->
 We're going to store several [`numpy`][numpy] arrays
 and other data to an ASDF file. We do this by creating a "tree", which
 is simply a [`dict`][dict], and we provide it as
-input to the constructor of \`AsdfFile\`:
-
-</div>
+input to the constructor of `AsdfFile`:
 
 ``` python
 import asdf
@@ -81,8 +74,6 @@ af.write_to("example.asdf")
 
 If we open the newly created file's metadata section, we can see some of
 the key features of ASDF on display:
-
-<div id="begin-example-asdf-metadata">
 
 ``` yaml
 #ASDF 1.0.0
@@ -118,10 +109,6 @@ sequence: !core/ndarray-1.0.0
 ...
 ```
 
-</div>
-
-<div id="end-example-asdf-metadata">
-
 The metadata in the file mirrors the structure of the tree that was
 stored. It is hierarchical and human-readable. Notice that metadata has
 been added to the tree that was not explicitly given by the user. Notice
@@ -129,17 +116,9 @@ also that the numerical array data is not stored in the metadata tree
 itself. Instead, it is stored as binary data blocks below the metadata
 section (not shown above).
 
-</div>
-
-<div id="end-create-file-text">
-
-<div id="begin-compress-file">
-
+<!-- --8<-- [end:create-file] -->
+<!-- --8<-- [start:compress-file] -->
 It is possible to compress the array data when writing the file:
-
-</div>
-
-</div>
 
 ``` python
 af.write_to("compressed.asdf", all_array_compression="zlib")
@@ -149,16 +128,14 @@ The built-in compression algorithms are `'zlib'`, and `'bzp2'`. The
 `'lz4'` algorithm becomes available when the
 [lz4](https://python-lz4.readthedocs.io/) package is installed. Other
 compression algorithms may be available via extensions.
+<!-- --8<-- [end:compress-file] -->
 
 ## Reading a file
 
-<div id="begin-read-file-text">
-
+<!-- --8<-- [start:read-file] -->
 To read an existing ASDF file, we simply use the top-level
 [`open`][asdf.open] function of the
 [`asdf`][asdf] package:
-
-</div>
 
 ``` python
 import asdf
@@ -234,18 +211,15 @@ array([   0,    1,    4,    9,   16,   25,   36,   49,   64,   81,  100,
 True
 ```
 
-Memory mapping can be enabled by providing `memmap=True` to \`open\`:
+Memory mapping can be enabled by providing `memmap=True` to `open`:
 
 ``` python
 af = asdf.open("example.asdf", memmap=True)
 ```
-
-<div id="end-read-file-text">
+<!-- --8<-- [end:read-file] -->
 
 For more information and for advanced usage examples, see the
 [documentation](http://asdf.readthedocs.io/en/latest/).
-
-</div>
 
 ## Extending ASDF
 
@@ -257,23 +231,19 @@ documentation](http://asdf.readthedocs.io/en/latest/#extending-asdf).
 
 # Installation
 
-<div id="begin-pip-install-text">
-
+<!-- --8<-- [start:pip-install] -->
 Stable releases of the ASDF Python package are registered [at
 PyPi](https://pypi.python.org/pypi/asdf). The latest stable version can
 be installed using `pip`:
 
-</div>
-
     $ pip install asdf
 
-<div id="begin-source-install-text">
+<!-- --8<-- [end:pip-install] -->
+<!-- --8<-- [start:source-install] -->
 
 The latest development version of ASDF is available from the `main`
 branch [on github](https://github.com/asdf-format/asdf). To clone the
 project:
-
-</div>
 
     $ git clone https://github.com/asdf-format/asdf
 
@@ -286,15 +256,13 @@ To install in [development
 mode](https://packaging.python.org/tutorials/distributing-packages/#working-in-development-mode):
 
     $ pip install -e .
+<!-- --8<-- [end:source-install] -->
 
 # Testing
 
-<div id="begin-testing-text">
-
+<!-- --8<-- [start:testing] -->
 To install the test dependencies from a source checkout of the
 repository:
-
-</div>
 
     $ pip install -e ".[tests]"
 
@@ -324,6 +292,8 @@ To run a specific session:
 Groups of sessions can also be specified by tag:
 
     $ nox -t downstream  # Run all downstream sessions
+
+<!-- --8<-- [end:testing] -->
 
 # Documentation
 

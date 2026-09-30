@@ -1,4 +1,5 @@
 * [Home](index.md)
+* [Installation](install.md)
 * [Overview](overview.md)
 * [Core Features](features/index.md)
     * [Array Data](features/arrays.md)
