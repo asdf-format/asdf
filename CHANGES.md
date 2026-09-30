@@ -27,7 +27,7 @@
 
 ## Feature
 
-- Added type hints to [`AsdfFile`][AsdfFile] and
+- Added type hints to [`AsdfFile`][asdf.AsdfFile] and
   [`asdf.config.AsdfConfig`][asdf.config.AsdfConfig]. Added
   [`asdf.typing`][asdf.typing] module containing new type
   aliases. ([\#2031](https://github.com/asdf-format/asdf/pull/2031))
@@ -79,7 +79,7 @@
 
 ## Bugfix
 
-- Added `__delitem__` method to [`AsdfFile`][AsdfFile].
+- Added `__delitem__` method to [`AsdfFile`][asdf.AsdfFile].
   ([\#2008](https://github.com/asdf-format/asdf/pull/2008))
 - Fixed bug in which empty/all-zero block checksums were treated as
   invalid when `validate_headers` is enabled.
@@ -655,12 +655,12 @@
 - Update citation.
   \[[\#1184](https://github.com/asdf-format/asdf/issues/1184)\]
 - Add search support to
-  [`~asdf.AsdfFile.schema_info`][~asdf.AsdfFile.schema_info].
+  [`schema_info`][asdf.AsdfFile.schema_info].
   \[[\#1187](https://github.com/asdf-format/asdf/issues/1187)\]
 - Add [`asdf.search.AsdfSearchResult`][asdf.search.AsdfSearchResult]
-  support for [`~asdf.AsdfFile.schema_info`][~asdf.AsdfFile.schema_info]
+  support for [`schema_info`][asdf.AsdfFile.schema_info]
   and
-  [`~asdf.search.AsdfSearchResult.schema_info`][~asdf.search.AsdfSearchResult.schema_info]
+  [`schema_info`][asdf.search.AsdfSearchResult.schema_info]
   method. \[[\#1197](https://github.com/asdf-format/asdf/issues/1197)\]
 - Use forc ndarray flag to correctly test for fortran array contiguity
   \[[\#1206](https://github.com/asdf-format/asdf/issues/1206)\]
@@ -693,7 +693,7 @@
 	The ASDF Standard is at v1.6.0
 
 - Add ability to pull information from schema about asdf file data,
-  using [`~asdf.AsdfFile.schema_info`][~asdf.AsdfFile.schema_info]
+  using [`schema_info`][asdf.AsdfFile.schema_info]
   method. \[[\#1167](https://github.com/asdf-format/asdf/issues/1167)\]
 
 2.12.1 (2022-08-17) ==================-
