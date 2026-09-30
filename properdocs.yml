@@ -1,5 +1,5 @@
 site_name: asdf
-site_url: https://www.asdf-format.org/projects/asdf
+site_url: !ENV [READTHEDOCS_CANONICAL_URL, 'https://www.asdf-format.org/projects/asdf']
 repo_url: https://github.com/asdf-format/asdf
 edit_uri: edit/main/docs/
 repo_name: asdf-format/asdf
@@ -45,6 +45,9 @@ theme:
 
 extra_css:
   - assets/stylesheets/extra.css
+extra_javascript:
+  - assets/scripts/readthedocs.js
+
 
 not_in_nav: |
   api/

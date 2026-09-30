@@ -6,3 +6,8 @@
 <a href="https://www.asdf-format.org/en/latest/community/index.html">Community</a>
 
 {% endblock %}
+
+{% block site_meta %}
+{{ super() }}
+<meta name="readthedocs-addons-api-version" content="1" />
+{% endblock %}
