@@ -115,7 +115,7 @@ subset: !core/ndarray-1.1.0
 For small arrays, you may not care about the efficiency of a binary
 representation and just want to save the array contents directly in the
 YAML tree. The
-[`~asdf.AsdfFile.set_array_storage`][~asdf.AsdfFile.set_array_storage] method
+[`set_array_storage`][asdf.AsdfFile.set_array_storage] method
 can be used to set the storage type of the associated data. The allowed
 values are `internal`, `external`, and `inline`.
 
@@ -177,8 +177,8 @@ my_array: !core/ndarray-1.1.0
 ```
 
 Alternatively, it is possible to use the `all_array_storage` parameter
-of [`AsdfFile.write_to`][AsdfFile.write_to] and
-[`AsdfFile.update`][AsdfFile.update] to control the storage
+of [`AsdfFile.write_to`][asdf.AsdfFile.write_to] and
+[`AsdfFile.update`][asdf.AsdfFile.update] to control the storage
 format of all arrays in the file.
 
 ```
@@ -288,6 +288,7 @@ used to manually write out the binary data.
 ...     # ``tobytes()``.
 ...     for i in range(100):
 ...         fd.write(np.array([i] * 128, np.float64).tobytes())
+
 ```
 
 ``` yaml

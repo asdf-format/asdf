@@ -143,7 +143,7 @@ compression algorithms may be available via extensions.
 ## Reading Files
 
 To read an existing ASDF file, we simply use the top-level
-[`open`][open] function of the
+[`open`][asdf.open] function of the
 [`asdf`][asdf] package:
 
 ``` python
@@ -152,7 +152,7 @@ import asdf
 af = asdf.open("example.asdf")
 ```
 
-The [`open`][open] function also works as a context
+The [`open`][asdf.open] function also works as a context
 handler:
 
 ``` python
@@ -161,7 +161,7 @@ with asdf.open("example.asdf") as af:
 ```
 
 To get a quick overview of the data stored in the file, use the
-top-level [`AsdfFile.info()`][AsdfFile.info()] method:
+top-level [`AsdfFile.info()`][asdf.AsdfFile.info] method:
 
 ```pycon
 >>> import asdf  # doctest: +SKIP
@@ -188,7 +188,7 @@ root (AsdfObject)
 └─sequence (NDArrayType): shape=(100,), dtype=int64
 ```
 
-The [`AsdfFile`][AsdfFile] behaves like a Python
+The [`AsdfFile`][asdf.AsdfFile] behaves like a Python
 [`dict`][dict], and nodes are accessed like any
 other dictionary entry:
 
@@ -223,5 +223,5 @@ True
 Memory mapping can be enabled by providing `memmap=True` to \`open\`:
 
 ``` python
-af = asdf.open("example.asdf", memmap=True)  # doctest: +SKIP
+af = asdf.open("example.asdf", memmap=True)
 ```

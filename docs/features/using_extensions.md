@@ -120,7 +120,7 @@ in its primitive form.
 If multiple converters are present that both handle the same tag, the
 first found by the library will be used. Users may disable a converter
 by removing its extension with the
-[`~asdf.config.AsdfConfig.remove_extension`][~asdf.config.AsdfConfig.remove_extension]
+[`remove_extension`][asdf.config.AsdfConfig.remove_extension]
 method.
 
 ### Writing files
@@ -134,7 +134,7 @@ error.
 If multiple converters are present that both handle the same type, the
 first found by the library will be used. Users may disable a converter
 by removing its extension with the
-[`~asdf.config.AsdfConfig.remove_extension`][~asdf.config.AsdfConfig.remove_extension]
+[`remove_extension`][asdf.config.AsdfConfig.remove_extension]
 method.
 
 ## Extensions from other packages
@@ -174,7 +174,7 @@ custom types.
 
 The config object returned from
 [`asdf.get_config`][asdf.get_config] offers an
-[`~asdf.config.AsdfConfig.add_extension`][~asdf.config.AsdfConfig.add_extension]
+[`add_extension`][asdf.config.AsdfConfig.add_extension]
 method that can be used to install an extension for the remainder of the
 current Python session.
 
@@ -199,7 +199,7 @@ af.write_to("custom.asdf")
 
 Note that the extension class must actually be instantiated when it is
 passed to
-[`~asdf.config.AsdfConfig.add_extension`][~asdf.config.AsdfConfig.add_extension].
+[`add_extension`][asdf.config.AsdfConfig.add_extension].
 
 To read the file (in a new session) we again need to install the
 extension first:

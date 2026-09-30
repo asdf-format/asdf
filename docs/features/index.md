@@ -21,7 +21,7 @@ structures. For simple examples of creating and reading trees, see
 	a YAML literal will result in a validation error.
 
 	For arbitrary precision integer support, see
-	[`IntegerType`][IntegerType].
+	[`IntegerType`][asdf.IntegerType].
 
 	Integers and floats of up to 64 bits can be stored inside of `numpy`
 	arrays (see below).
@@ -92,10 +92,10 @@ Schema validation is used to determine whether an ASDF file is well
 formed. All ASDF files must conform to the schemas defined by the
 `ASDF specification
 <asdf-standard:asdf-standard>`. Schema validation can be run using
-[`AsdfFile.validate`][AsdfFile.validate] and occurs when reading
+[`AsdfFile.validate`][asdf.AsdfFile.validate] and occurs when reading
 ASDF files (using [`asdf.open`][asdf.open]) and writing
-them out (using [`AsdfFile.write_to`][AsdfFile.write_to] or
-[`AsdfFile.update`][AsdfFile.update]).
+them out (using [`AsdfFile.write_to`][asdf.AsdfFile.write_to] or
+[`AsdfFile.update`][asdf.AsdfFile.update]).
 
 Schema validation also plays a role when using custom extensions (see
 `using_extensions` and `extending_extensions`). Extensions must provide
@@ -158,7 +158,7 @@ time the image was taken and the resolution of the image.
 In order to use this schema for a secondary validation pass, we pass the
 `custom_schema` argument to either
 [`asdf.open`][asdf.open] or the
-[`AsdfFile`][AsdfFile] constructor. Assume that the
+[`AsdfFile`][asdf.AsdfFile] constructor. Assume that the
 schema file lives in `image_schema.yaml`, and we wish to open a file
 called `image.asdf`. We would open the file with the following code:
 
@@ -211,15 +211,15 @@ schemas and ASDF file format is not supported by the software.
 
 When creating new ASDF files, it is possible to control the version of
 the ASDF core schemas that is used. This can be specified by passing the
-`version` argument to either the [`AsdfFile`][AsdfFile]
+`version` argument to either the [`AsdfFile`][asdf.AsdfFile]
 constructor when the file object is created, or to the
-[`AsdfFile.write_to`][AsdfFile.write_to] method when it is
+[`AsdfFile.write_to`][asdf.AsdfFile.write_to] method when it is
 written. By default, the latest stable version of the ASDF core schemas
 will be used.
 
 !!! warning
 	Take care when providing `version` to
-	[`AsdfFile.write_to`][AsdfFile.write_to] to select a version
+	[`AsdfFile.write_to`][asdf.AsdfFile.write_to] to select a version
 	that is stable. Writing files with a `development` (unstable) version
 	may produce files that will become unreadable as that version evolves.
 	The default version will always be stable and is often the best choice
@@ -236,7 +236,7 @@ syntax used in the file for this is called "JSON Pointer", but users of
 
 First, we'll create a ASDF file with a couple of arrays in it:
 
-``` pycon
+```pycon
 >>> from asdf import AsdfFile
 >>> import numpy as np
 
@@ -317,7 +317,7 @@ my_ref_b: {$ref: target.asdf#b}
 ...
 ```
 
-Calling [`~asdf.AsdfFile.find_references`][~asdf.AsdfFile.find_references]
+Calling [`find_references`][asdf.AsdfFile.find_references]
 will look up all of the references so they can be used as if they were
 local to the tree. It doesn't actually move any of the data, and keeps
 the references as references.
@@ -331,7 +331,7 @@ the references as references.
 ```
 
 On the other hand, calling
-[`~asdf.AsdfFile.resolve_references`][~asdf.AsdfFile.resolve_references] places
+[`resolve_references`][asdf.AsdfFile.resolve_references] places
 all of the referenced content directly in the tree, so when we write it
 out again, all of the external references are gone, with the literal
 content in its place.
@@ -419,7 +419,7 @@ d: &id001
 ### Array References
 
 ASDF files can refer to array data that is stored in other files using
-the [`ExternalArrayReference`][ExternalArrayReference] type.
+the [`ExternalArrayReference`][asdf.ExternalArrayReference] type.
 
 External files need not be ASDF files: ASDF is completely agnostic as to
 the format of the external file. The ASDF external array reference does
@@ -489,7 +489,7 @@ csv_data: !core/externalarray-1.0.0
 
 When reading a file containing external references, the user is
 responsible for using the information in the
-[`ExternalArrayReference`][ExternalArrayReference] type to open the
+[`ExternalArrayReference`][asdf.ExternalArrayReference] type to open the
 external file and retrieve the associated array data.
 
 ## Saving history entries
@@ -498,8 +498,8 @@ external file and retrieve the associated array data.
 notating the history of transformations that have been performed on a
 file.
 
-Given a [`~asdf.AsdfFile`][~asdf.AsdfFile] object, call
-[`~asdf.AsdfFile.add_history_entry`][~asdf.AsdfFile.add_history_entry], given a
+Given a [`AsdfFile`][asdf.AsdfFile] object, call
+[`add_history_entry`][asdf.AsdfFile.add_history_entry], given a
 description of the change and optionally a description of the software
 (i.e. your software, not [`asdf`][asdf]) that
 performed the operation.
@@ -578,7 +578,7 @@ root (AsdfObject)
 ```
 
 The first argument may be a `str` or `pathlib.Path` filesystem path, or
-an [`AsdfFile`][AsdfFile] or sub-node of an ASDF tree.
+an [`AsdfFile`][asdf.AsdfFile] or sub-node of an ASDF tree.
 
 By default, [`asdf.info`][asdf.info] limits the number
 of lines, and line length, of the displayed tree. The `max_rows`
@@ -601,9 +601,9 @@ comment on the same line. This provides a way for users to see more
 information about the attribute, similar to the way FITS header comments
 are used.
 
-The [`AsdfFile.info`][AsdfFile.info] method behaves
+The [`AsdfFile.info`][asdf.AsdfFile.info] method behaves
 similarly to [`asdf.info`][asdf.info], rendering the
-tree of the associated [`AsdfFile`][AsdfFile].
+tree of the associated [`AsdfFile`][asdf.AsdfFile].
 
 Normally [`asdf.info`][asdf.info] will not show the
 contents of asdf nodes turned into Python custom objects, but if that
@@ -614,14 +614,14 @@ such support for [`asdf.info`][asdf.info] and
 
 ## Searching the ASDF tree
 
-The [`AsdfFile`][AsdfFile] search interface provides a
+The [`AsdfFile`][asdf.AsdfFile] search interface provides a
 way to interactively discover the locations and values of nodes within
 the ASDF tree. We can search for nodes by key/index, type, or value.
 
 ### Basic usage
 
 Initiate a search by calling
-[`AsdfFile.search`][AsdfFile.search] on an open file:
+[`AsdfFile.search`][asdf.AsdfFile.search] on an open file:
 
 ```pycon
 >>> af.search()  # doctest: +SKIP
@@ -642,16 +642,10 @@ root (AsdfObject)
   └─example_key (str): example value
 ```
 
-<div class="currentmodule">
-
-asdf.search
-
-</div>
-
-The search returns an [`AsdfSearchResult`][AsdfSearchResult]
+The search returns an [`AsdfSearchResult`][asdf.search.AsdfSearchResult]
 object that displays in the Python console as a rendered tree. For
 single-node search results, the
-[`AsdfSearchResult.path`][AsdfSearchResult.path] property contains
+[`AsdfSearchResult.path`][asdf.search.AsdfSearchResult.path] property contains
 the Python code required to reference that node directly:
 
 ```pycon
@@ -659,7 +653,7 @@ the Python code required to reference that node directly:
 "root['data']['example_key']"
 ```
 
-While the [`AsdfSearchResult.node`][AsdfSearchResult.node] property
+While the [`AsdfSearchResult.node`][asdf.search.AsdfSearchResult.node] property
 contains the actual value of the node:
 
 ```pycon
@@ -668,8 +662,8 @@ contains the actual value of the node:
 ```
 
 For searches with multiple matching nodes, use the
-[`AsdfSearchResult.paths`][AsdfSearchResult.paths] and
-[`AsdfSearchResult.nodes`][AsdfSearchResult.nodes] properties
+[`AsdfSearchResult.paths`][asdf.search.AsdfSearchResult.paths] and
+[`AsdfSearchResult.nodes`][asdf.search.AsdfSearchResult.nodes] properties
 instead:
 
 ```pycon
@@ -680,7 +674,7 @@ instead:
 ```
 
 To replace matching nodes with a new value, use the
-[`AsdfSearchResult.replace`][AsdfSearchResult.replace] method:
+[`AsdfSearchResult.replace`][asdf.search.AsdfSearchResult.replace] method:
 
 ```pycon
 >>> af.search("example").replace("replacement value")  # doctest: +SKIP
@@ -688,13 +682,7 @@ To replace matching nodes with a new value, use the
 'replacement value'
 ```
 
-<div class="currentmodule">
-
-asdf
-
-</div>
-
-The first argument to [`AsdfFile.search`][AsdfFile.search]
+The first argument to [`AsdfFile.search`][asdf.AsdfFile.search]
 searches by dict key or list/tuple index. We can also search by type,
 value, or any combination thereof:
 
@@ -705,11 +693,12 @@ value, or any combination thereof:
 >>> af.search(
 ...     "foo", type_=int, value=10
 ... )  # Find the intersection of the above # doctest: +SKIP
+
 ```
 
 ### Chaining searches
 
-The return value of [`AsdfFile.search`][AsdfFile.search],
+The return value of [`AsdfFile.search`][asdf.AsdfFile.search],
 [`asdf.search.AsdfSearchResult`][asdf.search.AsdfSearchResult], has its own
 search method, so it's possible to chain searches together. This is
 useful when you need to see intermediate results before deciding how to
@@ -721,6 +710,7 @@ further narrow the search.
 >>> af.search().search(type_="NDArrayType").search(
 ...     "err"
 ... )  # Only ndarrays with 'err' in the key # doctest: +SKIP
+
 ```
 
 ### Descending into child nodes
@@ -733,6 +723,7 @@ into a child node of the current tree root:
 >>> af.search()["data"].search(
 ...     type_=int
 ... )  # Find integer descendants of 'data' # doctest: +SKIP
+
 ```
 
 ### Regular expression searches
@@ -752,6 +743,7 @@ before the regular expression is matched:
 
 ```pycon
 >>> af.search("^7$")  # Returns all nodes with key '7' or index 7 # doctest: +SKIP
+
 ```
 
 When the `type_` argument is a string, the search compares against the
@@ -762,6 +754,7 @@ fully-qualified class name of each node:
 ...     type_="asdf.tags.core.Software"
 ... )  # Find instances of ASDF's Software type # doctest: +SKIP
 >>> af.search(type_="^asdf\.")  # Find all ASDF objects # doctest: +SKIP
+
 ```
 
 When the `value` argument is a string, the search compares against the
@@ -771,6 +764,7 @@ string representation of each node's value.
 >>> af.search(
 ...     value="^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
 ... )  # Find values that look like dates # doctest: +SKIP
+
 ```
 
 ### Arbitrary search criteria
@@ -783,17 +777,12 @@ results. For example, to search for NDArrayType with a particular shape:
 
 ```pycon
 >>> af.search(type_="NDArrayType", filter_=lambda n: n.shape[0] == 1024)  # doctest: +SKIP
+
 ```
 
 ### Formatting search results
 
-<div class="currentmodule">
-
-asdf.search
-
-</div>
-
-The [`AsdfSearchResult`][AsdfSearchResult] object displays its
+The [`AsdfSearchResult`][asdf.search.AsdfSearchResult] object displays its
 content as a rendered tree with reasonable defaults for maximum number
 of lines and columns displayed. To change those values, we call
 \`AsdfSearchResult.format\`:
@@ -801,15 +790,17 @@ of lines and columns displayed. To change those values, we call
 ```pycon
 >>> af.search(type_=float)  # Displays limited rows # doctest: +SKIP
 >>> af.search(type_=float).format(max_rows=None)  # Show all matching rows # doctest: +SKIP
+
 ```
 
-Like [`AsdfSearchResult.search`][AsdfSearchResult.search], calls to
+Like [`AsdfSearchResult.search`][asdf.search.AsdfSearchResult.search], calls to
 format may be chained:
 
 ```pycon
 >>> af.search("time").format(max_rows=10).search(type_=str).format(
 ...     max_rows=None
 ... )  # doctest: +SKIP
+
 ```
 
 ## Searching Schema information
@@ -829,13 +820,7 @@ such as what is done with the `archive_catalog` information in the [rad
 schemas](https://github.com/spacetelescope/rad) for the Nancy Grace
 Roman Space Telescope.
 
-<div class="currentmodule">
-
-asdf
-
-</div>
-
-The [`AsdfFile.schema_info`][AsdfFile.schema_info] method provides
+The [`AsdfFile.schema_info`][asdf.AsdfFile.schema_info] method provides
 a way to access this information. This method returns a nested tree of
 dictionaries which contains tuples consisting of the information from
 the schema requested together with the value stored in the ASDF file
@@ -868,6 +853,6 @@ Or one can provide a `path` as an
 	method, which can be directly called on an
 	[`asdf.search.AsdfSearchResult`][asdf.search.AsdfSearchResult] object,
 	instead of passing the search through
-	[`AsdfFile.schema_info`][AsdfFile.schema_info].
+	[`AsdfFile.schema_info`][asdf.AsdfFile.schema_info].
 
 [^1]: <https://en.wikipedia.org/wiki/Serialization>
