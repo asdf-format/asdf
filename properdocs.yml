@@ -21,6 +21,7 @@ theme:
     - content.action.view
     - content.code.select
     - content.code.copy
+    - navigation.instant.preview
   palette:
     # Palette toggle for automatic mode
     - media: "(prefers-color-scheme)"
@@ -69,6 +70,13 @@ markdown_extensions:
         - name: pycon
           class: 'highlight'
           format: !!python/name:asdf._doc.pycon.strip_doctest_flags
+  - material.extensions.preview:
+      configurations:
+        - targets:
+            include:
+              - api/*
+              - user/*
+              - developer/*
 
 plugins:
 - search
