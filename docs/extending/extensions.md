@@ -169,7 +169,7 @@ class FooExtension(Extension):
     validators = [FooValidator()]
 ```
 
-See `extending_validators` for details on implementing the Validator
+See [validators][] for details on implementing the Validator
 interface.
 
 ### ASDF Standard version requirement

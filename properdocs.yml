@@ -5,6 +5,7 @@ edit_uri: edit/main/docs/
 repo_name: asdf-format/asdf
 watch:
   - asdf
+  - README.md
 theme:
   name: material
   custom_dir: docs/overrides
@@ -13,14 +14,17 @@ theme:
   features:
     - navigation.instant
     - navigation.tracking
-    - navigation.path
-    - navigation.top
+    - navigation.path # Show path breadcrumbs for nested pages
+    - navigation.top # Show "return to top" button when scrolling up
     - toc.follow
     - header.autohide
     - content.action.edit
     - content.action.view
     - content.code.select
     - content.code.copy
+    # Enable link previews for all internal links
+    # It would be better to only enable previews for API links but currently that doesn't work
+    # with the autorefs plugin (https://github.com/zensical/zensical/issues/985)
     - navigation.instant.preview
   palette:
     # Palette toggle for automatic mode
@@ -48,7 +52,6 @@ extra_css:
 extra_javascript:
   - assets/scripts/readthedocs.js
 
-
 not_in_nav: |
   api/
 
@@ -61,33 +64,31 @@ not_in_nav: |
 markdown_extensions:
   - toc:
       permalink: true
-  - admonition
   - footnotes
+  - attr_list
+  # Regular and collapsible admonitions
+  - admonition
   - pymdownx.details
+  # Preprocess to include snippets from outside source tree
   - pymdownx.snippets:
       base_path:
         - README.md
-  - pymdownx.superfences
+  # Block and inline syntax highlighting
   - pymdownx.highlight:
       anchor_linenums: true
       pygments_lang_class: true
       line_spans: __span
   - pymdownx.inlinehilite
+  # Enable custom block preprocessing
   - pymdownx.superfences:
       custom_fences:
         - name: pycon
           class: 'highlight'
           format: !!python/name:asdf._doc.pycon.strip_doctest_flags
-  - material.extensions.preview:
-      configurations:
-        - targets:
-            include:
-              - api/*
-              - user/*
-              - developer/*
 
 plugins:
 - search
+- autorefs
 - api-autonav:
       modules: ['asdf']
       api_root_uri: api
