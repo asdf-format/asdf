@@ -2,13 +2,15 @@
 title: ASDF - Advanced Scientific Data Format
 ---
 <!-- --8<-- [start:badges] -->
-[![CI](https://github.com/asdf-format/asdf/actions/workflows/ci.yml/badge.svg)](https://github.com/asdf-format/asdf/actions/workflows/ci.yml)
-[![image](https://readthedocs.org/projects/asdf/badge/?version=latest)](https://asdf.readthedocs.io/en/latest/)
-[![image](https://codecov.io/gh/asdf-format/asdf/branch/main/graphs/badge.svg)](https://codecov.io/gh/asdf-format/asdf)
+<p>
+<a href="https://github.com/asdf-format/asdf/actions/workflows/ci.yml"><img src="https://github.com/asdf-format/asdf/actions/workflows/ci.yml/badge.svg" alt="CI"/></a>
+<a href="https://asdf.readthedocs.io/en/latest/"><img src="https://readthedocs.org/projects/asdf/badge/?version=latest" alt="Documentation"/></a>
+<a href="https://codecov.io/gh/asdf-format/asdf"><img src="https://codecov.io/gh/asdf-format/asdf/branch/main/graphs/badge.svg" alt="Coverage"/></a>
 <!-- --8<-- [start:zenodo] -->
-[![image](https://zenodo.org/badge/18112754.svg)](https://zenodo.org/badge/latestdoi/18112754)
+<a href="https://zenodo.org/badge/latestdoi/18112754"><img src="https://zenodo.org/badge/18112754.svg" alt="Zenodo"/></a>
 <!-- # --8<-- [end:zenodo] -->
-[![image](https://img.shields.io/pypi/l/asdf.svg)](https://img.shields.io/pypi/l/asdf.svg)
+<a href="https://img.shields.io/pypi/l/asdf.svg"><img src="https://img.shields.io/pypi/l/asdf.svg" alt="License"/></a>
+</p>
 <!-- --8<-- [end:badges] -->
 
 <!-- --8<-- [start:summary] -->
