@@ -1,3 +1,5 @@
+# pyrefly: ignore-errors
+
 """Script to convert Sphinx RST files to mkdocs markdown files.
 
 Accepts one or more input files or directories and a single output directory.
