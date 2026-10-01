@@ -1,6 +1,5 @@
----
-title: ASDF - Advanced Scientific Data Format
----
+# ASDF - Advanced Scientific Data Format
+
 <!-- --8<-- [start:badges] -->
 <p>
 <a href="https://github.com/asdf-format/asdf/actions/workflows/ci.yml"><img src="https://github.com/asdf-format/asdf/actions/workflows/ci.yml/badge.svg" alt="CI"/></a>
@@ -36,12 +35,12 @@ ASDF is under active development [on
 github](https://github.com/asdf-format/asdf). More information on
 contributing can be found below.
 
-# Overview
+## Overview
 
 This section outlines basic use cases of the ASDF package for creating
 and reading ASDF files.
 
-## Creating a file
+### Creating a file
 
 <!-- --8<-- [start:create-file] -->
 We're going to store several [`numpy`][numpy] arrays
@@ -132,7 +131,7 @@ The built-in compression algorithms are `'zlib'`, and `'bzp2'`. The
 compression algorithms may be available via extensions.
 <!-- --8<-- [end:compress-file] -->
 
-## Reading a file
+### Reading a file
 
 <!-- --8<-- [start:read-file] -->
 To read an existing ASDF file, we simply use the top-level
@@ -223,7 +222,7 @@ af = asdf.open("example.asdf", memmap=True)
 For more information and for advanced usage examples, see the
 [documentation](http://asdf.readthedocs.io/en/latest/).
 
-## Extending ASDF
+### Extending ASDF
 
 Out of the box, the `asdf` package automatically serializes and
 deserializes native Python types. It is possible to extend `asdf` by
@@ -231,7 +230,7 @@ implementing custom tags that correspond to custom user types. More
 information on extending ASDF can be found in the [official
 documentation](http://asdf.readthedocs.io/en/latest/#extending-asdf).
 
-# Installation
+## Installation
 
 <!-- --8<-- [start:pip-install] -->
 Stable releases of the ASDF Python package are registered [at
@@ -260,7 +259,7 @@ mode](https://packaging.python.org/tutorials/distributing-packages/#working-in-d
     $ pip install -e .
 <!-- --8<-- [end:source-install] -->
 
-# Testing
+## Testing
 
 <!-- --8<-- [start:testing] -->
 To install the test dependencies from a source checkout of the
@@ -297,7 +296,7 @@ Groups of sessions can also be specified by tag:
 
 <!-- --8<-- [end:testing] -->
 
-# Documentation
+## Documentation
 
 More detailed documentation on this software package can be found
 [here](https://asdf.readthedocs.io).
@@ -309,7 +308,7 @@ More information on the ASDF file format itself can be found
 > **F**ormat, information can be found
 > [here](https://seismic-data.org/).
 
-# License
+## License
 
 ASDF is licensed under a BSD 3-clause style license. See
 [LICENSE](https://github.com/asdf-format/asdf/blob/main/LICENSE) for the
@@ -317,7 +316,7 @@ ASDF is licensed under a BSD 3-clause style license. See
 folder](https://github.com/asdf-format/asdf/tree/main/licenses) for
 licenses for any included software.
 
-# Contributing
+## Contributing
 
 We welcome feedback and contributions to the project. Contributions of
 code, documentation, or general feedback are all appreciated. Please
