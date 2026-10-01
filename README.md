@@ -2,7 +2,7 @@
 title: ASDF - Advanced Scientific Data Format
 ---
 <!-- --8<-- [start:badges] -->
-[![CI Status](https://github.com/asdf-format/asdf/workflows/ci.yml/badge.svg)](https://github.com/asdf-format/asdf/actions/workflows/ci.yml)
+[![CI](https://github.com/asdf-format/asdf/actions/workflows/ci.yml/badge.svg)](https://github.com/asdf-format/asdf/actions/workflows/ci.yml)
 [![image](https://readthedocs.org/projects/asdf/badge/?version=latest)](https://asdf.readthedocs.io/en/latest/)
 [![image](https://codecov.io/gh/asdf-format/asdf/branch/main/graphs/badge.svg)](https://codecov.io/gh/asdf-format/asdf)
 <!-- --8<-- [start:zenodo] -->
