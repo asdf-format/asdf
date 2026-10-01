@@ -8,7 +8,7 @@ watch:
   - README.md
 theme:
   name: material
-  custom_dir: docs/overrides
+  custom_dir: docs/.overrides
   favicon: assets/favicon.ico
   logo: assets/logo-dark-mode.png
   features:
@@ -48,7 +48,8 @@ theme:
         name: Switch to system preference
 
 extra_css:
-  - assets/stylesheets/extra.css
+  - assets/stylesheets/mkdocstrings.css
+  - assets/stylesheets/asdf.css
 extra_javascript:
   - assets/scripts/readthedocs.js
 
@@ -138,3 +139,12 @@ plugins:
             - griffe_sphinx
             - griffe_generics
             - griffe_inherited_docstrings
+
+extra:
+  header_links:
+    - title: ASDF Projects
+      href: https://www.asdf-format.org
+    - title: Tutorials
+      href: https://www.asdf-format.org/en/latest/tutorials/index.html
+    - title: Community
+      href: https://www.asdf-format.org/en/latest/community/index.html
