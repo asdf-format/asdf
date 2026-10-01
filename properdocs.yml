@@ -3,6 +3,8 @@ site_url: !ENV [READTHEDOCS_CANONICAL_URL, 'https://www.asdf-format.org/projects
 repo_url: https://github.com/asdf-format/asdf
 edit_uri: edit/main/docs/
 repo_name: asdf-format/asdf
+site_author: The ASDF Developers
+copyright: Copyright &copy; 2026, The ASDF Developers
 watch:
   - asdf
   - README.md
@@ -100,8 +102,9 @@ plugins:
     nav_file: SUMMARY.md
 - section-index
 # - git-authors
-# - git-revision-date-localized:
-#     enable_creation_date: true
+- git-revision-date-localized:
+    enable_creation_date: true
+    fallback_to_build_date: true
 - mkdocstrings:
     handlers:
       python:
@@ -111,6 +114,7 @@ plugins:
         - "https://python-semanticversion.readthedocs.io/en/latest/objects.inv"
         - "https://docs.pytest.org/en/latest/objects.inv"
         - "https://packaging.python.org/en/latest/objects.inv"
+        - "https://stdatamodels.readthedocs.io/en/latest/objects.inv"
         options:
           docstring_style: numpy
           docstring_options:
