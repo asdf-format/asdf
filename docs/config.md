@@ -48,6 +48,7 @@ returns the currently active config:
   lazy_tree: False
   warn_on_failed_conversion: False
 >
+
 ```
 
 The latter method, [`config_context`][asdf.config_context],
@@ -90,6 +91,7 @@ that do not impact other code:
   lazy_tree: False
   warn_on_failed_conversion: False
 >
+
 ```
 
 ### Special note to library maintainers
