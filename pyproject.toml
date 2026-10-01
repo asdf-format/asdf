@@ -134,6 +134,7 @@ omit = [
   "asdf/compat*",
   "asdf/_extern*",
   "asdf/_jsonschema/**",
+  "asdf/_doc/*",
   # And again for running against installed version
   "*/asdf/_astropy_init*",
   "*/asdf/conftest*",
