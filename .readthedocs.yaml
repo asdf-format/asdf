@@ -1,8 +1,6 @@
 version: 2
 
 build:
-  apt_packages:
-    - graphviz
   os: ubuntu-lts-latest
   tools:
     python: latest
@@ -11,15 +9,18 @@ build:
       - git fetch --unshallow || true
       - git config remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*' || true
       - git fetch --all --tags || true
-    pre_install:
-      - git update-index --assume-unchanged docs/conf.py
     post_install:
       - git describe --exact-match || towncrier build --keep
+    build:
+      html:
+        - properdocs build --strict
+    post_build:
+      # Copy the built site into the directory Read the Docs publishes.
+      - mkdir -p $READTHEDOCS_OUTPUT/html/
+      - cp --recursive site/* $READTHEDOCS_OUTPUT/html/
 
-sphinx:
-  builder: html
-  fail_on_warning: true
-  configuration: docs/conf.py
+mkdocs:
+  configuration: mkdocs.yml
 
 python:
   install:
@@ -27,6 +28,7 @@ python:
       command: sync
       groups:
         - docs
+      extras: all
       path: .
 
 # No extra formats

@@ -1,0 +1,11 @@
+div.asdf-header {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+.asdf-header>a {
+    color: var(--md-primary-bg-color);
+    text-decoration: underline;
+    font-size: 1.1em;
+}

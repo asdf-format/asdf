@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block announce %}
+<div class="asdf-header">
+    {% for item in config.extra.header_links %}
+    <a href="{{ item.href }}">{{ item.title }}</a>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block site_meta %}
+{{ super() }}
+<meta name="readthedocs-addons-api-version" content="1" />
+{% endblock %}

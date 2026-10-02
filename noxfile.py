@@ -412,20 +412,13 @@ def type_checking(session: Session) -> None:
 
 @nox.session(tags=["docs"], python="3.14", default=False)
 def docs(session: Session) -> None:
-    """Build sphinx documentation.
+    """Build properdocs documentation.
 
     If the environment hasn't changed, you can speed up the build by using nox's `-R` flag
     to reuse the virtual environment and skip reinstalling dependencies, e.g. `nox -R -s docs`.
     """
-    Asdf(extras=[]).install(session, *nox.project.dependency_groups(PYPROJECT, "docs"))
+    Asdf(extras=["all", "typing"]).install(session, *nox.project.dependency_groups(PYPROJECT, "docs"))
+    if not session.posargs:
+        session.posargs.append("build")
 
-    session.run(
-        "sphinx-build",
-        "-E",
-        "-T",
-        "-W",
-        "--keep-going",
-        "docs",
-        "docs/_build/html",
-        *session.posargs,
-    )
+    session.run("properdocs", *session.posargs)

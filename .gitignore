@@ -17,9 +17,8 @@ MANIFEST
 coverage.xml
 
 
-# Sphinx
-docs/api
-docs/_build
+# Mkdocs
+site
 
 # Eclipse editor project files
 .project

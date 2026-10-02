@@ -991,7 +991,7 @@ def get_uri(file_obj):
 
     Parameters
     ----------
-    uri : object
+    file_obj : object
     """
     if isinstance(file_obj, str):
         return file_obj

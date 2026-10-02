@@ -1,0 +1,153 @@
+site_name: asdf
+site_url: !ENV [READTHEDOCS_CANONICAL_URL, 'https://www.asdf-format.org/projects/asdf']
+repo_url: https://github.com/asdf-format/asdf
+edit_uri: edit/main/docs/
+repo_name: asdf-format/asdf
+site_author: The ASDF Developers
+copyright: Copyright &copy; 2026, The ASDF Developers
+watch:
+  - asdf
+  - README.md
+theme:
+  name: material
+  custom_dir: docs/.overrides
+  favicon: assets/favicon.ico
+  logo: assets/logo-dark-mode.png
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.path # Show path breadcrumbs for nested pages
+    - navigation.top # Show "return to top" button when scrolling up
+    - toc.follow
+    - header.autohide
+    - content.action.edit
+    - content.action.view
+    - content.code.select
+    - content.code.copy
+    # Enable link previews for all internal links
+    # It would be better to only enable previews for API links but currently that doesn't work
+    # with the autorefs plugin (https://github.com/zensical/zensical/issues/985)
+    - navigation.instant.preview
+  palette:
+    # Palette toggle for automatic mode
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: black
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+
+extra_css:
+  - assets/stylesheets/mkdocstrings.css
+  - assets/stylesheets/asdf.css
+extra_javascript:
+  - assets/scripts/readthedocs.js
+
+not_in_nav: |
+  api/
+
+# validation:
+#   omitted_files: warn
+#   absolute_links: warn  # Or 'relative_to_docs' - new in MkDocs 1.6
+#   unrecognized_links: warn
+#   anchors: warn  # New in MkDocs 1.6
+
+markdown_extensions:
+  - toc:
+      permalink: true
+  - footnotes
+  - attr_list
+  # Regular and collapsible admonitions
+  - admonition
+  - pymdownx.details
+  # Preprocess to include snippets from outside source tree
+  - pymdownx.snippets:
+      base_path:
+        - README.md
+  # Block and inline syntax highlighting
+  - pymdownx.highlight:
+      anchor_linenums: true
+      pygments_lang_class: true
+      line_spans: __span
+  - pymdownx.inlinehilite
+  # Enable custom block preprocessing
+  - pymdownx.superfences:
+      custom_fences:
+        - name: pycon
+          class: 'highlight'
+          format: !!python/name:asdf._doc.pycon.strip_doctest_flags
+
+plugins:
+- search
+- autorefs
+- api-autonav:
+      modules: ['asdf']
+      api_root_uri: api
+      exclude:
+      - asdf.conftest
+      on_implicit_namespace_package: skip
+- literate-nav:
+    nav_file: SUMMARY.md
+- section-index
+# - git-authors
+- git-revision-date-localized:
+    fallback_to_build_date: true
+- mkdocstrings:
+    handlers:
+      python:
+        inventories:
+        - https://docs.python.org/3/objects.inv
+        - "https://numpy.org/doc/stable/objects.inv"
+        - "https://python-semanticversion.readthedocs.io/en/latest/objects.inv"
+        - "https://docs.pytest.org/en/latest/objects.inv"
+        - "https://packaging.python.org/en/latest/objects.inv"
+        - "https://stdatamodels.readthedocs.io/en/latest/objects.inv"
+        options:
+          docstring_style: numpy
+          docstring_options:
+            warn_missing_types: true
+            warn_unknown_params: true
+            warnings: true
+          inherited_members: true
+          separate_signature: true
+          show_signature_annotations: true
+          show_signature_type_parameters: true
+          signature_crossrefs: true
+          merge_init_into_class: true
+          show_if_no_docstring: true
+          find_stubs_package: true
+          show_symbol_type_heading: true
+          show_symbol_type_toc: true
+          line_length: 88
+          filters: "public"
+          summary:
+            modules: false
+            attributes: true
+            functions: true
+            classes: true
+            type_aliases: true
+          extensions:
+            - griffe_sphinx
+            - griffe_generics
+            - griffe_inherited_docstrings
+
+extra:
+  header_links:
+    - title: ASDF Projects
+      href: https://www.asdf-format.org
+    - title: Tutorials
+      href: https://www.asdf-format.org/en/latest/tutorials/index.html
+    - title: Community
+      href: https://www.asdf-format.org/en/latest/community/index.html

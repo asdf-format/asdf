@@ -168,8 +168,6 @@ def create_tree(
         The asdf tree to search.
     filters : list of functions
         A list of functions that take a node and identifier and return True if the node should be included in the tree.
-    preserve_list : bool
-        If True, then lists are preserved. Otherwise, they are turned into dicts.
     """
     filters = [] if filters is None else filters
 
@@ -255,7 +253,7 @@ class SchemaInfo(NamedTuple):
     """
     A class to hold the schema info and the value of the node.
 
-    Parameters
+    Attributes
     ----------
     info : dict
         The schema info.
@@ -286,7 +284,7 @@ class NodeSchemaInfo:
     - Providing a way to pull static information about an ASDF file which has
       been stored within the schemas for that file.
 
-    Parameters
+    Attributes
     ----------
     key : str
         The key for the information to be collected from the underlying schema(s).

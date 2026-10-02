@@ -380,9 +380,7 @@ def get_compressed_size(
     Returns the number of bytes required when the given data is
     compressed.
 
-    Parameters
-    ----------
-    See `compress()`.
+    For description of parameters see `compress()`.
 
     Returns
     -------
