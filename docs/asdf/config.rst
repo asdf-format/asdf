@@ -45,7 +45,7 @@ the currently active config:
       legacy_fill_schema_defaults: True
       validate_on_read: False
       lazy_tree: False
-      warn_on_failed_conversion: False
+      warn_on_failed_conversion: True
     >
 
 The latter method, `~asdf.config_context`, returns a context manager that
@@ -71,7 +71,7 @@ This allows for short-lived configuration changes that do not impact other code:
       legacy_fill_schema_defaults: True
       validate_on_read: True
       lazy_tree: False
-      warn_on_failed_conversion: False
+      warn_on_failed_conversion: True
     >
     >>> asdf.get_config()  # doctest: +ELLIPSIS
     <AsdfConfig
@@ -85,7 +85,7 @@ This allows for short-lived configuration changes that do not impact other code:
       legacy_fill_schema_defaults: True
       validate_on_read: False
       lazy_tree: False
-      warn_on_failed_conversion: False
+      warn_on_failed_conversion: True
     >
 
 Special note to library maintainers
@@ -213,15 +213,10 @@ warn_on_failed_conversion
 -------------------------
 
 Flag to control if any errors raised during conversion of a tagged object to
-a custom object are caught and turned into warnings. It may be helpful to
-enable this option when opening old files with tags that are no longer supported
-in the current environment.
+a custom object are caught and turned into warnings.
 
 .. warning::
-  In a future release the default value will change from `False` to `True`.
-  Currently, if a conversion fails and this field hasn't been set then ASDF will
-  emit an `asdf.exceptions.AsdfFutureWarning` *before* raising an exception.
-  Manually set the field to either `True` or `False` to silence this warning.
+  In asdf 6.0.0 the default value changed from `False` to `True`.
 
 Additional AsdfConfig features
 ==============================
