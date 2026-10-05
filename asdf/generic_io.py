@@ -16,7 +16,6 @@ import pathlib
 import re
 import sys
 import typing
-import warnings
 from os import SEEK_CUR, SEEK_END, SEEK_SET
 from typing import TYPE_CHECKING, overload
 from urllib.request import url2pathname
@@ -1157,17 +1156,13 @@ def get_file(
         # Only generate a warning if its an actual duck-typed file.
         # If its just a random object it will raise a ValueError below anyway.
         if hasattr(init, "read") or hasattr(init, "write"):
-            warnings.warn(
+            raise NotImplementedError(
                 "Duck-typed file objects are deprecated. Use an instance of IOBase instead.",
-                DeprecationWarning,
             )
     elif not init.seekable() and mode != "w":
-        warnings.warn(
-            (
-                "Reading from non-seekable files is deprecated. "
-                "Consider implementing seek() or reading the file into a BytesIO instance."
-            ),
-            DeprecationWarning,
+        raise NotImplementedError(
+            "Reading from non-seekable files is deprecated. "
+            "Consider implementing seek() or reading the file into a BytesIO instance."
         )
 
     if isinstance(init, io.IOBase):

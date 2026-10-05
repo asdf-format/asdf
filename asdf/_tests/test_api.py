@@ -88,25 +88,6 @@ invalid_software: !core/software-1.0.0
         assert af["invalid_software"]["version"] == 3
 
 
-def test_open_stream(tmp_path):
-    file_path = tmp_path / "test.asdf"
-
-    with asdf.AsdfFile() as af:
-        af["foo"] = "bar"
-        af.write_to(file_path)
-
-    class StreamWrapper:
-        def __init__(self, fd):
-            self._fd = fd
-
-        def read(self, size=-1):
-            return self._fd.read(size)
-
-    with pytest.deprecated_call():
-        with file_path.open("rb") as fd, asdf.open(StreamWrapper(fd)) as af:
-            assert af["foo"] == "bar"
-
-
 def test_atomic_write(tmp_path, small_tree):
     tmpfile = str(tmp_path / "test.asdf")
 

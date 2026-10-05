@@ -3,7 +3,6 @@ import os
 import re
 import stat
 import sys
-import urllib.request as urllib_request
 from typing import Any
 
 import numpy as np
@@ -238,22 +237,6 @@ def test_streams2():
     assert len(x) == 60
 
 
-def test_urlopen(tree, httpserver):
-    path = os.path.join(httpserver.tmpdir, "test.asdf")
-
-    def get_write_fd():
-        # cannot use context manager here because it closes the file
-        return generic_io.get_file(open(path, "wb"), mode="w")
-
-    def get_read_fd():
-        with pytest.deprecated_call():
-            return generic_io.get_file(urllib_request.urlopen(httpserver.url + "test.asdf"))
-
-    with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
-        assert len(ff._blocks.blocks) == 2
-        assert not isinstance(ff._blocks.blocks[0].cached_data, np.memmap)
-
-
 def test_http_connection(tree, httpserver):
     path = os.path.join(httpserver.tmpdir, "test.asdf")
 
@@ -401,33 +384,6 @@ def test_invalid_obj(tmp_path):
         generic_io.get_file(fd, "w")
 
 
-def test_nonseekable_file(tmp_path):
-    base = io.FileIO
-
-    class FileWrapper(base):
-        def tell(self):
-            raise OSError
-
-        def seekable(self):
-            return False
-
-        def readable(self):
-            return True
-
-        def writable(self):
-            return True
-
-    with FileWrapper(os.path.join(str(tmp_path), "test.asdf"), "wb") as fd:
-        with pytest.deprecated_call():
-            assert isinstance(generic_io.get_file(fd, "w"), generic_io.OutputStream)
-            with pytest.raises(ValueError, match=r"File .* could not be opened in 'rw' mode"):
-                generic_io.get_file(fd, "rw")
-
-    with FileWrapper(os.path.join(str(tmp_path), "test.asdf"), "rb") as fd:
-        with pytest.deprecated_call():
-            assert isinstance(generic_io.get_file(fd, "r"), generic_io.InputStream)
-
-
 def test_relative_uri():
     assert generic_io.relative_uri("http://www.google.com", "file://local") == "file://local"
 
@@ -450,54 +406,6 @@ def test_resolve_uri(protocol):
         )
         == f"{protocol}://somewhere.org/some/other/path/to/some-other-schema"
     )
-
-
-def test_arbitrary_file_object():
-    class Wrapper:
-        def __init__(self, init):
-            self._fd = init
-
-    class Random:
-        def seek(self, *args):
-            return self._fd.seek(*args)
-
-        def tell(self, *args):
-            return self._fd.tell(*args)
-
-    class Reader(Wrapper):
-        def read(self, *args):
-            return self._fd.read(*args)
-
-    class RandomReader(Reader, Random):
-        pass
-
-    class Writer(Wrapper):
-        def write(self, *args):
-            return self._fd.write(*args)
-
-    class RandomWriter(Writer, Random):
-        pass
-
-    class All(Reader, Writer, Random):
-        pass
-
-    buff = io.BytesIO()
-    with pytest.deprecated_call():
-        assert isinstance(generic_io.get_file(Reader(buff), "r"), generic_io.InputStream)
-        assert isinstance(generic_io.get_file(Writer(buff), "w"), generic_io.OutputStream)
-        assert isinstance(generic_io.get_file(RandomReader(buff), "r"), generic_io.MemoryIO)
-        assert isinstance(generic_io.get_file(RandomWriter(buff), "w"), generic_io.MemoryIO)
-        assert isinstance(generic_io.get_file(All(buff), "rw"), generic_io.MemoryIO)
-        assert isinstance(generic_io.get_file(All(buff), "r"), generic_io.MemoryIO)
-        assert isinstance(generic_io.get_file(All(buff), "w"), generic_io.MemoryIO)
-
-    with pytest.raises(ValueError, match=r"Can't handle .* as a file for mode 'w'"):
-        with pytest.deprecated_call():
-            generic_io.get_file(Reader(buff), "w")
-
-    with pytest.raises(ValueError, match=r"Can't handle .* as a file for mode 'r'"):
-        with pytest.deprecated_call():
-            generic_io.get_file(Writer(buff), "r")
 
 
 def test_check_bytes(tmp_path):
