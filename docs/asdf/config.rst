@@ -39,7 +39,7 @@ the currently active config:
       all_array_storage: None
       all_array_compression: input
       all_array_compression_kwargs: None
-      default_array_save_base: True
+      default_array_save_base: False
       default_version: ...
       io_block_size: -1
       legacy_fill_schema_defaults: True
@@ -65,7 +65,7 @@ This allows for short-lived configuration changes that do not impact other code:
       all_array_storage: None
       all_array_compression: input
       all_array_compression_kwargs: None
-      default_array_save_base: True
+      default_array_save_base: False
       default_version: ...
       io_block_size: -1
       legacy_fill_schema_defaults: True
@@ -79,7 +79,7 @@ This allows for short-lived configuration changes that do not impact other code:
       all_array_storage: None
       all_array_compression: input
       all_array_compression_kwargs: None
-      default_array_save_base: True
+      default_array_save_base: False
       default_version: ...
       io_block_size: -1
       legacy_fill_schema_defaults: True
@@ -148,14 +148,17 @@ Defaults to ``None``.
 default_array_save_base
 -----------------------
 
-If ``True`` (the default) when an array is saved, the bytes for the
+If ``True`` when an array is saved, the bytes for the
 "base" array that owns the memory will be stored as an ASDF block
 (see `asdf.util.get_array_base`). This means that saving a small
 "view" of a large array will result in the entire large array being
 saved to the file.
 
-If ``False`` bytes for different arrays (even if they are views of the
+If ``False`` (the default) bytes for different arrays (even if they are views of the
 same memory) will be stored in different ASDF blocks.
+
+.. warning::
+  In asdf 6.0.0 the default value changed from `True` to `False`.
 
 default_version
 ---------------
