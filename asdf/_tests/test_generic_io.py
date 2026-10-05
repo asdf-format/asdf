@@ -107,7 +107,7 @@ def test_path(tree, tmp_path):
         return f
 
     with _roundtrip(tree, get_write_fd, get_read_fd, read_options={"memmap": True}) as ff:
-        assert len(ff._blocks.blocks) == 2
+        assert len(ff._blocks.blocks) == 4
         assert isinstance(ff._blocks.blocks[0].cached_data, np.memmap)
 
 
@@ -130,7 +130,7 @@ def test_open2(tree, tmp_path):
         return f
 
     with _roundtrip(tree, get_write_fd, get_read_fd, read_options={"memmap": True}) as ff:
-        assert len(ff._blocks.blocks) == 2
+        assert len(ff._blocks.blocks) == 4
         assert isinstance(ff._blocks.blocks[0].cached_data, np.memmap)
 
 
@@ -170,7 +170,7 @@ def test_io_open(tree, tmp_path):
         return f
 
     with _roundtrip(tree, get_write_fd, get_read_fd, read_options={"memmap": True}) as ff:
-        assert len(ff._blocks.blocks) == 2
+        assert len(ff._blocks.blocks) == 4
         assert isinstance(ff._blocks.blocks[0].cached_data, np.memmap)
         ff.tree["science_data"][0] = 42
 
@@ -206,7 +206,7 @@ def test_bytes_io(tree):
         return f
 
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
-        assert len(ff._blocks.blocks) == 2
+        assert len(ff._blocks.blocks) == 4
         assert not isinstance(ff._blocks.blocks[0].cached_data, np.memmap)
         ff.tree["science_data"][0] = 42
 
@@ -222,7 +222,7 @@ def test_streams(tree):
         return generic_io.InputStream(buff, "rw")
 
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
-        assert len(ff._blocks.blocks) == 2
+        assert len(ff._blocks.blocks) == 4
         assert not isinstance(ff._blocks.blocks[0].cached_data, np.memmap)
         ff.tree["science_data"][0] = 42
 
@@ -270,7 +270,7 @@ def test_http_connection(tree, httpserver):
         return fd
 
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
-        assert len(ff._blocks.blocks) == 2
+        assert len(ff._blocks.blocks) == 4
         assert (ff.tree["science_data"] == tree["science_data"]).all()
 
 
