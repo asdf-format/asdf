@@ -931,17 +931,7 @@ def get_file(
 
         - A ``bytes`` or ``unicode`` file path or ``file:`` or ``http:``
           url.
-
-        - A Python 2 ``file`` object.
-
         - An `io.IOBase` object (the default file object on Python 3).
-
-        - A ducktyped object that looks like a file object.  If ``mode``
-          is ``"r"``, it must have a ``read`` method.  If ``mode`` is
-          ``"w"``, it must have a ``write`` method.  If ``mode`` is
-          ``"rw"`` it must have the ``read``, ``write``, ``tell`` and
-          ``seek`` methods.
-
         - A `GenericFile` instance, in which case it is wrapped in a
           ``GenericWrapper`` instance, so that the file is closed when
           only when the final layer is unwrapped.
@@ -974,7 +964,7 @@ def get_file(
         raise ValueError(msg)
 
     if isinstance(init, io.TextIOWrapper) and init in (sys.__stdout__, sys.__stdin__, sys.__stderr__):
-        init = cast("io.IOBase", init.buffer)
+        init = cast("io.IOBase", os.fdopen(init.fileno(), init.mode + "b"))
 
     if isinstance(init, (GenericFile, GenericWrapper)):
         if mode not in init.mode:
