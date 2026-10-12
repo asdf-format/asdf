@@ -16,13 +16,12 @@ import pathlib
 import re
 import sys
 import typing
-import warnings
 from os import SEEK_CUR, SEEK_END, SEEK_SET
-from typing import TYPE_CHECKING, overload
+from typing import TYPE_CHECKING, cast
 from urllib.request import url2pathname
 
 import numpy as np
-from typing_extensions import Reader, Writer, deprecated
+from typing_extensions import Reader
 
 from ._extern import atomicfile
 from .exceptions import DelimiterNotFoundError
@@ -33,7 +32,7 @@ if TYPE_CHECKING:
 
     from fsspec.core import OpenFile
 
-    from asdf.typing import ByteArray1D, FileLike, FileMode, PathLike, Reader
+    from asdf.typing import ByteArray1D, FileLike, FileMode
 
 __all__ = ["GenericFile", "get_file", "get_uri", "relative_uri", "resolve_uri"]
 
@@ -1002,23 +1001,6 @@ def get_uri(file_obj):
     return getattr(file_obj, "name", "")
 
 
-@overload
-def get_file(
-    init: PathLike | io.IOBase | GenericFile,
-    mode: FileMode = ...,
-    uri: str | None = ...,
-    close: bool = ...,
-) -> GenericFile: ...
-@overload
-@deprecated("Duck-typed file objects are deprecated. Use an instance of IOBase instead.")
-def get_file(
-    init: Reader | Writer,
-    mode: FileMode = ...,
-    uri: str | None = ...,
-    close: bool = ...,
-) -> GenericFile: ...
-
-
 def get_file(
     init: FileLike,
     mode: FileMode = "r",
@@ -1083,7 +1065,7 @@ def get_file(
         raise ValueError(msg)
 
     if isinstance(init, io.TextIOWrapper) and init in (sys.__stdout__, sys.__stdin__, sys.__stderr__):
-        init = os.fdopen(init.fileno(), init.mode + "b")
+        init = cast("io.IOBase", init.buffer)
 
     if isinstance(init, (GenericFile, GenericWrapper)):
         if mode not in init.mode:
@@ -1149,71 +1131,40 @@ def get_file(
     if isinstance(init, io.BytesIO):
         return MemoryIO(init, mode, uri=uri)
 
+    # This check isn't strictly necessary but does provide more specific errors
     if isinstance(init, io.StringIO):
         msg = "io.StringIO objects are not supported.  Use io.BytesIO instead."
         raise TypeError(msg)
 
     if not isinstance(init, io.IOBase):
-        # Only generate a warning if its an actual duck-typed file.
-        # If its just a random object it will raise a ValueError below anyway.
-        if hasattr(init, "read") or hasattr(init, "write"):
-            warnings.warn(
-                "Duck-typed file objects are deprecated. Use an instance of IOBase instead.",
-                DeprecationWarning,
-            )
-    elif not init.seekable() and mode != "w":
-        warnings.warn(
-            (
-                "Reading from non-seekable files is deprecated. "
-                "Consider implementing seek() or reading the file into a BytesIO instance."
-            ),
-            DeprecationWarning,
-        )
+        msg = f"Expected file object that implements IOBase, got instance of {type(init).__name__}"
+        raise TypeError(msg)
 
-    if isinstance(init, io.IOBase):
-        if ("r" in mode and not init.readable()) or ("w" in mode and not init.writable()):
-            msg = f"File is opened as '{init.mode}', but '{mode}' was requested"
-            raise ValueError(msg)
+    if ("r" in mode and not init.readable()) or ("w" in mode and not init.writable()):
+        fmode = getattr(init, "mode", ("r" * init.readable()) + ("w" * init.writable()))
+        msg = f"File is opened as '{fmode}', but '{mode}' was requested"
+        raise ValueError(msg)
 
-        if init.seekable():
-            init2 = init.raw if hasattr(init, "raw") else init
-
-            if hasattr(init2, "getvalue"):
-                return MemoryIO(init2, mode, uri=uri, inner_fd=init)
-
-            # can we call 'fileno'? if not, we can't memmap so don't
-            # make a RealFile
-            try:
-                init2.fileno()
-                return RealFile(init2, mode, uri=uri, close=close, inner_fd=init)
-            except io.UnsupportedOperation:
-                return RandomAccessFile(init2, mode, uri=uri, close=close, inner_fd=init)
-
+    if not init.seekable():
         if mode == "w":
             return OutputStream(init, uri=uri, close=close)
 
-        if mode == "r":
-            return InputStream(init, mode, uri=uri, close=close)
-
-        msg = f"File '{init}' could not be opened in 'rw' mode"
+        msg = (
+            "Cannot read from non-seekable file. "
+            "Consider implementing seek() or reading the file into a BytesIO instance."
+        )
         raise ValueError(msg)
 
-    if mode == "w" and (hasattr(init, "write") and hasattr(init, "seek") and hasattr(init, "tell")):
-        return MemoryIO(init, mode, uri=uri)
+    ### At this point the file is seekable and mode is r or rw ###
 
-    if mode == "r" and (hasattr(init, "read") and hasattr(init, "seek") and hasattr(init, "tell")):
-        return MemoryIO(init, mode, uri=uri)
+    init2 = init.raw if hasattr(init, "raw") else init
+    if hasattr(init2, "getvalue"):
+        return MemoryIO(init2, mode, uri=uri, inner_fd=init)
 
-    if mode == "rw" and (
-        hasattr(init, "read") and hasattr(init, "write") and hasattr(init, "seek") and hasattr(init, "tell")
-    ):
-        return MemoryIO(init, mode, uri=uri)
-
-    if mode == "w" and hasattr(init, "write"):
-        return OutputStream(init, uri=uri, close=close)
-
-    if mode == "r" and hasattr(init, "read"):
-        return InputStream(init, mode, uri=uri, close=close)
-
-    msg = f"Can't handle '{init}' as a file for mode '{mode}'"
-    raise ValueError(msg)
+    # can we call 'fileno'? if not, we can't memmap so don't
+    # make a RealFile
+    try:
+        init2.fileno()
+        return RealFile(init2, mode, uri=uri, close=close, inner_fd=init)
+    except io.UnsupportedOperation:
+        return RandomAccessFile(init2, mode, uri=uri, close=close, inner_fd=init)

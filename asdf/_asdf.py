@@ -11,7 +11,6 @@ import weakref
 from typing import TYPE_CHECKING, overload
 
 from packaging.version import Version
-from typing_extensions import Reader, Writer, deprecated
 
 from asdf.exceptions import AsdfFutureWarning, ValidationError
 
@@ -48,7 +47,6 @@ if TYPE_CHECKING:
         FileMode,
         FilterFn,
         NDArray,
-        PathLike,
         TreeKey,
     )
 
@@ -968,32 +966,6 @@ class AsdfFile:
             if fd.can_memmap():
                 fd.close_memmap()
 
-    @overload
-    def write_to(
-        self,
-        fd: PathLike | io.IOBase | GenericFile,
-        all_array_storage: ArrayStorage | NOT_SET = ...,
-        all_array_compression: Compression | NOT_SET = ...,
-        compression_kwargs: dict[str, Any] | NOT_SET = ...,
-        pad_blocks: bool | float = ...,
-        include_block_index: bool = ...,
-        version: str | None = ...,
-        write_checksums: bool = ...,
-    ) -> None: ...
-    @overload
-    @deprecated("Duck-typed file objects are deprecated. Use an instance of IOBase instead.")
-    def write_to(
-        self,
-        fd: Reader | Writer,
-        all_array_storage: ArrayStorage | NOT_SET = ...,
-        all_array_compression: Compression | NOT_SET = ...,
-        compression_kwargs: dict[str, Any] | NOT_SET = ...,
-        pad_blocks: bool | float = ...,
-        include_block_index: bool = ...,
-        version: str | None = ...,
-        write_checksums: bool = ...,
-    ) -> None: ...
-
     def write_to(
         self,
         fd: FileLike,
@@ -1368,41 +1340,6 @@ class AsdfFile:
     # a context when one isn't explicitly passed in.
     def _create_serialization_context(self, operation=_serialization_context.BlockAccess.NONE):
         return _serialization_context.create(self, operation)
-
-
-@overload
-def open_asdf(
-    fd: PathLike | io.IOBase | GenericFile,
-    uri: str | None = ...,
-    mode: FileMode | None = ...,
-    validate_checksums: bool = ...,
-    extensions: ExtensionLike | Sequence[ExtensionLike] | None = ...,
-    ignore_unrecognized_tag: bool = ...,
-    _force_raw_types: bool = ...,
-    memmap: bool = ...,
-    lazy_tree: bool | NOT_SET = ...,
-    lazy_load: bool = ...,
-    custom_schema: str | None = ...,
-    strict_extension_check: bool = ...,
-    ignore_missing_extensions: bool = ...,
-) -> AsdfFile: ...
-@overload
-@deprecated("Duck-typed file objects are deprecated. Use an instance of IOBase instead.")
-def open_asdf(
-    fd: Reader | Writer,
-    uri: str | None = ...,
-    mode: FileMode | None = ...,
-    validate_checksums: bool = ...,
-    extensions: ExtensionLike | Sequence[ExtensionLike] | None = ...,
-    ignore_unrecognized_tag: bool = ...,
-    _force_raw_types: bool = ...,
-    memmap: bool = ...,
-    lazy_tree: bool | NOT_SET = ...,
-    lazy_load: bool = ...,
-    custom_schema: str | None = ...,
-    strict_extension_check: bool = ...,
-    ignore_missing_extensions: bool = ...,
-) -> AsdfFile: ...
 
 
 def open_asdf(
