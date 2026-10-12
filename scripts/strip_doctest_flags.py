@@ -1,3 +1,5 @@
+"""Mkdocs hook that removes doctest flags (e.g. `# doctest: +SKIP`) from code blocks"""
+
 from __future__ import annotations
 
 import re
@@ -8,13 +10,15 @@ if TYPE_CHECKING:
     from properdocs.structure.files import Files
     from properdocs.structure.pages import Page
 
+
+# Pattern matching any fenced code block with group capturing content between the first and last lines
 PYCON_BLOCK_RE = re.compile(r"```.*$\n>>>(.*$\n)+?```", flags=re.MULTILINE)
+# Pattern matching doctest flags with format: `# doctest: +\-FLAG`
 DOCTEST_RE = re.compile(r"(?<=\s)#[ ]*doctest:([ ]*(\+|-)[A-Z_]+)+(?=\s)")
 
 
-def _sub_block(m: re.Match) -> str:
-    return DOCTEST_RE.sub("", m[0])
-
-
 def on_page_markdown(markdown: str, page: Page, config: ProperDocsConfig, files: Files) -> str:
-    return PYCON_BLOCK_RE.sub(_sub_block, markdown)
+    def sub_block(m: re.Match) -> str:
+        return DOCTEST_RE.sub("", m[0])
+
+    return PYCON_BLOCK_RE.sub(sub_block, markdown)
