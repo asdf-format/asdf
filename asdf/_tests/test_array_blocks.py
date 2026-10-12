@@ -534,8 +534,7 @@ foo : bar
     assert len(ff._blocks.blocks) == 1
 
     buff.seek(0)
-    fd = generic_io.InputStream(buff, "r")
-    ff = asdf.open(fd)
+    ff = asdf.open(buff)
     assert len(ff._blocks.blocks) == 1
 
 
