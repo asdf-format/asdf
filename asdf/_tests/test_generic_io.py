@@ -148,7 +148,7 @@ def test_open_not_binary_fail(tmp_path, mode):
             match=r"File-like object must be opened in binary mode.",
         ),
     ):
-        generic_io.get_file(fd, mode=mode)
+        generic_io.get_file(fd, mode=mode)  # pyrefly: ignore [bad-argument-type]
 
 
 def test_io_open(tree, tmp_path):
