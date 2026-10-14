@@ -250,7 +250,7 @@ def test_urlopen(tree, httpserver):
             return generic_io.get_file(urllib_request.urlopen(httpserver.url + "test.asdf"))
 
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
-        assert len(ff._blocks.blocks) == 2
+        assert len(ff._blocks.blocks) == 4
         assert not isinstance(ff._blocks.blocks[0].cached_data, np.memmap)
 
 
