@@ -410,11 +410,6 @@ def type_checking(session: Session) -> None:
     session.run("pyrefly", "check", *session.posargs)
 
 
-def _docs(session: Session, *args) -> None:
-    Asdf(extras=["all", "typing"]).install(session, *nox.project.dependency_groups(PYPROJECT, "docs"))
-    session.run("properdocs", *args)
-
-
 @nox.session(tags=["docs"], python="3.14", default=False)
 def docs(session: Session) -> None:
     """Build properdocs documentation.
@@ -422,14 +417,8 @@ def docs(session: Session) -> None:
     If the environment hasn't changed, you can speed up the build by using nox's `-R` flag
     to reuse the virtual environment and skip reinstalling dependencies, e.g. `nox -R -s docs`.
     """
+    Asdf(extras=["all", "typing"]).install(session, *nox.project.dependency_groups(PYPROJECT, "docs"))
     if not session.posargs:
         session.posargs.append("build")
 
-    _docs(session, *session.posargs)
-
-
-@nox.session(name="check-docs", tags=["docs", "core"], python="3.14")
-def check_docs(session: Session):
-    """Build properdocs documentation in a temporary directory, failing on any warnings."""
-    dir = session.create_tmp()
-    _docs(session, "build", "--strict", "--site-dir", dir)
+    session.run("properdocs", *session.posargs)

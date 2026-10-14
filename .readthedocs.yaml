@@ -13,7 +13,7 @@ build:
       - git describe --exact-match || towncrier build --keep
     build:
       html:
-        - properdocs build
+        - properdocs build --strict
     post_build:
       # Copy the built site into the directory Read the Docs publishes.
       - mkdir -p $READTHEDOCS_OUTPUT/html/
