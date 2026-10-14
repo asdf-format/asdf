@@ -1015,17 +1015,17 @@ def get_file(
         try:
             import fsspec
         except ImportError:
-            fsspec = None
+            msg = f"Unable to open file URI {init}. Try installing fsspec."
+            raise ValueError(msg)
 
-        if fsspec:
-            # Cast because fsspec doesn't have type hints
-            fd = typing.cast("OpenFile", fsspec.open(init, realmode))
-            try:
-                fd = fd.__enter__()
-            except NotImplementedError as err:
-                msg = f"Unable to open {init} with mode {mode}"
-                raise ValueError(msg) from err
-            return get_file(fd, uri=str(uri or init), close=True)
+        # Cast because fsspec doesn't have type hints
+        fd = typing.cast("OpenFile", fsspec.open(init, realmode))
+        try:
+            fd = fd.__enter__()
+        except NotImplementedError as err:
+            msg = f"Unable to open {init} with mode {mode}"
+            raise ValueError(msg) from err
+        return get_file(fd, uri=str(uri or init), close=True)
 
     if isinstance(init, io.BytesIO):
         return MemoryIO(init, mode, uri=uri)
