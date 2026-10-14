@@ -19,9 +19,6 @@ build:
       - mkdir -p $READTHEDOCS_OUTPUT/html/
       - cp --recursive site/* $READTHEDOCS_OUTPUT/html/
 
-mkdocs:
-  configuration: mkdocs.yml
-
 python:
   install:
     - method: uv
