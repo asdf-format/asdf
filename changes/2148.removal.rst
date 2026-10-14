@@ -1,0 +1,1 @@
+Change default ``AsdfConfig.warn_on_failed_conversion`` to ``True``.
