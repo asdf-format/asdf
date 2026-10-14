@@ -6,10 +6,8 @@ import pytest
 import asdf
 from asdf import get_config
 from asdf._core._integration import get_json_schema_resource_mappings
-from asdf.exceptions import AsdfFutureWarning
 from asdf.extension import ExtensionProxy
 from asdf.resource import ResourceMappingProxy
-from asdf.testing import helpers
 
 
 def test_config_context():
