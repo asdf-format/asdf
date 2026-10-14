@@ -53,8 +53,8 @@ theme:
         name: Switch to system preference
 
 hooks:
-- scripts/toctree.py
-- scripts/strip_doctest_flags.py
+- docs/.hooks/toctree.py
+- docs/.hooks/strip_doctest_flags.py
 extra_css:
 - assets/stylesheets/mkdocstrings.css
 - assets/stylesheets/asdf.css
