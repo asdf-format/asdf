@@ -1,15 +1,17 @@
-We welcome feedback and contributions of all kinds. Contributions of code, documentation, or general feedback are all appreciated. This package follows the ASDF-format `Code Of Conduct <code-of-conduct>` and strives to provide a welcoming community to all of our users and contributors.
+# Contributing
+
+We welcome feedback and contributions of all kinds. Contributions of code, documentation, or general feedback are all appreciated. This package follows the ASDF-format [Code Of Conduct](CODE_OF_CONDUCT.md) and strives to provide a welcoming community to all of our users and contributors.
 
 New to GitHub or open source projects? If you are unsure about where to start or haven't used GitHub before, please feel free to contact the package maintainers.
 
 !!! note
 	The ASDF Standard itself also has a repository on github. Suggestions for improvements to the ASDF Standard can be [reported to the ASDF Standard repository](https://github.com/asdf-format/asdf-standard/issues).
 
-# Feedback, Feature Requests, and Bug Reports
+## Feedback, Feature Requests, and Bug Reports
 
 Feedback, feature requests, and bug reports for the ASDF Python implementation can be posted via [ASDF's github page](https://github.com/asdf-format/asdf). Please open a new issue any questions, bugs, feedback, or new features you would like to see. If there is an issue you would like to work on, please leave a comment and we will be happy to assist. New contributions and contributors are very welcome!
 
-# Contributing Code and Bug Fixes
+## Contributing Code and Bug Fixes
 
 To contribute code to ASDF please fork ASDF first and then open a pull request from your fork to ASDF. Typically, the main development work is done on the "main" branch. The rest of the branches are for release maintenance and should not be used normally. Unless otherwise told by a maintainer, pull request should be made and submitted to the "main" branch.
 
@@ -35,6 +37,6 @@ We ask that all contributions include unit tests to verify that the code works a
 	- `removal`: deprecation or removal of public API
 	- `general`: infrastructure or miscellaneous change
 
-# AI Policy
+## AI Policy
 
 All contributions must conform to ASDF's [AI Policy](https://github.com/asdf-format/.github/blob/main/AI_POLICY.md)
