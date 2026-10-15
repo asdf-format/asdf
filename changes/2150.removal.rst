@@ -1,0 +1,1 @@
+Change default ``AsdfConfig.validate_on_read`` to ``False``.

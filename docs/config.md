@@ -30,7 +30,7 @@ There are two methods available that give access to an [`AsdfConfig`][asdf.confi
   default_version: ...
   io_block_size: -1
   legacy_fill_schema_defaults: True
-  validate_on_read: True
+  validate_on_read: False
   lazy_tree: False
   warn_on_failed_conversion: True
 >
@@ -42,7 +42,7 @@ The latter method, [`config_context`][asdf.config_context], returns a context ma
 ```pycon
 >>> import asdf
 >>> with asdf.config_context() as config:  # doctest: +ELLIPSIS
-...     config.validate_on_read = False
+...     config.validate_on_read = True
 ...     asdf.get_config()
 ...
 <AsdfConfig
@@ -54,7 +54,7 @@ The latter method, [`config_context`][asdf.config_context], returns a context ma
   default_version: ...
   io_block_size: -1
   legacy_fill_schema_defaults: True
-  validate_on_read: False
+  validate_on_read: True
   lazy_tree: False
   warn_on_failed_conversion: True
 >
@@ -68,7 +68,7 @@ The latter method, [`config_context`][asdf.config_context], returns a context ma
   default_version: ...
   io_block_size: -1
   legacy_fill_schema_defaults: True
-  validate_on_read: True
+  validate_on_read: False
   lazy_tree: False
   warn_on_failed_conversion: True
 >
@@ -140,12 +140,12 @@ Defaults to True.
 
 ### validate_on_read
 
-Flag that controls schema validation of the ASDF tree when opening files. Users who trust the source of their files may wish to disable validation on read to improve performance.
+Flag that controls schema validation of the ASDF tree when opening files. Users who don't trust the source of their files may wish to enable validation on read.
 
-Defaults to True.
+Defaults to `False`.
 
 !!! warning
-	In a future release the default value will change from [`True`][] to [`False`][]. Currently, if a validation error occurs while loading a file and this field hasn't been manually set then ASDF will emit an [`asdf.exceptions.AsdfFutureWarning`][] *before* raising an exception. Manually set the field to either [`True`][] or [`False`][] to silence this warning.
+	In asdf 6.0.0 the default value changed from `True` to `False`.
 
 ### lazy_tree
 

@@ -6,38 +6,36 @@ import pytest
 import asdf
 from asdf import get_config
 from asdf._core._integration import get_json_schema_resource_mappings
-from asdf.exceptions import AsdfFutureWarning
 from asdf.extension import ExtensionProxy
 from asdf.resource import ResourceMappingProxy
-from asdf.testing import helpers
 
 
 def test_config_context():
-    assert get_config().validate_on_read is True
+    assert get_config().validate_on_read is False
 
     with asdf.config_context() as config:
-        config.validate_on_read = False
-        assert get_config().validate_on_read is False
+        config.validate_on_read = True
+        assert get_config().validate_on_read is True
 
-    assert get_config().validate_on_read is True
+    assert get_config().validate_on_read is False
 
 
 def test_config_context_nested():
-    assert get_config().validate_on_read is True
+    assert get_config().validate_on_read is False
 
     with asdf.config_context() as config1:
-        config1.validate_on_read = False
+        config1.validate_on_read = True
         with asdf.config_context() as config2:
-            config2.validate_on_read = True
+            config2.validate_on_read = False
             with asdf.config_context() as config3:
-                config3.validate_on_read = False
-                assert get_config().validate_on_read is False
+                config3.validate_on_read = True
+                assert get_config().validate_on_read is True
 
-    assert get_config().validate_on_read is True
+    assert get_config().validate_on_read is False
 
 
 def test_config_context_threaded():
-    assert get_config().validate_on_read is True
+    assert get_config().validate_on_read is False
 
     thread_value: bool | None = None
 
@@ -45,30 +43,30 @@ def test_config_context_threaded():
         nonlocal thread_value
         thread_value = get_config().validate_on_read
         with asdf.config_context() as config:
-            config.validate_on_read = False
+            config.validate_on_read = True
 
     with asdf.config_context() as config:
-        config.validate_on_read = False
+        config.validate_on_read = True
         thread = threading.Thread(target=worker)
         thread.start()
         thread.join()
 
-    assert thread_value is True
-    assert get_config().validate_on_read is True
+    assert thread_value is False
+    assert get_config().validate_on_read is False
 
 
 def test_global_config():
+    assert get_config().validate_on_read is False
+
+    get_config().validate_on_read = True
     assert get_config().validate_on_read is True
 
-    get_config().validate_on_read = False
-    assert get_config().validate_on_read is False
-
     with asdf.config_context() as config:
-        assert config.validate_on_read is False
-        config.validate_on_read = True
-        assert get_config().validate_on_read is True
+        assert config.validate_on_read is True
+        config.validate_on_read = False
+        assert get_config().validate_on_read is False
 
-    assert get_config().validate_on_read is False
+    assert get_config().validate_on_read is True
 
     # Global config is reset to defaults by autouse
     # fixture in asdf/_tests/conftest.py.
@@ -360,40 +358,3 @@ def test_invalid_set_default_array_save_base(value):
     with asdf.config_context() as config:
         with pytest.raises(ValueError, match="default_array_save_base must be a bool"):
             config.default_array_save_base = value
-
-
-def test_validate_on_read_default_warn():
-    """Test that when a ValidationError occurs while loading a file a FutureWarning is
-    emitted before the error if validate_on_read hasn't been manually set.
-
-    This test can be removed once the default for validate_on_read changes.
-    """
-    buff = helpers.yaml_to_asdf(r"invalid: !core/software-1.0.0 {version: 3}")
-    with pytest.raises(asdf.ValidationError), pytest.warns(AsdfFutureWarning):
-        with asdf.open(buff) as _af:
-            pass
-
-
-@helpers.config(validate_on_read=True)
-@pytest.mark.filterwarnings("error:AsdfFutureWarning")
-def test_validate_on_read_true_no_warn():
-    """Test that when a ValidationError occurs while loading a file no extra warning is
-    emitted if validate_on_read has been manually set to True.
-
-    This test can be removed once the default for validate_on_read changes.
-    """
-    buff = helpers.yaml_to_asdf(r"invalid: !core/software-1.0.0 {version: 3}")
-    with pytest.raises(asdf.ValidationError):
-        with asdf.open(buff) as _af:
-            pass
-
-
-@helpers.config(validate_on_read=False)
-@pytest.mark.filterwarnings("error:AsdfFutureWarning")
-def test_validate_on_read_false_no_warn():
-    """Test that when validate_on_read is set to False loading an invalid file produces
-    no errors and no warnings.
-    """
-    buff = helpers.yaml_to_asdf(r"invalid: !core/software-1.0.0 {version: 3}")
-    with asdf.open(buff) as _af:
-        pass
