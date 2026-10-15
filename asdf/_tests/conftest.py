@@ -29,6 +29,8 @@ def large_tree():
     return {
         "science_data": x,
         "more": y,
+        "a": np.arange(0, 10, dtype=float),  # extra arrays to give 4 blocks
+        "b": np.arange(0, 10, dtype=float),
     }
 
 
