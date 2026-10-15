@@ -149,6 +149,7 @@ def roundtrip(af, raw=False, standard_version=None):
 
 
 def test_sharing():
+    asdf.get_config().default_array_save_base = True
     x = np.arange(0, 10, dtype=float)
     tree = {"science_data": x, "subset": x[3:-3], "skipping": x[::2]}
 
@@ -414,7 +415,7 @@ def test_mask_roundtrip(mask):
         assert (tree["masked"].mask == af["masked"].mask).all()
         # ensure tree validity
         assert (af["unmasked"] == af["masked"].data).all()
-        assert len(af._blocks.blocks) == 2
+        assert len(af._blocks.blocks) == 3
 
 
 def test_len_roundtrip():
