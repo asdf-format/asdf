@@ -12,14 +12,12 @@ from typing import TYPE_CHECKING, overload
 
 from packaging.version import Version
 
-from asdf.exceptions import AsdfFutureWarning, ValidationError
-
 from . import _compression as mcompression
 from . import _display as display
 from . import _io, constants, generic_io, lazy_nodes, reference, schema, treeutil, util, versioning, yamlutil
 from . import _node_info as node_info
 from ._block.manager import Manager as BlockManager
-from ._helpers import is_set, validate_version
+from ._helpers import validate_version
 from .config import config_context, get_config
 from .exceptions import (
     AsdfManifestURIMismatchWarning,
@@ -1474,19 +1472,7 @@ def open_asdf(
 
         # validate
         if get_config().validate_on_read:
-            try:
-                instance._validate(tree, reading=True)
-            except ValidationError:
-                if not is_set(get_config(), "validate_on_read"):
-                    warnings.warn(
-                        (
-                            "In the future validation on read will be off by default. "
-                            "Set AsdfConfig.validate_on_read to False to opt-in to the new behavior, "
-                            "or to True to silence this warning."
-                        ),
-                        AsdfFutureWarning,
-                    )
-                raise
+            instance._validate(tree, reading=True)
 
         # lazy tree?
         if lazy_tree and not _force_raw_types:
