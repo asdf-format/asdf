@@ -8,6 +8,7 @@ copyright: Copyright &copy; 2026, The ASDF Developers
 watch:
   - asdf
   - README.md
+  - changes
 theme:
   name: material
   custom_dir: docs/.overrides
@@ -55,6 +56,7 @@ theme:
 hooks:
 - docs/.hooks/toctree.py
 - docs/.hooks/strip_doctest_flags.py
+- docs/.hooks/changelog.py
 extra_css:
 - assets/stylesheets/mkdocstrings.css
 - assets/stylesheets/asdf.css
@@ -177,3 +179,5 @@ extra:
     href: https://www.asdf-format.org/en/latest/tutorials/index.html
   - title: Community
     href: https://www.asdf-format.org/en/latest/community/index.html
+  changelog:
+    src_uri: CHANGES.md
