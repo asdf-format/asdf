@@ -1,6 +1,5 @@
 import os
 import pickle
-from unittest.mock import patch
 
 import numpy as np
 import pytest
@@ -365,9 +364,11 @@ def test_fsspec(tmp_path):
         assert_tree_match(tree, af.tree)
 
 
-@patch.dict("sys.modules", {"fsspec": None})
-def test_no_fsspec():
+def test_no_fsspec(monkeypatch):
     """Test that trying to open a remote file without fsspec generates an error"""
+    import sys
+
+    monkeypatch.setitem(sys.modules, "fsspec", None)
     with pytest.raises(ValueError):
         open_asdf("https://localhost/foo.asdf")
 
