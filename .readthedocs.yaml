@@ -9,8 +9,6 @@ build:
       - git fetch --unshallow || true
       - git config remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*' || true
       - git fetch --all --tags || true
-    post_install:
-      - git describe --exact-match || towncrier build --keep
     build:
       html:
         - properdocs build --strict
