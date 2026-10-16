@@ -22,7 +22,7 @@ def _test_defragment(tmp_path, codec):
     ff = AsdfFile(tree)
     ff.write_to(path)
     with asdf.open(path) as af:
-        assert len(af._blocks.blocks) == 2
+        assert len(af._blocks.blocks) == 4
 
     with pytest.warns(UserWarning, match="defragment is deprecated"):
         result = main.main_from_args(["defragment", str(path), "-o", str(out_path), "-c", codec])
@@ -40,7 +40,7 @@ def _test_defragment(tmp_path, codec):
 
     with asdf.open(tmp_path / "original.defragment.asdf") as ff:
         assert_tree_match(ff.tree, tree)
-        assert len(ff._blocks.blocks) == 2
+        assert len(ff._blocks.blocks) == 4
 
 
 def test_defragment_zlib(tmp_path):

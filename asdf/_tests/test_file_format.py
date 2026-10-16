@@ -4,7 +4,6 @@ import os
 import pytest
 
 import asdf
-from asdf import generic_io
 
 
 def test_no_yaml_end_marker(tmp_path):
@@ -47,8 +46,7 @@ baz: 42
         assert len(ff.tree) == 2
 
     buff.seek(0)
-    fd = generic_io.InputStream(buff, "r")
-    with asdf.open(fd) as ff:
+    with asdf.open(buff) as ff:
         assert len(ff.tree) == 2
 
     with open(path, "wb") as fd:

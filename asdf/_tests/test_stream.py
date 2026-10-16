@@ -128,7 +128,7 @@ def test_stream_to_stream():
 
     buff.seek(0)
 
-    with asdf.open(generic_io.InputStream(buff, "r")) as ff:
+    with asdf.open(buff) as ff:
         assert len(ff._blocks.blocks) == 2
         assert_array_equal(ff.tree["nonstream"], np.array([1, 2, 3, 4], np.int64))
         assert ff.tree["stream"].shape == (100, 6, 2)
@@ -148,7 +148,7 @@ def test_array_to_stream(tmp_path):
     buff.write(np.array([5, 6, 7, 8], np.int64).tobytes())
 
     buff.seek(0)
-    ff = asdf.open(generic_io.InputStream(buff))
+    ff = asdf.open(buff)
     assert_array_equal(ff.tree["stream"], [1, 2, 3, 4, 5, 6, 7, 8])
     buff.seek(0)
     ff2 = asdf.AsdfFile(ff)

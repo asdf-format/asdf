@@ -3,7 +3,7 @@ import os
 import re
 import stat
 import sys
-import urllib.request as urllib_request
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -44,8 +44,7 @@ def test_mode_fail(tmp_path):
     path = os.path.join(str(tmp_path), "test.asdf")
 
     with pytest.raises(ValueError, match=r"mode must be 'r', 'w' or 'rw'"):
-        # pyrefly: ignore[no-matching-overload]
-        generic_io.get_file(path, mode="r+")
+        generic_io.get_file(path, mode="r+")  # pyrefly: ignore [bad-argument-type]
 
 
 @pytest.mark.parametrize("mode", ["r", "w", "rw"])
@@ -107,7 +106,7 @@ def test_path(tree, tmp_path):
         return f
 
     with _roundtrip(tree, get_write_fd, get_read_fd, read_options={"memmap": True}) as ff:
-        assert len(ff._blocks.blocks) == 2
+        assert len(ff._blocks.blocks) == 4
         assert isinstance(ff._blocks.blocks[0].cached_data, np.memmap)
 
 
@@ -130,7 +129,7 @@ def test_open2(tree, tmp_path):
         return f
 
     with _roundtrip(tree, get_write_fd, get_read_fd, read_options={"memmap": True}) as ff:
-        assert len(ff._blocks.blocks) == 2
+        assert len(ff._blocks.blocks) == 4
         assert isinstance(ff._blocks.blocks[0].cached_data, np.memmap)
 
 
@@ -149,7 +148,7 @@ def test_open_not_binary_fail(tmp_path, mode):
             match=r"File-like object must be opened in binary mode.",
         ),
     ):
-        generic_io.get_file(fd, mode=mode)
+        generic_io.get_file(fd, mode=mode)  # pyrefly: ignore [bad-argument-type]
 
 
 def test_io_open(tree, tmp_path):
@@ -170,7 +169,7 @@ def test_io_open(tree, tmp_path):
         return f
 
     with _roundtrip(tree, get_write_fd, get_read_fd, read_options={"memmap": True}) as ff:
-        assert len(ff._blocks.blocks) == 2
+        assert len(ff._blocks.blocks) == 4
         assert isinstance(ff._blocks.blocks[0].cached_data, np.memmap)
         ff.tree["science_data"][0] = 42
 
@@ -206,12 +205,12 @@ def test_bytes_io(tree):
         return f
 
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
-        assert len(ff._blocks.blocks) == 2
+        assert len(ff._blocks.blocks) == 4
         assert not isinstance(ff._blocks.blocks[0].cached_data, np.memmap)
         ff.tree["science_data"][0] = 42
 
 
-def test_streams(tree):
+def test_stream_output(tree):
     buff = io.BytesIO()
 
     def get_write_fd():
@@ -219,39 +218,12 @@ def test_streams(tree):
 
     def get_read_fd():
         buff.seek(0)
-        return generic_io.InputStream(buff, "rw")
+        return buff
 
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
-        assert len(ff._blocks.blocks) == 2
+        assert len(ff._blocks.blocks) == 4
         assert not isinstance(ff._blocks.blocks[0].cached_data, np.memmap)
         ff.tree["science_data"][0] = 42
-
-
-def test_streams2():
-    buff = io.BytesIO(b"\0" * 60)
-    buff.seek(0)
-
-    fd = generic_io.InputStream(buff, "r")
-
-    x = fd.peek(10)
-    x = fd.read()
-    assert len(x) == 60
-
-
-def test_urlopen(tree, httpserver):
-    path = os.path.join(httpserver.tmpdir, "test.asdf")
-
-    def get_write_fd():
-        # cannot use context manager here because it closes the file
-        return generic_io.get_file(open(path, "wb"), mode="w")
-
-    def get_read_fd():
-        with pytest.deprecated_call():
-            return generic_io.get_file(urllib_request.urlopen(httpserver.url + "test.asdf"))
-
-    with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
-        assert len(ff._blocks.blocks) == 2
-        assert not isinstance(ff._blocks.blocks[0].cached_data, np.memmap)
 
 
 def test_http_connection(tree, httpserver):
@@ -270,7 +242,7 @@ def test_http_connection(tree, httpserver):
         return fd
 
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
-        assert len(ff._blocks.blocks) == 2
+        assert len(ff._blocks.blocks) == 4
         assert (ff.tree["science_data"] == tree["science_data"]).all()
 
 
@@ -340,12 +312,11 @@ def test_exploded_stream_read(tmp_path, small_tree):
     ff = asdf.AsdfFile(small_tree)
     ff.write_to(path, all_array_storage="external")
 
-    with open(path, "rb") as fd:
-        # This should work, so we can get the tree content
-        x = generic_io.InputStream(fd, "r")
-        # It's only when trying to access external data that an error occurs
-        with asdf.open(x) as ff, pytest.raises(ValueError, match=r"Resolved to relative URL"):
-            ff.tree["science_data"][:]
+    # This should work, so we can get the tree content
+    buff = Path(path).read_bytes()
+    # It's only when trying to access external data that an error occurs
+    with asdf.open(io.BytesIO(buff)) as ff, pytest.raises(ValueError, match=r"Resolved to relative URL"):
+        ff.tree["science_data"][:]
 
 
 def test_unicode_open(tmp_path, small_tree):
@@ -374,10 +345,9 @@ def test_open_stdout():
 
 
 def test_invalid_obj(tmp_path):
-    with pytest.raises(ValueError, match=r"Can't handle .* as a file for mode 'r'"):
+    with pytest.raises(TypeError):
         # Intentionally incorrect file type
-        # pyrefly: ignore[no-matching-overload]
-        generic_io.get_file(42)
+        generic_io.get_file(42)  # pyrefly: ignore [bad-argument-type]
 
     path = os.path.join(str(tmp_path), "test.asdf")
     with (
@@ -418,14 +388,14 @@ def test_nonseekable_file(tmp_path):
             return True
 
     with FileWrapper(os.path.join(str(tmp_path), "test.asdf"), "wb") as fd:
-        with pytest.deprecated_call():
-            assert isinstance(generic_io.get_file(fd, "w"), generic_io.OutputStream)
-            with pytest.raises(ValueError, match=r"File .* could not be opened in 'rw' mode"):
-                generic_io.get_file(fd, "rw")
+        assert isinstance(generic_io.get_file(fd, "w"), generic_io.OutputStream)
+
+        with pytest.raises(ValueError):
+            generic_io.get_file(fd, "rw")
 
     with FileWrapper(os.path.join(str(tmp_path), "test.asdf"), "rb") as fd:
-        with pytest.deprecated_call():
-            assert isinstance(generic_io.get_file(fd, "r"), generic_io.InputStream)
+        with pytest.raises(ValueError):
+            generic_io.get_file(fd, "r")
 
 
 def test_relative_uri():
@@ -482,22 +452,21 @@ def test_arbitrary_file_object():
         pass
 
     buff = io.BytesIO()
-    with pytest.deprecated_call():
-        assert isinstance(generic_io.get_file(Reader(buff), "r"), generic_io.InputStream)
-        assert isinstance(generic_io.get_file(Writer(buff), "w"), generic_io.OutputStream)
-        assert isinstance(generic_io.get_file(RandomReader(buff), "r"), generic_io.MemoryIO)
-        assert isinstance(generic_io.get_file(RandomWriter(buff), "w"), generic_io.MemoryIO)
-        assert isinstance(generic_io.get_file(All(buff), "rw"), generic_io.MemoryIO)
-        assert isinstance(generic_io.get_file(All(buff), "r"), generic_io.MemoryIO)
-        assert isinstance(generic_io.get_file(All(buff), "w"), generic_io.MemoryIO)
-
-    with pytest.raises(ValueError, match=r"Can't handle .* as a file for mode 'w'"):
-        with pytest.deprecated_call():
-            generic_io.get_file(Reader(buff), "w")
-
-    with pytest.raises(ValueError, match=r"Can't handle .* as a file for mode 'r'"):
-        with pytest.deprecated_call():
-            generic_io.get_file(Writer(buff), "r")
+    TYPES = [
+        (Reader, "r"),
+        (Reader, "w"),
+        (Writer, "w"),
+        (Writer, "r"),
+        (RandomReader, "r"),
+        (RandomWriter, "w"),
+        (All, "rw"),
+        (All, "r"),
+        (All, "w"),
+    ]
+    for ty, mode in TYPES:
+        with pytest.raises(TypeError):
+            # Intentionally incorrect arguments
+            generic_io.get_file(ty(buff), mode)  # pyrefly: ignore [bad-argument-type]
 
 
 def test_check_bytes(tmp_path):

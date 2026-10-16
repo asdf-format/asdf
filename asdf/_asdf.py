@@ -11,16 +11,13 @@ import weakref
 from typing import TYPE_CHECKING, overload
 
 from packaging.version import Version
-from typing_extensions import Reader, Writer, deprecated
-
-from asdf.exceptions import AsdfFutureWarning, ValidationError
 
 from . import _compression as mcompression
 from . import _display as display
 from . import _io, constants, generic_io, lazy_nodes, reference, schema, treeutil, util, versioning, yamlutil
 from . import _node_info as node_info
 from ._block.manager import Manager as BlockManager
-from ._helpers import is_set, validate_version
+from ._helpers import validate_version
 from .config import config_context, get_config
 from .exceptions import (
     AsdfManifestURIMismatchWarning,
@@ -48,7 +45,6 @@ if TYPE_CHECKING:
         FileMode,
         FilterFn,
         NDArray,
-        PathLike,
         TreeKey,
     )
 
@@ -968,32 +964,6 @@ class AsdfFile:
             if fd.can_memmap():
                 fd.close_memmap()
 
-    @overload
-    def write_to(
-        self,
-        fd: PathLike | io.IOBase | GenericFile,
-        all_array_storage: ArrayStorage | NOT_SET = ...,
-        all_array_compression: Compression | NOT_SET = ...,
-        compression_kwargs: dict[str, Any] | NOT_SET = ...,
-        pad_blocks: bool | float = ...,
-        include_block_index: bool = ...,
-        version: str | None = ...,
-        write_checksums: bool = ...,
-    ) -> None: ...
-    @overload
-    @deprecated("Duck-typed file objects are deprecated. Use an instance of IOBase instead.")
-    def write_to(
-        self,
-        fd: Reader | Writer,
-        all_array_storage: ArrayStorage | NOT_SET = ...,
-        all_array_compression: Compression | NOT_SET = ...,
-        compression_kwargs: dict[str, Any] | NOT_SET = ...,
-        pad_blocks: bool | float = ...,
-        include_block_index: bool = ...,
-        version: str | None = ...,
-        write_checksums: bool = ...,
-    ) -> None: ...
-
     def write_to(
         self,
         fd: FileLike,
@@ -1155,9 +1125,7 @@ class AsdfFile:
         elif software is not None:
             software = Software(software)
 
-        time_ = datetime.datetime.fromtimestamp(
-            int(os.environ.get("SOURCE_DATE_EPOCH", time.time())), datetime.timezone.utc
-        )
+        time_ = datetime.datetime.fromtimestamp(int(os.environ.get("SOURCE_DATE_EPOCH", time.time())), datetime.UTC)
 
         entry = HistoryEntry(
             {
@@ -1370,41 +1338,6 @@ class AsdfFile:
         return _serialization_context.create(self, operation)
 
 
-@overload
-def open_asdf(
-    fd: PathLike | io.IOBase | GenericFile,
-    uri: str | None = ...,
-    mode: FileMode | None = ...,
-    validate_checksums: bool = ...,
-    extensions: ExtensionLike | Sequence[ExtensionLike] | None = ...,
-    ignore_unrecognized_tag: bool = ...,
-    _force_raw_types: bool = ...,
-    memmap: bool = ...,
-    lazy_tree: bool | NOT_SET = ...,
-    lazy_load: bool = ...,
-    custom_schema: str | None = ...,
-    strict_extension_check: bool = ...,
-    ignore_missing_extensions: bool = ...,
-) -> AsdfFile: ...
-@overload
-@deprecated("Duck-typed file objects are deprecated. Use an instance of IOBase instead.")
-def open_asdf(
-    fd: Reader | Writer,
-    uri: str | None = ...,
-    mode: FileMode | None = ...,
-    validate_checksums: bool = ...,
-    extensions: ExtensionLike | Sequence[ExtensionLike] | None = ...,
-    ignore_unrecognized_tag: bool = ...,
-    _force_raw_types: bool = ...,
-    memmap: bool = ...,
-    lazy_tree: bool | NOT_SET = ...,
-    lazy_load: bool = ...,
-    custom_schema: str | None = ...,
-    strict_extension_check: bool = ...,
-    ignore_missing_extensions: bool = ...,
-) -> AsdfFile: ...
-
-
 def open_asdf(
     fd: FileLike,
     uri: str | None = None,
@@ -1537,19 +1470,7 @@ def open_asdf(
 
         # validate
         if get_config().validate_on_read:
-            try:
-                instance._validate(tree, reading=True)
-            except ValidationError:
-                if not is_set(get_config(), "validate_on_read"):
-                    warnings.warn(
-                        (
-                            "In the future validation on read will be off by default. "
-                            "Set AsdfConfig.validate_on_read to False to opt-in to the new behavior, "
-                            "or to True to silence this warning."
-                        ),
-                        AsdfFutureWarning,
-                    )
-                raise
+            instance._validate(tree, reading=True)
 
         # lazy tree?
         if lazy_tree and not _force_raw_types:

@@ -9,7 +9,7 @@ from numpy.testing import assert_array_equal
 import asdf
 import asdf.tags.core
 from asdf import config_context, constants, get_config, schema, tagged, util, yamlutil
-from asdf.exceptions import AsdfConversionWarning, AsdfWarning, ValidationError
+from asdf.exceptions import AsdfConversionWarning, ValidationError
 from asdf.extension import TagDefinition, get_cached_extension_manager
 from asdf.testing import helpers
 from asdf.testing.helpers import yaml_to_asdf
@@ -874,15 +874,17 @@ def test_read_large_literal(value):
 
     buff = yaml_to_asdf(yaml)
 
-    with pytest.warns(AsdfWarning, match=r"Invalid integer literal value"), asdf.open(buff) as af:
+    with pytest.raises(ValidationError, match=r"too large to safely represent"), asdf.open(buff) as af:
         assert af["integer"] == value
+        af.validate()
 
     yaml = f"{value}: foo"
 
     buff = yaml_to_asdf(yaml)
 
-    with pytest.warns(AsdfWarning, match=r"Invalid integer literal value"), asdf.open(buff) as af:
+    with pytest.raises(ValidationError, match=r"too large to safely represent"), asdf.open(buff) as af:
         assert af[value] == "foo"
+        af.validate()
 
 
 @pytest.mark.parametrize(

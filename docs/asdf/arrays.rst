@@ -59,7 +59,7 @@ See :ref:`overview_reading` for a description of how to open this file.
 Sharing of data
 ===============
 
-Arrays that are views on the same data automatically share the same
+Arrays that are views on the same data can share the same
 data in the file.  In this example an array and a subview on that same
 array are saved to the same file, resulting in only a single block of
 data being saved.
@@ -76,13 +76,13 @@ data being saved.
    ...     'subset':   subset
    ... }
    >>> ff = AsdfFile(tree)
+   >>> ff.set_array_save_base(subset, True)
    >>> ff.write_to("array_with_subset.asdf")
 
-For circumstances where this is undesirable (such as saving
-a small view of a large array) this can be disabled by setting
-`asdf.config.AsdfConfig.default_array_save_base` (to set the default behavior)
-or `asdf.AsdfFile.set_array_save_base` to control the behavior for
-a specific array.
+In the above example, `asdf.AsdfFile.set_array_save_base` was used to
+trigger saving the base array (``my_array``) of the view (``subset``).
+It is also possible to change the default behavior, making asdf save
+the base array of all views by enabling `asdf.config.AsdfConfig.default_array_save_base`.
 
 .. code:: yaml
 
