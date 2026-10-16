@@ -145,7 +145,7 @@ class NDArrayConverter(Converter[_NdArray, _NdArrayNode]):
 
         if isinstance(data, ma.MaskedArray):
             if options.storage_type == "inline":
-                ctx._blocks._set_array_storage(data.mask, "inline")
+                ctx._blocks._set_array_storage(data.mask, "inline")  # type: ignore [bad-argument-type]
 
             result["mask"] = data.mask
 

@@ -17,6 +17,11 @@ nox.options.default_venv_backend = "uv|virtualenv"
 nox.options.error_on_external_run = True
 
 PYPROJECT = nox.project.load_toml("pyproject.toml")
+PY_STABLE = ["3.11", "3.12", "3.13", "3.14"]
+PY_UNSTABLE = "3.15"
+PY_DEFAULT = "3.13"
+PY_OLDEST = PY_STABLE[0]
+PY_NEWEST = PY_STABLE[-1]
 
 
 def log_dependencies(session: Session) -> None:
@@ -300,7 +305,7 @@ DOWNSTREAM: list[Package] = [
 ################
 
 
-@nox.session(tags=["test", "downstream"], python="3.12")
+@nox.session(tags=["test", "downstream"], python=PY_DEFAULT)
 @nox.parametrize("pkg", [pkg.as_param() for pkg in DOWNSTREAM])
 def downstream(session: Session, pkg: Package) -> None:
     """Run the test suite for a downstream package against the local asdf version."""
@@ -311,13 +316,13 @@ def downstream(session: Session, pkg: Package) -> None:
         pkg.test(session)
 
 
-@nox.session(tags=["test", "core"], python=["3.10", "3.11", "3.12", "3.13"])
+@nox.session(tags=["test", "core"], python=PY_STABLE[:-1])
 def core(session: Session) -> None:
     """Run asdf test suite"""
     Asdf(parallel=True).install(session).test(session)
 
 
-@nox.session(tags=["test", "coverage", "core"], python="3.14")
+@nox.session(tags=["test", "coverage", "core"], python=PY_NEWEST)
 def coverage(session: Session) -> None:
     """Run asdf test suite with coverage"""
     (
@@ -336,7 +341,7 @@ def coverage(session: Session) -> None:
     )
 
 
-@nox.session(tags=["test", "core"], python=["3.10", "3.11", "3.12", "3.13", "3.14"])
+@nox.session(tags=["test", "core"], python=PY_STABLE)
 def devdeps(session: Session) -> None:
     """Run asdf tests against latest unstable versions of asdf dependencies"""
     session.virtualenv.env.update(
@@ -357,7 +362,7 @@ def devdeps(session: Session) -> None:
     )
 
 
-@nox.session(tags=["test", "core"], python="3.12")
+@nox.session(tags=["test", "core"], python=PY_DEFAULT)
 def mocks3(session: Session) -> None:
     """Set up AWS mocks and run S3 integration tests"""
     (
@@ -367,13 +372,13 @@ def mocks3(session: Session) -> None:
     )
 
 
-@nox.session(tags=["test", "core"], python="3.11")
+@nox.session(tags=["test", "core"], python=PY_OLDEST)
 def compatibility(session: Session) -> None:
     """Run asdf compatibility integration tests"""
     Asdf(parallel=False).install(session, "virtualenv").test(session, "integration_tests/compatibility/")
 
 
-@nox.session(tags=["test", "core"], python="3.12")
+@nox.session(tags=["test", "core"], python=PY_DEFAULT)
 def jsonschema(session: Session) -> None:
     """Run asdf jsonschema tests"""
     Asdf(parallel=False).install(session).test(session, "--jsonschema")
@@ -381,7 +386,7 @@ def jsonschema(session: Session) -> None:
 
 @nox.session(
     tags=["test", "core"],
-    python="3.10",
+    python=PY_OLDEST,
     # This test doesn't work with the uv backend
     # Probably due to differences in build isolation
     venv_backend="virtualenv",
@@ -391,13 +396,13 @@ def oldestdeps(session: Session) -> None:
     (Asdf(parallel=True).install(session).install_oldest_deps(session).test(session))
 
 
-@nox.session(tags=["test", "core"], python=["3.14", "3.15"])
+@nox.session(tags=["test", "core"], python=[PY_NEWEST, PY_UNSTABLE])
 def pytestdev(session: Session) -> None:
     """Run asdf tests using latest unstable pytest version"""
     Asdf(parallel=True).install(session, "git+https://github.com/pytest-dev/pytest").test(session)
 
 
-@nox.session(name="type-checking", tags=["core", "type-checking"], python="3.10")
+@nox.session(name="type-checking", tags=["core", "type-checking"], python=PY_OLDEST)
 def type_checking(session: Session) -> None:
     """Run pyrefly type-checking."""
 
@@ -410,7 +415,7 @@ def type_checking(session: Session) -> None:
     session.run("pyrefly", "check", *session.posargs)
 
 
-@nox.session(tags=["docs"], python="3.14", default=False)
+@nox.session(tags=["docs"], python=PY_NEWEST, default=False)
 def docs(session: Session) -> None:
     """Build sphinx documentation.
 
