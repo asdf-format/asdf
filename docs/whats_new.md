@@ -1,5 +1,21 @@
 # What's New
 
+## 6.0.0
+
+Asdf 6.0.0 removes some deprecated API and changes a few default settings.
+
+### Removed API
+
+- Reading non-seekable files is no longer supported. Users should implement a buffer to allow seeking during read.
+- Reading file objects that aren't instances of  [`io.IOBase`][] are no longer supported. Users should wrap non-`io.IOBase` objects in a supported class.
+
+### New Defaults
+
+- [`AsdfConfig.validate_on_read`][asdf.config.AsdfConfig.validate_on_read] now defaults to `False`. This means that opening an ASDF file will no longer automatically trigger validation against schemas that match tags within the file. Users are encouraged to either call [`AsdfFile.validate`][asdf.AsdfFile.validate] on the opened `AsdfFile` instance or re-enable `AsdfConfig.validate_on_read`.
+- [`AsdfConfig.warn_on_failed_conversion`][asdf.config.AsdfConfig.warn_on_failed_conversion] now defaults to `True`. Files that are not fully supported by the user environment (especially those that contain nested unknown tags) can often lead to errors during [`asdf.open`][]. With this new default these errors are converted to warnings and users can still access the raw, unconverted file contents.
+- [`AsdfConfig.default_array_save_base`][asdf.config.AsdfConfig.default_array_save_base] now defaults to `False`. With this new default, adding a view of a larger numpy array will trigger asdf to save the contents of the view in an ASDF block (instead of the contents of the larger array). Users who wish to save views of other arrays can either re-enable this option or use [`AsdfFile.set_array_save_base`][asdf.AsdfFile.set_array_save_base] for each view.
+
+
 ## 5.0.0
 
 Asdf 5.0.0 removes some deprecated API.
