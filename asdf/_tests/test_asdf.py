@@ -178,7 +178,7 @@ def test_open_asdf_extensions(tmp_path):
     msg = r"[The extensions parameter must be an extension.*, Extension must implement the Extension interface]"
     for arg in (object(), [object()]):
         # Intentionally incorrect extension type
-        # pyrefly: ignore[no-matching-overload]
+        # pyrefly: ignore [bad-argument-type]
         with pytest.raises(TypeError, match=msg), open_asdf(path, extensions=arg) as af:
             pass
 
@@ -362,6 +362,15 @@ def test_fsspec(tmp_path):
     with fsspec.open(fn) as f:
         af = open_asdf(f)
         assert_tree_match(tree, af.tree)
+
+
+def test_no_fsspec(monkeypatch):
+    """Test that trying to open a remote file without fsspec generates an error"""
+    import sys
+
+    monkeypatch.setitem(sys.modules, "fsspec", None)
+    with pytest.raises(ValueError):
+        open_asdf("https://localhost/foo.asdf")
 
 
 def test_fsspec_http(httpserver):
