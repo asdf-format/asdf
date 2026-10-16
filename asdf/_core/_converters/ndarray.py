@@ -144,8 +144,7 @@ class NDArrayConverter(Converter[_NdArray, _NdArrayNode]):
                 result["strides"] = list(strides)
 
         if isinstance(data, ma.MaskedArray):
-            # Check that `mask` is an array since it can also be a scalar boolean
-            if options.storage_type == "inline" and isinstance(data.mask, np.ndarray):
+            if options.storage_type == "inline":
                 ctx._blocks._set_array_storage(data.mask, "inline")
 
             result["mask"] = data.mask
