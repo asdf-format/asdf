@@ -210,7 +210,7 @@ directory = "changes"
 package = "asdf"
 start_string = "<!-- towncrier release notes start -->\n"
 title_format = "## {version} ({project_date})"
-issue_format = "[#{issue}](https://github.com/twisted/my-project/issues/{issue})"
+issue_format = "[#{issue}](https://github.com/asdf-format/asdf/issues/{issue})"
 underlines = ["", "", ""]
 ignore = [".gitkeep"]
 
