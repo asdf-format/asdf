@@ -1,1 +1,0 @@
-Removed support for reading from non-seekable files and for reading or writing duck-typed files that aren't instances of ``IOBase``.

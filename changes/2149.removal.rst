@@ -1,1 +1,0 @@
-Change ``AsdfConfig.default_array_save_base`` to ``False``.

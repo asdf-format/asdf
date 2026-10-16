@@ -8,17 +8,16 @@ class Stream:
     Examples
     --------
     Save a double-precision array with 1024 columns, one row at a
-    time::
+    time:
 
-         >>> from asdf import AsdfFile, Stream
-         >>> import numpy as np
-         >>> ff = AsdfFile()
-         >>> ff.tree['streamed'] = Stream([1024], np.float64)
-         >>> with open('test.asdf', 'wb') as fd:
-         ...     ff.write_to(fd)
-         ...     for i in range(200):
-         ...         nbytes = fd.write(
-         ...                      np.array([i] * 1024, np.float64).tobytes())
+    >>> from asdf import AsdfFile, Stream
+    >>> import numpy as np
+    >>> ff = AsdfFile()
+    >>> ff.tree["streamed"] = Stream([1024], np.float64)
+    >>> with open("test.asdf", "wb") as fd:
+    ...     ff.write_to(fd)
+    ...     for i in range(200):
+    ...         nbytes = fd.write(np.array([i] * 1024, np.float64).tobytes())
     """
 
     def __init__(self, shape, dtype, strides=None):
