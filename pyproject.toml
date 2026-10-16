@@ -2,7 +2,7 @@
 name = "asdf"
 description = "Python implementation of the ASDF Standard"
 readme = "README.rst"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = "BSD-3-Clause"
 license-files = ["LICENSE"]
 authors = [{ name = "The ASDF Developers" }]
