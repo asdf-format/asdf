@@ -19,8 +19,10 @@ from .versioning import _YAML_VERSION, _yaml_base_loader
 if TYPE_CHECKING:
     from typing import Any
 
+    from typing_extensions import Reader
+
     from asdf.tagged import Tagged, TaggedDict
-    from asdf.typing import Reader, TreeKey
+    from asdf.typing import TreeKey
 
 __all__ = ["custom_tree_to_tagged_tree", "tagged_tree_to_custom_tree"]
 

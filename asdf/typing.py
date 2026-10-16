@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
+from io import IOBase
 from pathlib import Path
 from typing import Any, Literal, Protocol, TypeAlias, overload
 
 import numpy as np
 import numpy.typing as npt
-from typing_extensions import Reader, TypeVar, Writer
+from typing_extensions import TypeVar
 
 from asdf.generic_io import GenericFile
 from asdf.tags.core import NDArrayType
@@ -27,9 +28,7 @@ __all__ = [
     "FilterFn",
     "NDArray",
     "PathLike",
-    "Reader",
     "TreeKey",
-    "Writer",
 ]
 
 
@@ -48,7 +47,7 @@ YamlNode: TypeAlias = Mapping[TreeKey, Any] | Sequence[Any] | str
 #: Local file path or remote file URI
 PathLike: TypeAlias = str | Path
 #: Readable/writable file object or the path or URI of an openable file
-FileLike: TypeAlias = PathLike | Reader | Writer | GenericFile
+FileLike: TypeAlias = PathLike | IOBase | GenericFile
 #: A type interpretable as a version number
 AsdfVersionLike: TypeAlias = AsdfVersion | str
 
