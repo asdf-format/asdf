@@ -2,6 +2,28 @@
 
 <!-- towncrier release notes start -->
 
+## 6.0.0 (2026-10-16)
+
+### Doc
+
+- Updated documentation on writing compression plugins to reflect changes to the interface. ([#2114](https://github.com/asdf-format/asdf/issues/2114))
+- Updated documentation for working with memory-mapped arrays. ([#2142](https://github.com/asdf-format/asdf/issues/2142))
+
+### Feature
+
+- Changed [`asdf.extension.Compressor`][] from an abstract class to a type-checkable protocol. ([#2114](https://github.com/asdf-format/asdf/issues/2114))
+- Changed [`asdf.extension.Converter`][] from an abstract class to a type-checkable protocol. ([#2114](https://github.com/asdf-format/asdf/issues/2114))
+
+### Removal
+
+- Compression plugins are now required to implement both `compress` and `decompress` methods. Plugins that only implement one or the other will continue to work but will generate a deprecation warning. ([#2114](https://github.com/asdf-format/asdf/issues/2114))
+- Removed support for reading from non-seekable files and for reading or writing duck-typed files that aren't instances of `IOBase`. ([#2147](https://github.com/asdf-format/asdf/issues/2147))
+- Change default [`AsdfConfig.warn_on_failed_conversion`][asdf.config.AsdfConfig.warn_on_failed_conversion] to `True`. ([#2148](https://github.com/asdf-format/asdf/issues/2148))
+- Change [`AsdfConfig.default_array_save_base`][asdf.config.AsdfConfig.default_array_save_base] to `False`. ([#2149](https://github.com/asdf-format/asdf/issues/2149))
+- Change default [`AsdfConfig.validate_on_read`][asdf.config.AsdfConfig.validate_on_read] to `False`. ([#2150](https://github.com/asdf-format/asdf/issues/2150))
+- Dropped support for Python 3.10 as it is now end of life. ([#2152](https://github.com/asdf-format/asdf/issues/2152))
+
+
 ## 5.4.0 (2026-09-04)
 
 ### Bugfix
