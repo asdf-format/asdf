@@ -27,6 +27,7 @@ if TYPE_CHECKING:
 
 log = logging.getLogger(f"properdocs.plugins.{__name__}")
 
+_NO_CHANGE_RE = re.compile(r"^No significant changes.\s+\Z", flags=re.MULTILINE)
 
 def on_page_markdown(markdown: str, page: Page, config: ProperDocsConfig, files: Files) -> str | None:
     src_uri = config.extra.get("changelog", {}).get("src_uri", None)
@@ -40,18 +41,19 @@ def on_page_markdown(markdown: str, page: Page, config: ProperDocsConfig, files:
 
     py = tomllib.loads(Path("pyproject.toml").read_text())
     cfg = py["tool"]["towncrier"]
-    changes_dir = Path(cfg["directory"])
     start_string = cfg["start_string"]
 
-    if not any(changes_dir.iterdir()):
+    res = subprocess.run([cmd, "build", "--draft"], check=True, capture_output=True, text=True)
+    out = res.stdout
+
+    if _NO_CHANGE_RE.search(out):
         log.info(f"Changelog already up to date: {src_uri}")
         return None
 
-    res = subprocess.run([cmd, "build", "--draft"], check=True, capture_output=True, text=True)
-    text, count = re.subn(start_string, res.stdout, markdown, count=1)
+    text, count = re.subn(start_string, out, markdown, count=1)
     if count:
         log.info(f"Changelog updated: {src_uri}")
     else:
-        log.info(f"Changelog already up to date: {src_uri}")
+        log.warning(f"No towncrier marker found in changelog file {src_uri}, skipping update")
 
     return text
