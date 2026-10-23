@@ -61,7 +61,7 @@ def format_as_index(container, indices):
     """
     Construct a single string containing indexing operations for the indices.
 
-    For example for a container ``bar``, [1, 2, "foo"] -> bar[1][2]["foo"]
+    For example for a container ``bar``, ``[1, 2, "foo"] -> bar[1][2]["foo"]``
 
     Arguments:
 

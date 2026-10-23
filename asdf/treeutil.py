@@ -45,12 +45,6 @@ def iter_tree(top):
     top : object
         The root of the tree.  May be a dict, list or other Python object.
 
-    callback : callable
-        A function to call at each node in the tree.
-
-        The callback is called on an instance after all of its
-        children have been visited (depth-first order).
-
     Returns
     -------
     tree : object

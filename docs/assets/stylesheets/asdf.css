@@ -1,0 +1,29 @@
+.md-banner {
+    background-color: #000000dd;
+}
+
+div.asdf-header {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+.asdf-header>a {
+    color: var(--md-primary-bg-color);
+    text-decoration: underline;
+    font-size: 1.1em;
+}
+
+[data-md-color-scheme="slate"] {
+    --md-hue: 225;
+    --md-default-bg-color: hsla(var(--md-hue), 15%, 12%, 1);
+    --md-default-bg-color--light: hsla(var(--md-hue), 15%, 12%, 0.54);
+    --md-default-bg-color--lighter: hsla(var(--md-hue), 15%, 12%, 0.26);
+    --md-default-bg-color--lightest: hsla(var(--md-hue), 15%, 12%, 0.07);
+}
+
+[data-md-color-primary="black"] {
+    .md-header {
+        background-color: hsla(var(--md-hue), 15%, 6%, 1);
+    }
+}

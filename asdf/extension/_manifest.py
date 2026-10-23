@@ -48,8 +48,8 @@ class ManifestExtension(Extension):
         ----------
         manifest_uri : str
             Manifest URI.
-
-        See the class docstring for details on keyword parameters.
+        kwargs :
+            See the class docstring for details on keyword parameters.
         """
         from asdf.config import get_config
 

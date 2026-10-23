@@ -168,17 +168,17 @@ class Validator(Protocol):
         r"""
         Lazily yield each of the validation errors in the given instance.
 
-        >>> from asdf._jsonschema import Draft202012Validator
-        >>> schema = {
-        ...     "type" : "array",
-        ...     "items" : {"enum" : [1, 2, 3]},
-        ...     "maxItems" : 2,
-        ... }
-        >>> v = Draft202012Validator(schema)
-        >>> for error in sorted(v.iter_errors([2, 3, 4]), key=str):
-        ...     print(error.message)
-        4 is not one of [1, 2, 3]
-        [2, 3, 4] is too long
+            >>> from asdf._jsonschema import Draft202012Validator
+            >>> schema = {
+            ...     "type" : "array",
+            ...     "items" : {"enum" : [1, 2, 3]},
+            ...     "maxItems" : 2,
+            ... }
+            >>> v = Draft202012Validator(schema)
+            >>> for error in sorted(v.iter_errors([2, 3, 4]), key=str):
+            ...     print(error.message)
+            4 is not one of [1, 2, 3]
+            [2, 3, 4] is too long
 
         .. deprecated:: v4.0.0
 

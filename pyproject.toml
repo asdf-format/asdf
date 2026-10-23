@@ -54,21 +54,23 @@ asdftool = "asdf._commands.main:main"
 # Used for S3 integration testing
 mocks3 = ["boto", "fsspec", "moto[s3,server]", "s3fs>2023.12.1"]
 docs = [
-  "furo",
-  "graphviz",
-  "sphinx-asdf>=0.2.2",
-  "sphinx-inline-tabs",
+  "griffe-generics",
+  "griffe-inherited-docstrings",
+  "griffe-sphinx",
+  "mkdocs-api-autonav",
+  "mkdocs-git-revision-date-localized-plugin",
+  "mkdocs-literate-nav",
+  "mkdocs-material",
+  "mkdocs-section-index",
+  "mkdocstrings[python]",
+  "properdocs",
+  "ruff",
   "towncrier",
 ]
 
 [build-system]
 requires = ["setuptools>=60", "setuptools_scm[toml]>=8", "wheel"]
 build-backend = "setuptools.build_meta"
-
-[tool.uv.dependency-groups]
-# In sphinx <9.1 autodoc doesn't work with our documentation
-# sphinx >=9.1 is only available on Python >=3.12
-docs = { requires-python = ">=3.12" }
 
 [tool.setuptools.packages.find]
 include = ["asdf*"]
@@ -109,7 +111,7 @@ filterwarnings = [
 ]
 addopts = [
   "--doctest-modules",
-  "--doctest-glob=*.rst",
+  "--doctest-glob=docs/*.md",
   "--color=yes",
   "-rsxfE",
   "-p no:legacypath",
@@ -203,13 +205,14 @@ fo,afile,
 """
 
 [tool.towncrier]
-filename = "CHANGES.rst"
+filename = "CHANGES.md"
 directory = "changes"
 package = "asdf"
-title_format = "{version} ({project_date})"
+start_string = "<!-- towncrier release notes start -->\n"
+title_format = "## {version} ({project_date})"
+issue_format = "[#{issue}](https://github.com/asdf-format/asdf/issues/{issue})"
+underlines = ["", "", ""]
 ignore = [".gitkeep"]
-wrap = true
-issue_format = "`#{issue} <https://github.com/asdf-format/asdf/pull/{issue}>`_"
 
 [tool.towncrier.fragment.feature]
 
