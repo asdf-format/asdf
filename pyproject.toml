@@ -238,6 +238,3 @@ bad-param-name-override = "warn"
 path = "tombi://www.schemastore.org/pyproject.json"
 include = ["pyproject.toml"]
 format.rules.table-keys-order.enabled = false
-
-[tool.uv]
-default-groups = ["docs"]
