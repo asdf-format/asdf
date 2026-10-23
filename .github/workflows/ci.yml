@@ -34,8 +34,8 @@ jobs:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         persist-credentials: false
-    - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-    - uses: j178/prek-action@4e14d07f9231acabce116ccfca13b13dd9755ece # v3.0.0
+    - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+    - uses: j178/prek-action@44924fe9ef4a6f88253c4b6b1bf11c689d3ce53d # v3.1.0
   core-generate-jobs:
     runs-on: ubuntu-latest
     outputs:
@@ -44,7 +44,7 @@ jobs:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         persist-credentials: false
-    - uses: wntrblm/nox@a976d7ee04ab7a13634adc1016d4755a1348225f # 2026.08.17
+    - uses: wntrblm/nox@afa3983bbac3143bab5c8406244327581f76a3d7 # 2026.10.20
     - id: set-matrix
       shell: bash
       run: echo session=$(nox --json -l -t core | jq -c '[.[].session]') | tee --append $GITHUB_OUTPUT
@@ -71,7 +71,7 @@ jobs:
           persist-credentials: false
     - uses: | # v8.3.2 # zizmor: ignore[cache-poisoning] this workflow doesn't publish any artifacts
         astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7
-    - uses: wntrblm/nox@a976d7ee04ab7a13634adc1016d4755a1348225f # 2026.08.17
+    - uses: wntrblm/nox@afa3983bbac3143bab5c8406244327581f76a3d7 # 2026.10.20
     - run: nox -v -s "${MATRIX_SESSION}"
       shell: bash
       env:
