@@ -39,5 +39,5 @@
 - [Citation](CITATION.md)
 
 ## See also
-- The [Advanced Scientific Data Format (ASDF) specification][asdf-standard]
+- The {{ asdf_standard('Advanced Scientific Data Format (ASDF) specification', 'index') }}
 - `asdf` Python package distribution on [pypi](https://pypi.org/project/asdf/)

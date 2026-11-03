@@ -178,13 +178,10 @@ plugins:
         - https://docs.python.org/3/objects.inv
         - https://numpy.org/doc/stable/objects.inv
         - https://python-semanticversion.readthedocs.io/en/latest/objects.inv
-        - url: https://docs.pytest.org/en/latest/objects.inv
-          domains: ["std", "py"]
+        - https://docs.pytest.org/en/latest/objects.inv
         - https://packaging.python.org/en/latest/objects.inv
-        - url: https://www.asdf-format.org/projects/asdf-standard/en/latest/objects.inv
-          domains: ["std", "py"]
-        - url: https://stdatamodels.readthedocs.io/en/latest/objects.inv
-          domains: ["std", "py"]
+        - https://www.asdf-format.org/projects/asdf-standard/en/latest/objects.inv
+        - https://stdatamodels.readthedocs.io/en/latest/objects.inv
 
 extra:
   header_links:
@@ -194,4 +191,15 @@ extra:
     href: https://www.asdf-format.org/en/latest/tutorials/index.html
   - title: Community
     href: https://www.asdf-format.org/en/latest/community/index.html
-  legacy_labels_path: docs/.hooks/legacy_labels.csv
+  legacy_labels_path: docs/.hooks/legacy_labels.csv  # Config for `export_legacy_labels` hook
+  external_links: # Config for `extlink` macro
+    check: true
+    stdatamodels:
+      url: https://stdatamodels.readthedocs.io/en/latest/
+      suffix: ".html"
+    asdf_standard:
+      url: https://www.asdf-format.org/projects/asdf-standard/en/latest/
+      suffix: ".html"
+    pytest:
+      url: https://docs.pytest.org/en/latest/
+      suffix: ".html"

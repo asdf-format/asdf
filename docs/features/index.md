@@ -7,7 +7,7 @@ This section discusses the core features of the ASDF data format, and provides e
 The fundamental data object in ASDF is the `tree`, which is a nested combination of basic data structures: dictionaries, lists, strings and numbers. In Python, these types correspond to `dict`, `list`, `str`, and `int`, `float`, and `complex`, respectively. The top-level tree object behaves like a Python dictionary and supports arbitrary nesting of data structures. For simple examples of creating and reading trees, see *[Overview](/overview.md)*.
 
 !!! note
-	The ASDF specification imposes a maximum size of 64-bit signed integers literals in the tree (see *[Literal integer values in the tree][literal_integers]* for details and justification). Attempting to store a larger value as a YAML literal will result in a validation error.
+	The ASDF specification imposes a maximum size of 64-bit signed integers literals in the tree (see *{{ asdf_standard('Literal integer values in the tree', 'known_limits#literal-integers') }}* for details and justification). Attempting to store a larger value as a YAML literal will result in a validation error.
 
 	For arbitrary precision integer support, see [`IntegerType`][asdf.IntegerType].
 
@@ -42,7 +42,7 @@ Even though this particular implementation of ASDF necessarily serializes Python
 [](){ #features-schema-validation }
 ## Schema validation
 
-Schema validation is used to determine whether an ASDF file is well formed. All ASDF files must conform to the schemas defined by the [ASDF specification][asdf-standard]. Schema validation can be run using [`AsdfFile.validate`][asdf.AsdfFile.validate] and occurs when reading ASDF files (using [`asdf.open`][]) and writing them out (using [`AsdfFile.write_to`][asdf.AsdfFile.write_to] or [`AsdfFile.update`][asdf.AsdfFile.update]).
+Schema validation is used to determine whether an ASDF file is well formed. All ASDF files must conform to the schemas defined by the {{ asdf_standard('ASDF specification', 'index') }}. Schema validation can be run using [`AsdfFile.validate`][asdf.AsdfFile.validate] and occurs when reading ASDF files (using [`asdf.open`][]) and writing them out (using [`AsdfFile.write_to`][asdf.AsdfFile.write_to] or [`AsdfFile.update`][asdf.AsdfFile.update]).
 
 Schema validation also plays a role when using custom extensions (see *[Using Extensions](using_extensions.md)* and *[Extensions](/extending/extensions.md)*). Extensions must provide schemas for the types that they serialize. When writing a file with custom types, the output is validated against the schemas corresponding to those types. If the appropriate extension is installed when reading a file with custom types, then the types will be validated against the schemas provided by the corresponding extension.
 
@@ -105,7 +105,7 @@ new_af = asdf.AsdfFile(custom_schema="image_schema.yaml")
 If your custom schema is registered with ASDF in an extension, you may pass the schema URI (`http://example.com/schemas/your-custom-schema`, in this case) instead of a file path.
 
 !!! note
-	The top-level core schemas can be found [here][core-schema].
+	The top-level core schemas can be found {{ asdf_standard('here', 'schemas/core') }}.
 
 [](){ #features-versioning-and-compat }
 ## Versioning and Compatibility

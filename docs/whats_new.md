@@ -70,7 +70,7 @@ By default asdf 4.0.0 will write files that use the 1.6.0 version of the ASDF st
 In addition to new schemas and tags ASDF standard 1.6.0 comes with a few other changes (scheduled for this version).
 
 - Opening files will no longer trigger [`AsdfFile.fill_defaults`][asdf.AsdfFile.fill_defaults].
-- Mapping keys are restricted to str, int, bool See *[YAML Subset][yaml_subset]*.
+- Mapping keys are restricted to str, int, bool See *{{ asdf_standard('YAML Subset', 'tree#yaml-subset') }}*.
 
 #### Validation { #400-validation }
 

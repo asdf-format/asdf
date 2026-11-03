@@ -33,7 +33,7 @@ properties:
 ...
 ```
 
-This is similar to the quantity schema, found [here][stsci.edu/asdf/unit/quantity-1.1.0], but has been updated to reflect current recommendations regarding schemas. Let's walk through this schema line by line.
+This is similar to the quantity schema, found {{ asdf_standard('here', 'generated/stsci.edu/asdf/unit/quantity-1.1.0') }}, but has been updated to reflect current recommendations regarding schemas. Let's walk through this schema line by line.
 
 ``` yaml
 %YAML 1.1
@@ -217,4 +217,4 @@ The schema tests do **not** run by default. In order to enable the tests by defa
 
 - [JSON Schema Draft 4](https://json-schema.org/specification-links.html#draft-4)
 - [Understanding JSON Schema](https://json-schema.org/understanding-json-schema/)
-- [Unit Schemas][stsci.edu/asdf/unit/quantity-1.1.0]
+- {{ asdf_standard('Unit Schemas', 'generated/stsci.edu/asdf/unit/quantity-1.1.0') }}
