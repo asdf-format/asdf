@@ -110,7 +110,7 @@ def scipy_array_api():
         import scipy._lib._array_api_override as mod
 
         mod.SCIPY_ARRAY_API = True  # pyrefly: ignore [bad-assignment]
-    except (ImportError, AttributeError):
+    except (ImportError, AttributeError):  # pragma: no cover
         yield None
     else:
         yield None
