@@ -109,7 +109,7 @@ def scipy_array_api():
         # but it allows us to toggle it on and off even if scipy has already been imported
         import scipy._lib._array_api_override as mod
 
-        mod.SCIPY_ARRAY_API = True
+        mod.SCIPY_ARRAY_API = True  # pyrefly: ignore [bad-assignment]
     except (ImportError, AttributeError):
         yield None
     else:
