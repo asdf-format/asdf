@@ -5,3 +5,4 @@ git+https://github.com/python-attrs/attrs
 fsspec[http] @ git+https://github.com/fsspec/filesystem_spec
 
 numpy>=0.0.dev0
+scipy>=0.0.dev0 ; python_version>='3.12'
