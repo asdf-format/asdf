@@ -99,3 +99,19 @@ def with_lazy_tree(request):
     with config.config_context() as cfg:
         cfg.lazy_tree = request.param
         yield cfg.lazy_tree
+
+
+@pytest.fixture
+def scipy_array_api():
+    """Fixture that enables scipy's experimental array API support."""
+    try:
+        # Doing it this way instead of using the `SCIPY_ARRAY_API` environment variable is hacky
+        # but it allows us to toggle it on and off even if scipy has already been imported
+        import scipy._lib._array_api_override as mod
+
+        mod.SCIPY_ARRAY_API = True
+    except (ImportError, AttributeError):
+        yield None
+    else:
+        yield None
+        mod.SCIPY_ARRAY_API = False
