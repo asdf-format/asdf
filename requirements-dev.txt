@@ -4,5 +4,6 @@ git+https://github.com/yaml/pyyaml.git
 git+https://github.com/python-attrs/attrs
 fsspec[http] @ git+https://github.com/fsspec/filesystem_spec
 
+--extra-index-url https://pypi.anaconda.org/scientific-python-nightly-wheels/simple
 numpy>=0.0.dev0
 scipy>=0.0.dev0 ; python_version>='3.12'
