@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import enum
 import json
 import os
 from dataclasses import KW_ONLY, dataclass, field
@@ -9,6 +10,8 @@ from typing import TYPE_CHECKING
 import nox
 
 if TYPE_CHECKING:
+    from collections.abc import Generator
+
     from nox import Session
 
 # Use uv if available, otherwise fall back to default
@@ -114,31 +117,86 @@ class Package:
             yield from self.pytest_args
 
 
+class DepsStrategy(enum.Enum):
+    """Dependency version resolution strategy."""
+
+    Default = enum.auto()
+    """Use default dependency resolution."""
+    Dev = enum.auto()
+    """Use unstable releases for certain packages as defined in `requirements-dev.txt`."""
+    Oldest = enum.auto()
+    """Use oldest compatible versions for direct ASDF dependencies.
+
+    Does not affect extra dependencies or indirect dependencies.
+    """
+
+    def generate_requirements(self, session: Session) -> Generator[str]:
+        """Returns an iterator of requirement file lines based on the override mode.
+
+        Also modifies `session` environment variables if needed to configure dependency resolution.
+
+        Note that the returned values are intended to be written to a requirements file
+        and can't be directly passed to `pip install`.
+        """
+        match self:
+            case DepsStrategy.Default:
+                return
+            case DepsStrategy.Dev:
+                # Change uv index resolution to match pip
+                session.virtualenv.env["UV_INDEX_STRATEGY"] = "unsafe-best-match"
+                # Change uv prerelease resolution to match pip
+                session.virtualenv.env["UV_PRERELEASE"] = "allow"
+                yield from self._dev()
+            case DepsStrategy.Oldest:
+                yield from self._oldest(session)
+
+    def _dev(self) -> Generator[str]:
+        yield from Path("requirements-dev.txt").read_text().splitlines()
+
+    def _oldest(self, session: Session) -> Generator[str]:
+        session.install("minimum_dependencies")
+        # asdf needs to be installed for `minimum_dependencies` to read its metadata
+        session.install("-e", ".", "--no-deps")
+        tmp_path = Path(session.create_tmp()) / "requirements-min.txt"
+        session.run_install("minimum_dependencies", "asdf", "--filename", str(tmp_path), silent=True)
+
+        yield from tmp_path.read_text().splitlines()
+
+
 @dataclass(frozen=True, kw_only=True)
 class Asdf:
     """Helper class for managing ASDF installation and testing options."""
 
     parallel: bool = False
+    """Enable parallel test execution via `xdist`"""
     show_slowest: int | None = 10
+    """If not `None`, print the `n` slowest test cases after running the test suite."""
     extras: list[str] = field(default_factory=lambda: ["all", "tests"])
+    """ASDF package extras to enable during installation."""
+    deps_groups: list[str] = field(default_factory=list)
+    """Pyproject `dependency-groups` to enable during installation."""
+    deps_strategy: DepsStrategy = DepsStrategy.Default
+    """Resolution strategy for determining ASDF dependency versions."""
 
     def install(self, session: Session, *extra_deps: str) -> Asdf:
         """Install local version of ASDF and its dependencies.
 
-        Arguments passed to `extra_deps` are installed after ASDF.
+        Arguments passed to `extra_deps` are installed last and override any existing dependencies.
         """
+        extras = f"[{','.join(self.extras)}]" if self.extras else ""
+        deps = [f"-e .{extras}"]
+        for group in self.deps_groups:
+            deps.extend(nox.project.dependency_groups(PYPROJECT, group))
+
         if self.parallel:
-            session.install("pytest-xdist")
+            deps.append("pytest-xdist")
 
-        if self.extras:
-            extras = f"[{','.join(self.extras)}]"
-        else:
-            extras = ""
+        deps.extend(self.deps_strategy.generate_requirements(session))
+        deps.extend(extra_deps)
 
-        session.install("-e", f".{extras}")
-
-        if extra_deps:
-            session.install(*extra_deps)
+        deps_path = Path(session.create_tmp()) / "requirements.txt"
+        deps_path.write_text("\n".join(deps))
+        session.install("-r", str(deps_path))
 
         return self
 
@@ -149,15 +207,6 @@ class Asdf:
         """
         log_dependencies(session)
         session.run(*self._pytest_args(), *extra_args, *session.posargs)
-        return self
-
-    def install_oldest_deps(self, session: Session) -> Asdf:
-        """Install the oldest supported versions of all ASDF dependencies."""
-        session.install("minimum_dependencies")
-        tmp_path = Path(session.create_tmp()) / "requirements-min.txt"
-        session.run_install("minimum_dependencies", "asdf", "--filename", str(tmp_path), silent=True)
-
-        session.install("-r", str(tmp_path))
         return self
 
     def _pytest_args(self):
@@ -344,20 +393,11 @@ def coverage(session: Session) -> None:
 @nox.session(tags=["test", "core"], python=PY_STABLE)
 def devdeps(session: Session) -> None:
     """Run asdf tests against latest unstable versions of asdf dependencies"""
-    session.virtualenv.env.update(
-        {
-            "ASDF_UNSTABLE_CORE_SCHEMAS": "1",
-            "PIP_EXTRA_INDEX_URL": "https://pypi.anaconda.org/scientific-python-nightly-wheels/simple",
-            "UV_INDEX": "https://pypi.anaconda.org/scientific-python-nightly-wheels/simple",
-            # Change uv index resolution to match pip
-            "UV_INDEX_STRATEGY": "unsafe-best-match",
-            # Change uv prerelease resolution to match pip
-            "UV_PRERELEASE": "allow",
-        }
-    )
+    # Enable unstable ASDF schemas
+    session.virtualenv.env["ASDF_UNSTABLE_CORE_SCHEMAS"] = "1"
     (
-        Asdf(parallel=True)
-        .install(session, "-r", "requirements-dev.txt")
+        Asdf(parallel=True, deps_strategy=DepsStrategy.Dev)
+        .install(session)
         .test(session, "-W", "ignore::asdf_standard.exceptions.UnstableCoreSchemasWarning")
     )
 
@@ -365,11 +405,7 @@ def devdeps(session: Session) -> None:
 @nox.session(tags=["test", "core"], python=PY_DEFAULT)
 def mocks3(session: Session) -> None:
     """Set up AWS mocks and run S3 integration tests"""
-    (
-        Asdf(parallel=False)
-        .install(session, *nox.project.dependency_groups(PYPROJECT, "mocks3"))
-        .test(session, "integration_tests/mocks3/")
-    )
+    (Asdf(parallel=False, deps_groups=["mocks3"]).install(session).test(session, "integration_tests/mocks3/"))
 
 
 @nox.session(tags=["test", "core"], python=PY_OLDEST)
@@ -393,7 +429,7 @@ def jsonschema(session: Session) -> None:
 )
 def oldestdeps(session: Session) -> None:
     """Run asdf tests against oldest supported dependency versions"""
-    (Asdf(parallel=True).install(session).install_oldest_deps(session).test(session))
+    Asdf(parallel=True, deps_strategy=DepsStrategy.Oldest).install(session).test(session)
 
 
 @nox.session(tags=["test", "core"], python=[PY_NEWEST, PY_UNSTABLE])
@@ -422,7 +458,7 @@ def docs(session: Session) -> None:
     If the environment hasn't changed, you can speed up the build by using nox's `-R` flag
     to reuse the virtual environment and skip reinstalling dependencies, e.g. `nox -R -s docs`.
     """
-    Asdf(extras=[]).install(session, *nox.project.dependency_groups(PYPROJECT, "docs"))
+    Asdf(extras=[], deps_groups=["docs"]).install(session)
 
     session.run(
         "sphinx-build",
