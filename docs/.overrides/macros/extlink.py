@@ -55,16 +55,24 @@ HTML query parameters are not supported.
 
 """
 
+from __future__ import annotations
+
 import logging
+import textwrap
 from dataclasses import dataclass
+from html.parser import HTMLParser
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urldefrag, urljoin
 
 import requests
 
+if TYPE_CHECKING:
+    from mkdocs_macros.plugin import MacrosPlugin
+
 log = logging.getLogger("properdocs.plugins.towncrier")
 
 
-def register(env):
+def register(env: MacrosPlugin):
     """Parses the `external_links` configuration and registers a new macro definition
     for each entry in the configuration.
     """
@@ -84,16 +92,18 @@ def register(env):
             # URL without a trailing slash produces unintuitive behavior with `urljoin`
             url += "/"
 
-        proj = ExtProject(url, check, link_classes, suffix)
+        proj = ExtProject(key, url, check, link_classes, suffix, env)
         env.macro(proj.link, key)
 
 
 @dataclass
 class ExtProject:
+    key: str
     base: str
     check: bool
     link_classes: list[str]
     suffix: str | None
+    env: MacrosPlugin
 
     def link(self, title: str, path: str) -> str:
         url = urljoin(self.base, path)
@@ -105,9 +115,17 @@ class ExtProject:
 
         if self.check:
             try:
-                requests.get(url, timeout=1).raise_for_status()
-            except requests.RequestException as error:
-                log.warning(f"Failed to resolve external link: {url}\n{error}")
+                _check_link(url)
+            except Exception as error:
+                indent = "    "
+                page = self.env.page.file.src_uri
+                source = f"{self.key}('{title}', '{path}')"
+                log.warning(
+                    f"{page}: failed to resolve external link\n"
+                    f"{textwrap.indent(url, indent)}\n"
+                    f"Error:\n{textwrap.indent(str(error), indent)}\n"
+                    f"Source:\n{textwrap.indent(source, indent)}\n"
+                )
 
         if self.link_classes:
             classes = "".join([f".{cls}" for cls in self.link_classes])
@@ -116,3 +134,44 @@ class ExtProject:
             attrs = ""
 
         return f"[{title}]({url}){attrs}"
+
+
+def _check_link(url: str) -> None:
+    _, anchor = urldefrag(url)
+
+    method = "GET" if anchor else "HEAD"
+    resp = requests.request(method, url, timeout=1, stream=True)
+    resp.raise_for_status()
+
+    if not anchor:
+        return
+
+    finder = _AnchorFinder(anchor)
+    for chunk in resp.iter_content(chunk_size=4096, decode_unicode=True):
+        if finder.check(chunk):
+            return
+
+    raise AnchorError(anchor)
+
+
+class AnchorError(Exception):
+    def __init__(self, anchor: str):
+        super().__init__(f"Anchor not found: {anchor}")
+
+
+class _AnchorFinder(HTMLParser):
+    def __init__(self, anchor: str):
+        super().__init__()
+
+        self.anchor = anchor
+        self.found = False
+
+    def check(self, chunk: str) -> bool:
+        self.feed(chunk)
+        return self.found
+
+    def handle_starttag(self, tag: Any, attrs: Any) -> None:
+        for key, value in attrs:
+            if key in {"id", "name"} and value == self.anchor:
+                self.found = True
+                break
