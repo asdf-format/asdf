@@ -195,6 +195,9 @@ select = [
   "UP",  # pyupgrade
   "RUF",  # ruff specific, includes yesqa
   "TC",  # type-checking
+  "PLE",  # pylint
+  "PGH",  # pygrep-hooks
+  "T100",  # flake-debugger
 ]
 ignore = [
   "S310",  # URL open for permitted schemes
@@ -206,9 +209,6 @@ ignore = [
 "test_*.py" = ["S101"]
 "asdf/_tests/_helpers.py" = ["S101"]
 "integration_tests/compatibility/common.py" = ["S101"]
-
-[tool.flynt]
-exclude = ["asdf/_extern/*", "asdf/_jsonschema/*"]
 
 [tool.codespell]
 skip = "*.pdf,*.asdf,asdf/_extern,asdf/_jsonschema,build,./tags,.git,docs/_build"

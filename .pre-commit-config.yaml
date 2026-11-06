@@ -22,8 +22,6 @@ repos:
 - repo: https://github.com/pre-commit/pygrep-hooks
   rev: v1.10.0
   hooks:
-    - id: python-check-blanket-noqa
-    - id: python-check-mock-methods
     - id: text-unicode-replacement-char
 
 - repo: https://github.com/codespell-project/codespell
@@ -33,12 +31,6 @@ repos:
       args: ["--write-changes"]
       additional_dependencies:
         - tomli
-
-- repo: https://github.com/ikamensh/flynt/
-  rev: '1.0.6'
-  hooks:
-    - id: flynt
-      exclude: "asdf/(extern||_jsonschema)/.*"
 
 - repo: https://github.com/astral-sh/ruff-pre-commit
   rev: 'v0.16.0'
