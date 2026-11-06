@@ -292,7 +292,7 @@ class ConverterProxy(Generic[_T, _Node], Converter[_T, _Node]):
 
         Parameters
         ----------
-        tree : dict or list or str
+        node : dict or list or str
             The YAML node to convert.
         tag : str
             The YAML tag of the object being converted.

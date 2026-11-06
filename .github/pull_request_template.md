@@ -22,15 +22,15 @@ https://github.com/asdf-format/.github/blob/main/AI_POLICY.md
 - [ ] [run `prek` on your machine](https://prek.j178.dev/quickstart/)
 - [ ] [run `pytest` on your machine](https://docs.pytest.org/en/7.1.x/getting-started.html)
 - [ ] Does this PR add new features and / or change user-facing code / API? (if not, label with `no-changelog-entry-needed`)
-    - [ ] write news fragment(s) in `changes/`: `echo "changed something" > changes/<PR#>.<changetype>.rst` (see below for change types)
+    - [ ] write news fragment(s) in `changes/`: `echo "changed something" > changes/<PR#>.<changetype>.md` (see below for change types)
     - [ ] update relevant docstrings and / or `docs/` page
     - [ ] for any new features, add unit tests
 
 <details><summary>news fragment change types...</summary>
 
-- ``changes/<PR#>.feature.rst``: new feature
-- ``changes/<PR#>.bugfix.rst``: bug fix
-- ``changes/<PR#>.doc.rst``: documentation change
-- ``changes/<PR#>.removal.rst``: deprecation or removal of public API
-- ``changes/<PR#>.general.rst``: infrastructure or miscellaneous change
+- ``changes/<PR#>.feature.md``: new feature
+- ``changes/<PR#>.bugfix.md``: bug fix
+- ``changes/<PR#>.doc.md``: documentation change
+- ``changes/<PR#>.removal.md``: deprecation or removal of public API
+- ``changes/<PR#>.general.md``: infrastructure or miscellaneous change
 </details>
