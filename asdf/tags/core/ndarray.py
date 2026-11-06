@@ -430,18 +430,26 @@ class NDArrayType:
         return len(self._make_array())
 
     def __getattr__(self, attr):
-        # We need to ignore __array_struct__, or unicode arrays end up
-        # getting "double casted" and upsized.  This also reduces the
-        # number of array creations in the general case.
-        if attr == "__array_struct__":
+        IGNORE = (
+            # We need to ignore __array_struct__, or unicode arrays end up
+            # getting "double casted" and upsized.  This also reduces the
+            # number of array creations in the general case.
+            "__array_struct__",
+            # AsdfFile.info will call hasattr(obj, "__asdf_traverse__") which
+            # will trigger this method, making the array, and loading the array
+            # data. Intercept this and raise AttributeError as this class does
+            # not support that method
+            # see: https://github.com/asdf-format/asdf/issues/1553
+            "__asdf_traverse__",
+            # Scipy uses `__array_namespace__` to identify array API types.
+            # Not returning `__array_namespace__` signals this isn't an array API object
+            # and allows coercion into a numpy array.
+            # See https://github.com/asdf-format/asdf/issues/2161
+            "__array_namespace__",
+        )
+        if attr in IGNORE:
             raise AttributeError
-        # AsdfFile.info will call hasattr(obj, "__asdf_traverse__") which
-        # will trigger this method, making the array, and loading the array
-        # data. Intercept this and raise AttributeError as this class does
-        # not support that method
-        # see: https://github.com/asdf-format/asdf/issues/1553
-        if attr == "__asdf_traverse__":
-            raise AttributeError
+
         return getattr(self._make_array(), attr)
 
     def __setitem__(self, *args):
