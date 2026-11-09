@@ -1,0 +1,1 @@
+Bumped minimum supported NumPy version to 1.24.
