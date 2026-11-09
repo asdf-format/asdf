@@ -15,7 +15,7 @@ dependencies = [
   "asdf-standard>=1.1.0",
   "importlib-metadata>=4.11.4 ; python_version<='3.11'",
   "jmespath>=0.6.2",
-  "numpy>=1.22",
+  "numpy>=1.24",
   "packaging>=19",
   "pyyaml>=6.0",
   "semantic_version>=2.8",
