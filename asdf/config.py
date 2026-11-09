@@ -12,19 +12,20 @@ from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any
 
 from . import _entry_points, util, versioning
-from ._helpers import validate_version
+from ._helpers import _IsSet, validate_version
 from .extension import ExtensionProxy
 from .resource import ResourceManager, ResourceMappingProxy
 
 if TYPE_CHECKING:
     from collections.abc import Generator, Mapping
 
-    from asdf.typing import ArrayStorage, Compression, ExtensionLike
+    from asdf.extension import ExtensionLike
+    from asdf.typing import ArrayStorage, Compression
 
 __all__ = ["AsdfConfig", "config_context", "get_config"]
 
 
-DEFAULT_VALIDATE_ON_READ = True
+DEFAULT_VALIDATE_ON_READ = False
 DEFAULT_DEFAULT_VERSION = str(versioning.default_version)
 DEFAULT_LEGACY_FILL_SCHEMA_DEFAULTS = True
 DEFAULT_IO_BLOCK_SIZE = -1  # auto
@@ -32,12 +33,12 @@ DEFAULT_ARRAY_INLINE_THRESHOLD = None
 DEFAULT_ALL_ARRAY_STORAGE = None
 DEFAULT_ALL_ARRAY_COMPRESSION = "input"
 DEFAULT_ALL_ARRAY_COMPRESSION_KWARGS = None
-DEFAULT_DEFAULT_ARRAY_SAVE_BASE = True
+DEFAULT_DEFAULT_ARRAY_SAVE_BASE = False
 DEFAULT_LAZY_TREE = False
-DEFAULT_WARN_ON_FAILED_CONVERSION = False
+DEFAULT_WARN_ON_FAILED_CONVERSION = True
 
 
-class AsdfConfig:
+class AsdfConfig(_IsSet):
     """
     Container for ASDF configuration options.  Users are not intended to
     construct this object directly; instead, use the `asdf.get_config` and
@@ -45,6 +46,7 @@ class AsdfConfig:
     """
 
     def __init__(self):
+        super().__init__()
         self._resource_mappings = None
         self._resource_manager = None
         self._extensions = None
@@ -430,6 +432,14 @@ class AsdfConfig:
         Returns
         -------
         bool
+
+        Warnings
+        --------
+        In a future release the default value will change from `True` to `False`.
+        Currently, if a validation error occurs while loading a file and this field hasn't
+        been manually set then ASDF will emit an `asdf.exceptions.AsdfFutureWarning`
+        *before* raising an exception.
+        Manually set the field to either `True` or `False` to silence this warning.
         """
         return self._validate_on_read
 
@@ -476,6 +486,13 @@ class AsdfConfig:
         Returns
         -------
         bool
+
+        Warnings
+        --------
+        In a future release the default value will change from `False` to `True`.
+        Currently, if a conversion fails and this field hasn't been set then ASDF will
+        emit an `asdf.exceptions.AsdfFutureWarning` *before* raising an exception.
+        Manually set the field to either `True` or `False` to silence this warning.
         """
         return self._warn_on_failed_conversion
 

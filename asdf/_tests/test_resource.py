@@ -15,7 +15,7 @@ def test_resource_manager():
         "http://somewhere.org/schemas/baz-1.0.0": b"baz",
         "http://somewhere.org/schemas/foz-1.0.0": "foz",
     }
-    manager = ResourceManager([mapping1, mapping2])
+    manager = ResourceManager([ResourceMappingProxy.maybe_wrap(m) for m in [mapping1, mapping2]])
 
     assert isinstance(manager, Mapping)
 

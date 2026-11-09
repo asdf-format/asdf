@@ -1,21 +1,28 @@
 import collections
 import fractions
 import sys
+import typing
+from typing import Any
 
 import pytest
 from packaging.specifiers import SpecifierSet
 
 import asdf
 from asdf import AsdfFile, config_context
-from asdf.exceptions import AsdfManifestURIMismatchWarning, AsdfSerializationError, ValidationError
+from asdf.exceptions import (
+    AsdfManifestURIMismatchWarning,
+    AsdfSerializationError,
+    DeprecatedCompressorWarning,
+    ValidationError,
+)
 from asdf.extension import (
-    Compressor,
     Converter,
     ConverterProxy,
     Extension,
     ExtensionManager,
     ExtensionProxy,
     ManifestExtension,
+    SerializationContext,
     TagDefinition,
     Validator,
     get_cached_extension_manager,
@@ -90,17 +97,17 @@ class MinimumConverter:
             self._types = types
 
     @property
-    def tags(self):
+    def tags(self) -> list[str]:
         return self._tags
 
     @property
-    def types(self):
+    def types(self) -> list[str | type]:
         return self._types
 
-    def to_yaml_tree(self, obj, tag, ctx):
+    def to_yaml_tree(self, obj: Any, tag: str, ctx: SerializationContext) -> str:
         return "to_yaml_tree result"
 
-    def from_yaml_tree(self, obj, tag, ctx):
+    def from_yaml_tree(self, node: str, tag: str, ctx: SerializationContext) -> Any:
         return "from_yaml_tree result"
 
 
@@ -109,7 +116,9 @@ class FullConverter(MinimumConverter):
         return "select_tag result"
 
 
-class MinimalCompressor(Compressor):
+# Intentionally not inheriting from `Compressor`.
+# Since this class implements `compress` but not `decompress` it should still work but raise a deprecation warning.
+class MinimalCompressor:
     @staticmethod
     def compress(data):
         return b""
@@ -152,6 +161,7 @@ def test_extension_proxy_maybe_wrap():
     assert ExtensionProxy.maybe_wrap(proxy) is proxy
 
     with pytest.raises(TypeError, match=r"Extension must implement the Extension interface"):
+        # pyrefly: ignore [bad-argument-type]
         ExtensionProxy.maybe_wrap(object())
 
 
@@ -209,7 +219,8 @@ def test_extension_proxy():
         tags=["asdf://somewhere.org/extensions/full/tags/foo-1.0"],
         legacy_class_names=["foo.extensions.SomeOldExtensionClass"],
     )
-    proxy = ExtensionProxy(extension, package_name="foo", package_version="1.2.3")
+    with pytest.warns(DeprecatedCompressorWarning):
+        proxy = ExtensionProxy(extension, package_name="foo", package_version="1.2.3")
 
     assert proxy.extension_uri == "asdf://somewhere.org/extensions/full-1.0"
     assert proxy.legacy_class_names == {"foo.extensions.SomeOldExtensionClass"}
@@ -230,6 +241,7 @@ def test_extension_proxy():
 
     # Should fail when the input is not one of the two extension interfaces:
     with pytest.raises(TypeError, match=r"Extension must implement the Extension interface"):
+        # pyrefly: ignore [bad-argument-type]
         ExtensionProxy(object)
 
     # Should fail with a bad converter:
@@ -452,27 +464,30 @@ def test_converter():
         tags = []
         types = []
 
-        def to_yaml_tree(self, *args):
+        def to_yaml_tree(self, obj, tag, ctx):
             pass
 
-        def from_yaml_tree(self, *args):
+        def from_yaml_tree(self, node, tag, ctx):
             pass
 
-    assert issubclass(ConverterNoSubclass, Converter)
+    # Have to use isinstance instead of issubclass
+    # issubclass isn't supported for Protocols with non-function attributes
+    assert isinstance(ConverterNoSubclass(), Converter)
 
 
 def test_converter_proxy():
     # Test the minimum set of converter methods:
     extension = ExtensionProxy(MinimumExtension())
     converter = MinimumConverter()
+    ctx = typing.cast("SerializationContext", None)
     proxy = ConverterProxy(converter, extension)
 
     assert isinstance(proxy, Converter)
 
     assert proxy.tags == []
     assert proxy.types == []
-    assert proxy.to_yaml_tree(None, None, None) == "to_yaml_tree result"
-    assert proxy.from_yaml_tree(None, None, None) == "from_yaml_tree result"
+    assert proxy.to_yaml_tree(None, "", ctx) == "to_yaml_tree result"
+    assert proxy.from_yaml_tree("", "", ctx) == "from_yaml_tree result"
     assert proxy.tags == []
     assert proxy.delegate is converter
     assert proxy.extension == extension
@@ -483,9 +498,12 @@ def test_converter_proxy():
     # Check the __eq__ and __hash__ behavior:
     assert proxy == ConverterProxy(converter, extension)
     assert proxy != ConverterProxy(MinimumConverter(), extension)
-    assert proxy != ConverterProxy(converter, MinimumExtension())
+    assert proxy != ConverterProxy(converter, ExtensionProxy.maybe_wrap(MinimumExtension()))
     assert proxy in {ConverterProxy(converter, extension)}
-    assert proxy not in {ConverterProxy(MinimumConverter(), extension), ConverterProxy(converter, MinimumExtension())}
+    assert proxy not in {
+        ConverterProxy(MinimumConverter(), extension),
+        ConverterProxy(converter, ExtensionProxy.maybe_wrap(MinimumExtension())),
+    }
 
     # Check the __repr__:
     assert "class: asdf._tests.test_extension.MinimumConverter" in repr(proxy)
@@ -523,9 +541,9 @@ def test_converter_proxy():
     assert "asdf://somewhere.org/extensions/test/tags/foo-1.0" in proxy.tags
     assert "asdf://somewhere.org/extensions/test/tags/bar-1.0" in proxy.tags
     assert proxy.types == [FooType, BarType]
-    assert proxy.to_yaml_tree(None, None, None) == "to_yaml_tree result"
-    assert proxy.from_yaml_tree(None, None, None) == "from_yaml_tree result"
-    assert proxy.select_tag(None, None) == "select_tag result"
+    assert proxy.to_yaml_tree(None, "", ctx) == "to_yaml_tree result"
+    assert proxy.from_yaml_tree("", "", ctx) == "from_yaml_tree result"
+    assert proxy.select_tag(None, ctx) == "select_tag result"
     assert proxy.delegate is converter
     assert proxy.extension == extension_proxy
     assert proxy.package_name == "foo"
@@ -538,18 +556,26 @@ def test_converter_proxy():
 
     # Should error because object() does fulfill the Converter interface:
     with pytest.raises(TypeError, match=r"Converter must implement the .*"):
-        ConverterProxy(object(), extension)
+        ConverterProxy(
+            object(),  # pyrefly: ignore [bad-argument-type]
+            ExtensionProxy.maybe_wrap(extension),
+        )
 
     # Should fail because tags must be str:
     with pytest.raises(TypeError, match=r"Converter property .* must contain str values"):
-        ConverterProxy(MinimumConverter(tags=[object()]), extension)
+        ConverterProxy(
+            MinimumConverter(tags=[object()]),
+            ExtensionProxy.maybe_wrap(extension),
+        )
 
     # Should fail because types must instances of type:
     with pytest.raises(TypeError, match=r"Converter property .* must contain str or type values"):
         # as the code will ignore types if no relevant tags are found
         # include a tag from this extension to make sure the proxy considers
         # the types
-        ConverterProxy(MinimumConverter(tags=[extension.tags[0].tag_uri], types=[object()]), extension)
+        ConverterProxy(
+            MinimumConverter(tags=[extension.tags[0].tag_uri], types=[object()]), ExtensionProxy.maybe_wrap(extension)
+        )
 
 
 def test_converter_subclass_with_no_supported_tags():
@@ -633,13 +659,13 @@ tags:
             tags = ["asdf://somewhere.org/tags/bar", "asdf://somewhere.org/tags/baz"]
             types = []
 
-            def select_tag(self, *args):
+            def select_tag(self, obj: Any, ctx: SerializationContext) -> str | None:
                 pass
 
-            def to_yaml_tree(self, *args):
+            def to_yaml_tree(self, obj: Any, tag: str, ctx: SerializationContext) -> Any:
                 pass
 
-            def from_yaml_tree(self, *args):
+            def from_yaml_tree(self, node: Any, tag: str, ctx: SerializationContext) -> Any:
                 pass
 
         converter = FooConverter()
@@ -666,7 +692,8 @@ tags:
         assert extension.tags[1].title == "Baz title"
         assert extension.tags[1].description == "Bar description"
 
-        proxy = ExtensionProxy(extension)
+        with pytest.warns(DeprecatedCompressorWarning):
+            proxy = ExtensionProxy(extension)
         assert proxy.extension_uri == "asdf://somewhere.org/extensions/foo"
         assert proxy.legacy_class_names == {"foo.extension.LegacyExtension"}
         assert proxy.asdf_standard_requirement == SpecifierSet(">=1.6.0,<2.0.0")
@@ -895,14 +922,14 @@ def test_warning_or_error_for_default_select_tag(is_subclass, indirect):
     class Foo:
         pass
 
-    ParentClass = Converter if is_subclass else object
+    ParentClass: type[Any] = Converter if is_subclass else object
 
     if indirect:
 
         class IntermediateClass(ParentClass):
             pass
 
-        ParentClass = IntermediateClass
+        ParentClass: type[Any] = IntermediateClass
 
     class FooConverter(ParentClass):
         tags = ["asdf://somewhere.org/tags/foo-*"]

@@ -1,7 +1,17 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+
 import yaml
 
 from ._extension import Extension
 from ._tag import TagDefinition
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from asdf.extension import Compressor, Converter, Validator
+    from asdf.typing import TreeKey
 
 
 class ManifestExtension(Extension):
@@ -28,7 +38,7 @@ class ManifestExtension(Extension):
     """
 
     @classmethod
-    def from_uri(cls, manifest_uri, **kwargs):
+    def from_uri(cls, manifest_uri: str, **kwargs) -> ManifestExtension:
         """
         Construct the extension using the manifest with the
         specified URI.  The manifest document must be registered
@@ -46,7 +56,15 @@ class ManifestExtension(Extension):
         manifest = yaml.safe_load(get_config().resource_manager[manifest_uri])
         return cls(manifest, **kwargs)
 
-    def __init__(self, manifest, *, legacy_class_names=None, converters=None, compressors=None, validators=None):
+    def __init__(
+        self,
+        manifest: Mapping[TreeKey, Any],
+        *,
+        legacy_class_names: list[str] | None = None,
+        converters: list[Converter[Any]] | None = None,
+        compressors: list[Compressor] | None = None,
+        validators: list[Validator] | None = None,
+    ):
         self._manifest = manifest
 
         if legacy_class_names is None:
@@ -70,15 +88,15 @@ class ManifestExtension(Extension):
             self._validators = validators
 
     @property
-    def extension_uri(self):
+    def extension_uri(self) -> str:
         return self._manifest["extension_uri"]
 
     @property
-    def legacy_class_names(self):
+    def legacy_class_names(self) -> list[str]:
         return self._legacy_class_names
 
     @property
-    def asdf_standard_requirement(self):
+    def asdf_standard_requirement(self) -> str | None:
         version = self._manifest.get("asdf_standard_requirement", None)
         if version is None:
             return None
@@ -94,20 +112,20 @@ class ManifestExtension(Extension):
         return ",".join(specifiers)
 
     @property
-    def converters(self):
+    def converters(self) -> list[Converter[Any]]:
         return self._converters
 
     @property
-    def compressors(self):
+    def compressors(self) -> list[Compressor]:
         return self._compressors
 
     @property
-    def validators(self):
+    def validators(self) -> list[Validator]:
         return self._validators
 
     @property
-    def tags(self):
-        result = []
+    def tags(self) -> list[str | TagDefinition]:
+        result: list[str | TagDefinition] = []
         for tag in self._manifest.get("tags", []):
             if isinstance(tag, str):
                 # ExtensionProxy knows how to handle str tags.

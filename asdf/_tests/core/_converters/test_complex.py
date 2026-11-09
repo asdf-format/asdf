@@ -15,6 +15,7 @@ a: !core/complex-1.0.0
     return helpers.yaml_to_asdf(yaml)
 
 
+@helpers.config(validate_on_read=True)
 @pytest.mark.parametrize(
     "invalid",
     [

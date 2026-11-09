@@ -1,9 +1,23 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, TypedDict
+
 import numpy as np
 
 from asdf.extension import Converter
+from asdf.tags.core.integer import IntegerType
+
+if TYPE_CHECKING:
+    from asdf.extension import SerializationContext
 
 
-class IntegerConverter(Converter):
+class IntegerNode(TypedDict):
+    words: Any
+    sign: str
+    string: str
+
+
+class IntegerConverter(Converter[IntegerType, IntegerNode]):
     tags = [
         "tag:stsci.edu:asdf/core/integer-1.0.0",
         "tag:stsci.edu:asdf/core/integer-1.1.0",
@@ -11,7 +25,7 @@ class IntegerConverter(Converter):
     ]
     types = ["asdf.tags.core.integer.IntegerType"]
 
-    def to_yaml_tree(self, obj, tag, ctx):
+    def to_yaml_tree(self, obj: IntegerType, tag: str, ctx: SerializationContext) -> IntegerNode:
         abs_value = int(np.abs(obj._value))
 
         # pack integer value into 32-bit words
@@ -23,17 +37,11 @@ class IntegerConverter(Converter):
 
         array = np.array(words, dtype=np.uint32)
 
-        tree = {}
         ctx.set_array_storage(array, obj._storage)
-        tree["words"] = array
-        tree["sign"] = obj._sign
-        tree["string"] = str(int(obj._value))
 
-        return tree
+        return {"words": array, "sign": obj._sign, "string": str(int(obj._value))}
 
-    def from_yaml_tree(self, node, tag, ctx):
-        from asdf.tags.core.integer import IntegerType
-
+    def from_yaml_tree(self, node: IntegerNode, tag: str, ctx: SerializationContext) -> IntegerType:
         value = 0
         for x in node["words"][::-1]:
             value <<= 32

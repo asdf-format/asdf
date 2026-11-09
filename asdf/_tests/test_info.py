@@ -8,6 +8,8 @@ import numpy as np
 import pytest
 
 import asdf
+import asdf.extension
+from asdf._node_info import NodeSchemaInfo
 from asdf.extension import ExtensionProxy, ManifestExtension
 from asdf.resource import DirectoryResourceMapping
 
@@ -721,7 +723,7 @@ def test_info_str(capsys):
     ],
 )
 def test_node_property(schema, expected):
-    ni = asdf._node_info.NodeSchemaInfo.from_root_node("title", "root", {}, schema)
+    ni = NodeSchemaInfo.from_root_node("title", "root", {}, schema)
     assert ni.get_schema_for_property("foo") == expected
 
 
@@ -747,7 +749,7 @@ def test_node_property(schema, expected):
     ],
 )
 def test_node_property_error(schema):
-    ni = asdf._node_info.NodeSchemaInfo.from_root_node("title", "root", {}, schema)
+    ni = NodeSchemaInfo.from_root_node("title", "root", {}, schema)
     assert ni.get_schema_for_property("foo") == {}
 
 
@@ -766,7 +768,7 @@ def test_node_property_error(schema):
     ],
 )
 def test_node_info(schema, expected):
-    ni = asdf._node_info.NodeSchemaInfo.from_root_node("title", "root", {}, schema)
+    ni = NodeSchemaInfo.from_root_node("title", "root", {}, schema)
     assert ni.info == expected
 
 

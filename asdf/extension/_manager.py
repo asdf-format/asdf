@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from functools import lru_cache
 from typing import TYPE_CHECKING
 
+from typing_extensions import TypeVar
+
 from asdf.tagged import Tagged
 from asdf.util import get_class_name, uri_match
 
@@ -15,8 +17,10 @@ if TYPE_CHECKING:
     from typing import Any
 
     from asdf.exceptions import ValidationError
-    from asdf.extension import Validator
+    from asdf.extension import ConverterProxy, Extension, ExtensionLike, TagDefinition, Validator
     from asdf.typing import TreeKey
+
+_T_contra = TypeVar("_T_contra", contravariant=True)
 
 
 def _resolve_type(path):
@@ -67,7 +71,7 @@ class ExtensionManager:
         in the list take precedence.
     """
 
-    def __init__(self, extensions):
+    def __init__(self, extensions: Iterable[ExtensionLike]):
         self._extensions = [ExtensionProxy.maybe_wrap(e) for e in extensions]
 
         self._tag_defs_by_tag = {}
@@ -138,7 +142,7 @@ class ExtensionManager:
         self._validator_manager = _get_cached_validator_manager(tuple(validators))
 
     @property
-    def extensions(self):
+    def extensions(self) -> list[ExtensionProxy]:
         """
         Get the list of extensions.
 
@@ -148,7 +152,7 @@ class ExtensionManager:
         """
         return self._extensions
 
-    def handles_tag(self, tag):
+    def handles_tag(self, tag: str) -> bool:
         """
         Return `True` if the specified tag is handled by a
         converter.
@@ -164,7 +168,7 @@ class ExtensionManager:
         """
         return tag in self._converters_by_tag
 
-    def handles_type(self, typ):
+    def handles_type(self, typ: type[Any]) -> bool:
         """
         Returns `True` if the specified Python type is handled
         by a converter.
@@ -182,7 +186,7 @@ class ExtensionManager:
         self._index_converters()
         return typ in self._converters_by_type
 
-    def handles_tag_definition(self, tag):
+    def handles_tag_definition(self, tag: str) -> bool:
         """
         Return `True` if the specified tag has a definition.
 
@@ -197,7 +201,7 @@ class ExtensionManager:
         """
         return tag in self._tag_defs_by_tag
 
-    def get_tag_definition(self, tag):
+    def get_tag_definition(self, tag: str) -> TagDefinition:
         """
         Get the tag definition for the specified tag.
 
@@ -221,7 +225,7 @@ class ExtensionManager:
             msg = f"No support available for YAML tag '{tag}'.  You may need to install a missing extension."
             raise KeyError(msg) from None
 
-    def get_converter_for_tag(self, tag):
+    def get_converter_for_tag(self, tag: str) -> ConverterProxy[Any]:
         """
         Get the converter for the specified tag.
 
@@ -245,7 +249,7 @@ class ExtensionManager:
             msg = f"No support available for YAML tag '{tag}'.  You may need to install a missing extension."
             raise KeyError(msg) from None
 
-    def get_converter_for_type(self, typ):
+    def get_converter_for_type(self, typ: type[_T_contra]) -> ConverterProxy[_T_contra]:
         """
         Get the converter for the specified Python type.
 
@@ -273,7 +277,7 @@ class ExtensionManager:
             )
             raise KeyError(msg) from None
 
-    def _index_converters(self):
+    def _index_converters(self) -> None:
         """
         Search _converters_by_class_path for paths (strings) that
         refer to classes that are currently imported. For imported
@@ -290,11 +294,11 @@ class ExtensionManager:
             del self._converters_by_class_path[class_path]
 
     @property
-    def validator_manager(self):
+    def validator_manager(self) -> ValidatorManager:
         return self._validator_manager
 
 
-def get_cached_extension_manager(extensions):
+def get_cached_extension_manager(extensions: Iterable[ExtensionLike]) -> ExtensionManager:
     """
     Get a previously created ExtensionManager for the specified
     extensions, or create and cache one if necessary.  Building
@@ -309,8 +313,6 @@ def get_cached_extension_manager(extensions):
     -------
     asdf.extension.ExtensionManager
     """
-    from ._extension import ExtensionProxy
-
     # The tuple makes the extensions hashable so that we
     # can pass them to the lru_cache method.  The ExtensionProxy
     # overrides __hash__ to return the hashed object id of the wrapped
@@ -323,7 +325,7 @@ def get_cached_extension_manager(extensions):
 
 
 @lru_cache
-def _get_cached_extension_manager(extensions):
+def _get_cached_extension_manager(extensions: tuple[Extension | ExtensionProxy, ...]) -> ExtensionManager:
     return ExtensionManager(extensions)
 
 
@@ -396,7 +398,7 @@ class JsonSchemaValidators:
                 yield from validator.validate(schema_property_value, node, schema)
 
 
-def _validator_matches(validator, node):
+def _validator_matches(validator: Validator, node: Any) -> bool:
     if any(t == "**" for t in validator.tags):
         return True
 
@@ -407,5 +409,5 @@ def _validator_matches(validator, node):
 
 
 @lru_cache
-def _get_cached_validator_manager(validators):
+def _get_cached_validator_manager(validators: Iterable[Validator]) -> ValidatorManager:
     return ValidatorManager(validators)

@@ -11,62 +11,62 @@ from asdf.resource import ResourceMappingProxy
 
 
 def test_config_context():
-    assert get_config().validate_on_read is True
+    assert get_config().validate_on_read is False
 
     with asdf.config_context() as config:
-        config.validate_on_read = False
-        assert get_config().validate_on_read is False
+        config.validate_on_read = True
+        assert get_config().validate_on_read is True
 
-    assert get_config().validate_on_read is True
+    assert get_config().validate_on_read is False
 
 
 def test_config_context_nested():
-    assert get_config().validate_on_read is True
+    assert get_config().validate_on_read is False
 
     with asdf.config_context() as config1:
-        config1.validate_on_read = False
+        config1.validate_on_read = True
         with asdf.config_context() as config2:
-            config2.validate_on_read = True
+            config2.validate_on_read = False
             with asdf.config_context() as config3:
-                config3.validate_on_read = False
-                assert get_config().validate_on_read is False
+                config3.validate_on_read = True
+                assert get_config().validate_on_read is True
 
-    assert get_config().validate_on_read is True
+    assert get_config().validate_on_read is False
 
 
 def test_config_context_threaded():
-    assert get_config().validate_on_read is True
+    assert get_config().validate_on_read is False
 
-    thread_value = None
+    thread_value: bool | None = None
 
     def worker():
         nonlocal thread_value
         thread_value = get_config().validate_on_read
         with asdf.config_context() as config:
-            config.validate_on_read = False
+            config.validate_on_read = True
 
     with asdf.config_context() as config:
-        config.validate_on_read = False
+        config.validate_on_read = True
         thread = threading.Thread(target=worker)
         thread.start()
         thread.join()
 
-    assert thread_value is True
-    assert get_config().validate_on_read is True
+    assert thread_value is False
+    assert get_config().validate_on_read is False
 
 
 def test_global_config():
+    assert get_config().validate_on_read is False
+
+    get_config().validate_on_read = True
     assert get_config().validate_on_read is True
 
-    get_config().validate_on_read = False
-    assert get_config().validate_on_read is False
-
     with asdf.config_context() as config:
-        assert config.validate_on_read is False
-        config.validate_on_read = True
-        assert get_config().validate_on_read is True
+        assert config.validate_on_read is True
+        config.validate_on_read = False
+        assert get_config().validate_on_read is False
 
-    assert get_config().validate_on_read is False
+    assert get_config().validate_on_read is True
 
     # Global config is reset to defaults by autouse
     # fixture in asdf/_tests/conftest.py.
@@ -215,12 +215,17 @@ def test_resource_mappings():
 
 
 def test_resource_manager():
+    def assert_bytes_in(a: bytes, b: str | bytes) -> None:
+        """Helper function for checking if bytes `a` are in sequence `b` which may be string or bytes"""
+        assert isinstance(b, bytes)
+        assert a in b
+
     with asdf.config_context() as config:
         # Initial resource manager should contain just the entry points resources:
         assert "http://stsci.edu/schemas/asdf/core/asdf-1.1.0" in config.resource_manager
-        assert (
-            b"http://stsci.edu/schemas/asdf/core/asdf-1.1.0"
-            in config.resource_manager["http://stsci.edu/schemas/asdf/core/asdf-1.1.0"]
+        assert_bytes_in(
+            b"http://stsci.edu/schemas/asdf/core/asdf-1.1.0",
+            config.resource_manager["http://stsci.edu/schemas/asdf/core/asdf-1.1.0"],
         )
         assert "http://somewhere.org/schemas/foo-1.0.0" not in config.resource_manager
 
@@ -228,9 +233,9 @@ def test_resource_manager():
         new_mapping = {"http://somewhere.org/schemas/foo-1.0.0": b"foo"}
         config.add_resource_mapping(new_mapping)
         assert "http://stsci.edu/schemas/asdf/core/asdf-1.1.0" in config.resource_manager
-        assert (
-            b"http://stsci.edu/schemas/asdf/core/asdf-1.1.0"
-            in config.resource_manager["http://stsci.edu/schemas/asdf/core/asdf-1.1.0"]
+        assert_bytes_in(
+            b"http://stsci.edu/schemas/asdf/core/asdf-1.1.0",
+            config.resource_manager["http://stsci.edu/schemas/asdf/core/asdf-1.1.0"],
         )
         assert "http://somewhere.org/schemas/foo-1.0.0" in config.resource_manager
         assert config.resource_manager["http://somewhere.org/schemas/foo-1.0.0"] == b"foo"
@@ -238,9 +243,9 @@ def test_resource_manager():
         # Remove a mapping and confirm that the manager no longer contains it:
         config.remove_resource_mapping(new_mapping)
         assert "http://stsci.edu/schemas/asdf/core/asdf-1.1.0" in config.resource_manager
-        assert (
-            b"http://stsci.edu/schemas/asdf/core/asdf-1.1.0"
-            in config.resource_manager["http://stsci.edu/schemas/asdf/core/asdf-1.1.0"]
+        assert_bytes_in(
+            b"http://stsci.edu/schemas/asdf/core/asdf-1.1.0",
+            config.resource_manager["http://stsci.edu/schemas/asdf/core/asdf-1.1.0"],
         )
         assert "http://somewhere.org/schemas/foo-1.0.0" not in config.resource_manager
 
@@ -248,9 +253,9 @@ def test_resource_manager():
         config.add_resource_mapping(new_mapping)
         config.reset_resources()
         assert "http://stsci.edu/schemas/asdf/core/asdf-1.1.0" in config.resource_manager
-        assert (
-            b"http://stsci.edu/schemas/asdf/core/asdf-1.1.0"
-            in config.resource_manager["http://stsci.edu/schemas/asdf/core/asdf-1.1.0"]
+        assert_bytes_in(
+            b"http://stsci.edu/schemas/asdf/core/asdf-1.1.0",
+            config.resource_manager["http://stsci.edu/schemas/asdf/core/asdf-1.1.0"],
         )
         assert "http://somewhere.org/schemas/foo-1.0.0" not in config.resource_manager
 

@@ -5,6 +5,7 @@ from asdf._jsonschema import ValidationError
 __all__ = [
     "AsdfConversionWarning",
     "AsdfDeprecationWarning",
+    "AsdfFutureWarning",
     "AsdfLazyReferenceError",
     "AsdfManifestURIMismatchWarning",
     "AsdfPackageVersionWarning",
@@ -84,3 +85,18 @@ class AsdfSerializationError(RepresenterError):
     that the object does not have a supporting asdf Converter and needs to
     be manually converted to a supported type.
     """
+
+
+class AsdfFutureWarning(AsdfWarning, FutureWarning):
+    """Warning about a future change in ASDF behavior."""
+
+
+class DeprecatedCompressorWarning(AsdfDeprecationWarning):
+    """Warning emitted when a compressor plugin only implements ``compress`` or ``decompress``."""
+
+    def __init__(self):
+        super().__init__(
+            "Compression plugins that only implement compress or decompress are deprecated. "
+            "In the future plugins will be required to implement both methods. "
+            "Consider inheriting from asdf.extension.Compressor."
+        )

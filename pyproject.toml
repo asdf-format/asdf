@@ -2,7 +2,7 @@
 name = "asdf"
 description = "Python implementation of the ASDF Standard"
 readme = "README.rst"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = "BSD-3-Clause"
 license-files = ["LICENSE"]
 authors = [{ name = "The ASDF Developers" }]
@@ -19,7 +19,7 @@ dependencies = [
   "packaging>=19",
   "pyyaml>=6.0",
   "semantic_version>=2.8",
-  "typing-extensions>=4.14",
+  "typing-extensions>=4.16",
 
   # for vendorized jsonschema
   "attrs>=22.2.0",
@@ -31,8 +31,20 @@ dynamic = ["version"]
 all = ["asdf[lz4]", "asdf[http]"]
 http = ["fsspec[http]>=2022.8.2"]
 lz4 = ["lz4>=0.10"]
-tests = ["asdf[all]", "psutil", "pytest>=8", "syrupy>=5.1"]
-typing = ["pyrefly==1.1.1", "types-PyYAML", "types-jmespath", "nox"]
+tests = [
+  "asdf[all]",
+  "psutil",
+  "pytest>=8",
+  "syrupy>=5.1",
+  "scipy>=1.12 ; python_version>='3.12'",
+]
+typing = [
+  "pyrefly==1.4.0",
+  "types-PyYAML",
+  "types-jmespath",
+  "nox",
+  "scipy-stubs",
+]
 
 benchmark = ["asdf[tests]", "pytest-benchmark"]
 test = ["asdf[tests]"]
@@ -162,7 +174,7 @@ exclude_also = [
 ]
 
 [tool.ruff]
-target-version = "py310"
+target-version = "py311"
 line-length = 120
 extend-exclude = ["asdf/_extern/*", "asdf/_jsonschema/*", "docs/*"]
 
@@ -181,6 +193,9 @@ select = [
   "UP",  # pyupgrade
   "RUF",  # ruff specific, includes yesqa
   "TC",  # type-checking
+  "PLE",  # pylint
+  "PGH",  # pygrep-hooks
+  "T100",  # flake-debugger
 ]
 ignore = [
   "S310",  # URL open for permitted schemes
@@ -192,9 +207,6 @@ ignore = [
 "test_*.py" = ["S101"]
 "asdf/_tests/_helpers.py" = ["S101"]
 "integration_tests/compatibility/common.py" = ["S101"]
-
-[tool.flynt]
-exclude = ["asdf/_extern/*", "asdf/_jsonschema/*"]
 
 [tool.codespell]
 skip = "*.pdf,*.asdf,asdf/_extern,asdf/_jsonschema,build,./tags,.git,docs/_build"

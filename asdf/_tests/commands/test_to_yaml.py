@@ -20,7 +20,7 @@ def test_to_yaml(tmp_path):
     ff = AsdfFile(tree)
     ff.write_to(path)
     with asdf.open(path) as ff2:
-        assert len(ff2._blocks.blocks) == 2
+        assert len(ff2._blocks.blocks) == 4
 
     result = main.main_from_args(["to_yaml", str(path)])
 

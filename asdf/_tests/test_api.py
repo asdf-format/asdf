@@ -15,6 +15,7 @@ from asdf import config_context, get_config, treeutil, versioning
 from asdf.exceptions import AsdfPackageVersionWarning, ValidationError
 from asdf.extension import ExtensionProxy
 from asdf.resource import ResourceMappingProxy
+from asdf.tags.core import ExtensionMetadata, Software
 from asdf.testing.helpers import roundtrip_object, yaml_to_asdf
 
 from ._helpers import assert_tree_match
@@ -86,25 +87,6 @@ invalid_software: !core/software-1.0.0
     with asdf.open(buff) as af:
         assert af["invalid_software"]["name"] == "Minesweeper"
         assert af["invalid_software"]["version"] == 3
-
-
-def test_open_stream(tmp_path):
-    file_path = tmp_path / "test.asdf"
-
-    with asdf.AsdfFile() as af:
-        af["foo"] = "bar"
-        af.write_to(file_path)
-
-    class StreamWrapper:
-        def __init__(self, fd):
-            self._fd = fd
-
-        def read(self, size=-1):
-            return self._fd.read(size)
-
-    with pytest.deprecated_call():
-        with file_path.open("rb") as fd, asdf.open(StreamWrapper(fd)) as af:
-            assert af["foo"] == "bar"
 
 
 def test_atomic_write(tmp_path, small_tree):
@@ -242,7 +224,7 @@ def test_access_tree_outside_handler(tmp_path):
     tree = {"random": np.random.random(10)}
 
     ff = asdf.AsdfFile(tree)
-    ff.write_to(str(tempname))
+    ff.write_to(tempname)
 
     with asdf.open(tempname) as newf:
         pass
@@ -266,7 +248,7 @@ def test_context_handler_resolve_and_inline(tmp_path):
     tree = {"random": np.random.random(10)}
 
     ff = asdf.AsdfFile(tree)
-    ff.write_to(str(tempname))
+    ff.write_to(tempname)
 
     with asdf.open(tempname) as newf:
         newf.resolve_references()
@@ -313,10 +295,10 @@ def test_extension_version_check(installed, extension, warns, strict, with_lazy_
         {
             "history": {
                 "extensions": [
-                    asdf.tags.core.ExtensionMetadata(
+                    ExtensionMetadata(
                         extension_class="something",
                         extension_uri=FooExtension.extension_uri,
-                        software=asdf.tags.core.Software(name="foo", version=extension),
+                        software=Software(name="foo", version=extension),
                     ),
                 ],
             },
@@ -366,10 +348,10 @@ def test_check_extension_manifest_software(installed, extension, warns):
         tree = {
             "history": {
                 "extensions": [
-                    asdf.tags.core.ExtensionMetadata(
+                    ExtensionMetadata(
                         extension_uri=FooExtension.extension_uri,
-                        software=asdf.tags.core.Software(name="foo", version="1.0.0"),
-                        manifest_software=asdf.tags.core.Software(name="bar", version=extension),
+                        software=Software(name="foo", version="1.0.0"),
+                        manifest_software=Software(name="bar", version=extension),
                     ),
                 ],
             },
@@ -398,9 +380,9 @@ def test_extension_check_no_warning_on_builtin():
     tree = {
         "history": {
             "extensions": [
-                asdf.tags.core.ExtensionMetadata(
+                ExtensionMetadata(
                     extension_class="asdf.extension.BuiltinExtension",
-                    software=asdf.tags.core.Software(name="asdf", version="2.15.1"),
+                    software=Software(name="asdf", version="2.15.1"),
                 ),
             ],
         },

@@ -11,7 +11,6 @@ import weakref
 from typing import TYPE_CHECKING, overload
 
 from packaging.version import Version
-from typing_extensions import Reader, Writer, deprecated
 
 from . import _compression as mcompression
 from . import _display as display
@@ -35,20 +34,17 @@ if TYPE_CHECKING:
     from collections.abc import Mapping, MutableMapping, Sequence
     from typing import Any
 
-    from asdf.extension import ExtensionManager, SerializationContext
+    from asdf.extension import ExtensionLike, ExtensionManager, SerializationContext
     from asdf.generic_io import GenericFile
     from asdf.tagged import Tagged
     from asdf.typing import (
         ArrayStorage,
         AsdfVersionLike,
         Compression,
-        ExtensionLike,
         FileLike,
         FileMode,
         FilterFn,
         NDArray,
-        NotSetType,
-        PathLike,
         TreeKey,
     )
 
@@ -329,7 +325,7 @@ class AsdfFile:
                 package_description = f"{package_name}=={package_version}"
                 installed_version = None
                 for mapping in get_config().resource_manager._resource_mappings:
-                    if mapping.package_name == package_name:
+                    if mapping.package_name == package_name and mapping.package_version is not None:
                         installed_version = Version(mapping.package_version)
                         break
                 msg = None
@@ -490,14 +486,17 @@ class AsdfFile:
         self._external_asdf_by_uri.clear()
         self._blocks.close()
 
-    def copy(self) -> AsdfFile:
+    def __deepcopy__(self, memo):
         return self.__class__(
-            copy.deepcopy(self._tree),
+            copy.deepcopy(self._tree, memo),
             self._blocks._uri,
             self._user_extensions,
         )
 
-    __copy__ = __deepcopy__ = copy
+    def copy(self) -> AsdfFile:
+        return copy.deepcopy(self)
+
+    __copy__ = copy
 
     @property
     def uri(self) -> str | None:
@@ -826,9 +825,9 @@ class AsdfFile:
 
     def update(
         self,
-        all_array_storage: ArrayStorage | NotSetType = NOT_SET,
-        all_array_compression: Compression | NotSetType = NOT_SET,
-        compression_kwargs: dict[str, Any] | NotSetType = NOT_SET,
+        all_array_storage: ArrayStorage | NOT_SET = NOT_SET,
+        all_array_compression: Compression | NOT_SET = NOT_SET,
+        compression_kwargs: dict[str, Any] | NOT_SET = NOT_SET,
         pad_blocks: bool | float = False,
         include_block_index: bool = True,
         version: str | None = None,
@@ -965,38 +964,12 @@ class AsdfFile:
             if fd.can_memmap():
                 fd.close_memmap()
 
-    @overload
-    def write_to(
-        self,
-        fd: PathLike | io.IOBase | GenericFile,
-        all_array_storage: ArrayStorage | NotSetType = ...,
-        all_array_compression: Compression | NotSetType = ...,
-        compression_kwargs: dict[str, Any] | NotSetType = ...,
-        pad_blocks: bool | float = ...,
-        include_block_index: bool = ...,
-        version: str | None = ...,
-        write_checksums: bool = ...,
-    ) -> None: ...
-    @overload
-    @deprecated("Duck-typed file objects are deprecated. Use an instance of IOBase instead.")
-    def write_to(
-        self,
-        fd: Reader | Writer,
-        all_array_storage: ArrayStorage | NotSetType = ...,
-        all_array_compression: Compression | NotSetType = ...,
-        compression_kwargs: dict[str, Any] | NotSetType = ...,
-        pad_blocks: bool | float = ...,
-        include_block_index: bool = ...,
-        version: str | None = ...,
-        write_checksums: bool = ...,
-    ) -> None: ...
-
     def write_to(
         self,
         fd: FileLike,
-        all_array_storage: ArrayStorage | NotSetType = NOT_SET,
-        all_array_compression: Compression | NotSetType = NOT_SET,
-        compression_kwargs: dict[str, Any] | NotSetType = NOT_SET,
+        all_array_storage: ArrayStorage | NOT_SET = NOT_SET,
+        all_array_compression: Compression | NOT_SET = NOT_SET,
+        compression_kwargs: dict[str, Any] | NOT_SET = NOT_SET,
         pad_blocks: bool | float = False,
         include_block_index: bool = True,
         version: str | None = None,
@@ -1152,9 +1125,7 @@ class AsdfFile:
         elif software is not None:
             software = Software(software)
 
-        time_ = datetime.datetime.fromtimestamp(
-            int(os.environ.get("SOURCE_DATE_EPOCH", time.time())), datetime.timezone.utc
-        )
+        time_ = datetime.datetime.fromtimestamp(int(os.environ.get("SOURCE_DATE_EPOCH", time.time())), datetime.UTC)
 
         entry = HistoryEntry(
             {
@@ -1312,9 +1283,9 @@ class AsdfFile:
 
     def search(
         self,
-        key: str | Any | NotSetType = NOT_SET,
-        type_: str | type | NotSetType = NOT_SET,
-        value: str | Any | NotSetType = NOT_SET,
+        key: str | Any | NOT_SET = NOT_SET,
+        type_: str | type | NOT_SET = NOT_SET,
+        value: str | Any | NOT_SET = NOT_SET,
         filter_: FilterFn | None = None,
     ) -> AsdfSearchResult:
         """
@@ -1367,41 +1338,6 @@ class AsdfFile:
         return _serialization_context.create(self, operation)
 
 
-@overload
-def open_asdf(
-    fd: PathLike | io.IOBase | GenericFile,
-    uri: str | None = ...,
-    mode: FileMode | None = ...,
-    validate_checksums: bool = ...,
-    extensions: ExtensionLike | Sequence[ExtensionLike] | None = ...,
-    ignore_unrecognized_tag: bool = ...,
-    _force_raw_types: bool = ...,
-    memmap: bool = ...,
-    lazy_tree: bool | NotSetType = ...,
-    lazy_load: bool = ...,
-    custom_schema: str | None = ...,
-    strict_extension_check: bool = ...,
-    ignore_missing_extensions: bool = ...,
-) -> AsdfFile: ...
-@overload
-@deprecated("Duck-typed file objects are deprecated. Use an instance of IOBase instead.")
-def open_asdf(
-    fd: Reader | Writer,
-    uri: str | None = ...,
-    mode: FileMode | None = ...,
-    validate_checksums: bool = ...,
-    extensions: ExtensionLike | Sequence[ExtensionLike] | None = ...,
-    ignore_unrecognized_tag: bool = ...,
-    _force_raw_types: bool = ...,
-    memmap: bool = ...,
-    lazy_tree: bool | NotSetType = ...,
-    lazy_load: bool = ...,
-    custom_schema: str | None = ...,
-    strict_extension_check: bool = ...,
-    ignore_missing_extensions: bool = ...,
-) -> AsdfFile: ...
-
-
 def open_asdf(
     fd: FileLike,
     uri: str | None = None,
@@ -1411,7 +1347,7 @@ def open_asdf(
     ignore_unrecognized_tag: bool = False,
     _force_raw_types: bool = False,
     memmap: bool = False,
-    lazy_tree: bool | NotSetType = NOT_SET,
+    lazy_tree: bool | NOT_SET = NOT_SET,
     lazy_load: bool = True,
     custom_schema: str | None = None,
     strict_extension_check: bool = False,

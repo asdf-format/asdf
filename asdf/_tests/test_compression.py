@@ -213,10 +213,10 @@ class LzmaCompressor(Compressor):
         comp = lzma.compress(data, **kwargs)
         yield comp
 
-    def decompress(self, blocks, out, **kwargs):
+    def decompress(self, data, out, **kwargs):
         decompressor = lzma.LZMADecompressor(**kwargs)
         i = 0
-        for block in blocks:
+        for block in data:
             decomp = decompressor.decompress(block)
             out[i : i + len(decomp)] = decomp
             i += len(decomp)

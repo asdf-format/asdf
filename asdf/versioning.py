@@ -3,6 +3,8 @@ This module deals with things that change between different versions
 of the ASDF spec.
 """
 
+from __future__ import annotations
+
 from functools import total_ordering
 
 import yaml
@@ -22,7 +24,7 @@ _yaml_base_loader = yaml.CSafeLoader if getattr(yaml, "__with_libyaml__", None) 
 __all__ = ["AsdfVersion", "AsdfVersionMixin", "join_tag_version", "split_tag_version"]
 
 
-def split_tag_version(tag):
+def split_tag_version(tag: str) -> tuple[str, AsdfVersion]:
     """
     Split a tag into its base and version.
     """
@@ -31,7 +33,7 @@ def split_tag_version(tag):
     return name, version
 
 
-def join_tag_version(name, version):
+def join_tag_version(name: str, version: str) -> str:
     """
     Join the root and version of a tag back together.
     """
@@ -91,9 +93,11 @@ class AsdfVersion(AsdfVersionMixin, Version):
         super().__init__(version)
 
 
-supported_versions = tuple(AsdfVersion(version) for version in get_supported_core_schema_versions())
+supported_versions: tuple[AsdfVersion, ...] = tuple(
+    AsdfVersion(version) for version in get_supported_core_schema_versions()
+)
 
-default_version = supported_versions[-1]
+default_version: AsdfVersion = supported_versions[-1]
 
 # This is the ASDF core schemas version at which the format of the history
 # field changed to include extension metadata.

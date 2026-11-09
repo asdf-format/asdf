@@ -1,8 +1,20 @@
+from __future__ import annotations
+
 import re
-from collections import namedtuple
+import typing
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any
+
+from typing_extensions import NamedTuple
 
 from .schema import load_schema
 from .treeutil import get_children, is_container
+
+if TYPE_CHECKING:
+    from collections.abc import Collection, Mapping
+
+    from asdf.extension import ExtensionManager
+    from asdf.typing import FilterFn, TreeKey
 
 
 def _filter_tree(info, filters):
@@ -138,7 +150,13 @@ def _get_schema_key(schema, key):
     return None
 
 
-def create_tree(key, node, identifier="root", filters=None, extension_manager=None):
+def create_tree(
+    key: str,
+    node: Mapping[TreeKey, Any],
+    identifier: str = "root",
+    filters: Collection[FilterFn] | None = None,
+    extension_manager: ExtensionManager | None = None,
+) -> NodeSchemaInfo | None:
     """
     Create a `NodeSchemaInfo` tree which can be filtered from a base node.
 
@@ -169,13 +187,13 @@ def create_tree(key, node, identifier="root", filters=None, extension_manager=No
 
 
 def collect_schema_info(
-    key,
-    path,
-    node,
-    identifier="root",
-    filters=None,
-    preserve_list=True,
-    extension_manager=None,
+    key: str,
+    path: str | None,
+    node: Any,
+    identifier: str = "root",
+    filters: Collection[FilterFn] | None = None,
+    preserve_list: bool = True,
+    extension_manager: ExtensionManager | None = None,
 ):
     """
     Collect from the underlying schemas any of the info stored under key, relative to the path
@@ -202,6 +220,8 @@ def collect_schema_info(
         filters=[] if filters is None else filters,
         extension_manager=extension_manager,
     )
+    if schema_info is None:
+        return None
 
     info = schema_info.collect_info(preserve_list=preserve_list)
 
@@ -231,10 +251,7 @@ def _make_traversable(node, extension_manager):
     return extension_manager.get_converter_for_type(node_type).to_info(node), False, True
 
 
-_SchemaInfo = namedtuple("SchemaInfo", ["info", "value"])
-
-
-class SchemaInfo(_SchemaInfo):
+class SchemaInfo(NamedTuple):
     """
     A class to hold the schema info and the value of the node.
 
@@ -246,10 +263,14 @@ class SchemaInfo(_SchemaInfo):
         The value of the node.
     """
 
+    info: dict[TreeKey, Any]
+    value: Any
+
     def __repr__(self):
         return f"{self.info}"
 
 
+@dataclass
 class NodeSchemaInfo:
     """
     Container for keyed information collected from a schema about a node of an ASDF file tree.
@@ -295,24 +316,23 @@ class NodeSchemaInfo:
         The portion of the underlying schema corresponding to the node.
     """
 
-    def __init__(self, key, parent, identifier, node, depth, recursive=False, visible=True, extension_manager=None):
-        self.key = key
-        self.parent = parent
-        self.identifier = identifier
-        self.node = node
-        self.depth = depth
-        self.recursive = recursive
-        self.visible = visible
-        self.children = []
-        self.schema = None
-        self.extension_manager = extension_manager or _get_extension_manager()
+    key: str
+    parent: NodeSchemaInfo | None
+    identifier: str | int
+    node: Any
+    depth: int
+    recursive: bool = False
+    visible: bool = True
+    extension_manager: ExtensionManager = field(default_factory=_get_extension_manager)
+    children: list[NodeSchemaInfo] = field(default_factory=list, init=False)
+    schema: Mapping[TreeKey, Any] | None = field(default=None, init=False)
 
     @property
-    def visible_children(self):
+    def visible_children(self) -> list[NodeSchemaInfo]:
         return [c for c in self.children if c.visible]
 
     @property
-    def parent_node(self):
+    def parent_node(self) -> Any | None:
         if self.parent is not None:
             return self.parent.node
 
@@ -342,7 +362,14 @@ class NodeSchemaInfo:
         self.schema = schema
 
     @classmethod
-    def from_root_node(cls, key, root_identifier, root_node, schema=None, extension_manager=None):
+    def from_root_node(
+        cls,
+        key: str,
+        root_identifier: str,
+        root_node: Any,
+        schema: Mapping[TreeKey, Any] | None = None,
+        extension_manager: ExtensionManager | None = None,
+    ):
         """
         Build a NodeSchemaInfo tree from the given ASDF root node.
         Intentionally processes the tree in breadth-first order so that recursively
@@ -424,7 +451,7 @@ class NodeSchemaInfo:
 
         return root_info
 
-    def collect_info(self, preserve_list=True):
+    def collect_info(self, preserve_list: bool = True) -> dict[str, Any]:
         """
         Collect the information from the NodeSchemaInfo tree, and return it as nested dict.
 
@@ -434,16 +461,20 @@ class NodeSchemaInfo:
         preserve_list : bool
             If True, then lists are preserved. Otherwise, they are turned into dicts.
         """
-        if preserve_list and isinstance(self.node, (list, tuple)) and self.info is None:
-            info = [c_info for child in self.visible_children if len(c_info := child.collect_info(preserve_list)) > 0]
-        else:
-            info = {
-                child.identifier: c_info
-                for child in self.visible_children
-                if len(c_info := child.collect_info(preserve_list)) > 0
-            }
+        # The root node can't be a list but this is hard to encode in the type system
+        return typing.cast("dict[str, Any]", self._collect_info(preserve_list))
 
-            if self.info is not None:
-                info[self.key] = SchemaInfo(self.info, self.node)
+    def _collect_info(self, preserve_list: bool = True) -> dict[str | int, Any] | list[Any]:
+        if preserve_list and isinstance(self.node, (list, tuple)) and self.info is None:
+            return [c_info for child in self.visible_children if len(c_info := child.collect_info(preserve_list)) > 0]
+
+        info: dict[str | int, Any] = {
+            child.identifier: c_info
+            for child in self.visible_children
+            if len(c_info := child.collect_info(preserve_list)) > 0
+        }
+
+        if self.info is not None:
+            info[self.key] = SchemaInfo(self.info, self.node)
 
         return info

@@ -23,7 +23,7 @@ def test_explode_then_implode(tmp_path):
     # inline.
     ff.write_to(path, all_array_storage="internal")
     with asdf.open(path) as af:
-        assert len(af._blocks.blocks) == 2
+        assert len(af._blocks.blocks) == 4
 
     result = main.main_from_args(["explode", str(path)])
 
@@ -33,9 +33,9 @@ def test_explode_then_implode(tmp_path):
 
     assert "original.asdf" in files
     assert "original_exploded.asdf" in files
-    assert "original_exploded0000.asdf" in files
-    assert "original_exploded0001.asdf" in files
-    assert "original_exploded0002.asdf" not in files
+    for i in range(4):
+        assert f"original_exploded000{i}.asdf" in files
+    assert "original_exploded0005.asdf" not in files
 
     # compare file sizes of original and exploded files
     original_size = (tmp_path / "original.asdf").stat().st_size
@@ -49,7 +49,7 @@ def test_explode_then_implode(tmp_path):
 
     with asdf.open(tmp_path / "original_exploded_all.asdf") as af:
         assert_tree_match(af.tree, tree)
-        assert len(af._blocks.blocks) == 2
+        assert len(af._blocks.blocks) == 4
 
 
 def test_file_not_found(tmp_path):

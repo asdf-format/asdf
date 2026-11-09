@@ -534,8 +534,7 @@ foo : bar
     assert len(ff._blocks.blocks) == 1
 
     buff.seek(0)
-    fd = generic_io.InputStream(buff, "r")
-    ff = asdf.open(fd)
+    ff = asdf.open(buff)
     assert len(ff._blocks.blocks) == 1
 
 
@@ -922,21 +921,18 @@ def test_remove_blocks(tmp_path, lazy_load, memmap):
         af.write_to(fn1)
 
         with asdf.open(fn1, lazy_load=lazy_load, memmap=memmap, mode="rw") as af:
-            assert len(af._blocks.blocks) == 2
+            assert len(af._blocks.blocks) == 3
             af[key] = None
             af.write_to(fn2)
 
         with asdf.open(fn1, lazy_load=lazy_load, memmap=memmap, mode="rw") as af:
-            assert len(af._blocks.blocks) == 2
+            assert len(af._blocks.blocks) == 3
             af[key] = None
             af.update()
 
         for fn in (fn1, fn2):
             with asdf.open(fn) as af:
-                if key == "a":
-                    assert len(af._blocks.blocks) == 1
-                else:
-                    assert len(af._blocks.blocks) == 2
+                assert len(af._blocks.blocks) == 2
                 for key2 in tree:
                     if key == key2:
                         continue
@@ -958,7 +954,7 @@ def test_open_memmap_from_closed_file(tmp_path):
         view = af["view"]
         base2 = af["base2"]
 
-    msg = r"ASDF file has already been closed. Can not get the data."
+    msg = r"Attempt to load block from closed file"
     with pytest.raises(OSError, match=msg):
         view[:]
 

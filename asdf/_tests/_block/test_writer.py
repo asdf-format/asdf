@@ -15,6 +15,7 @@ from asdf._block import reader, writer
 def test_write_blocks(tmp_path, lazy, index, padding, compression, stream, seekable):
     data = [np.ones(10, dtype=np.uint8), np.zeros(5, dtype=np.uint8), None]
     if lazy:
+        # pyrefly: ignore [bad-argument-type]
         blocks = [writer.WriteBlock(lambda bd=d: bd, compression=compression) for d in data]
     else:
         blocks = [writer.WriteBlock(d, compression=compression) for d in data]

@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 
 import asdf
+import asdf.tagged
 from asdf import generic_io, util
 
 
@@ -78,20 +79,6 @@ def test_get_file_type(content, expected_type):
     fd = generic_io.get_file(io.BytesIO(content))
     assert util.get_file_type(fd) == expected_type
     # Confirm that no content was lost
-    assert fd.read() == content
-
-    # We've historically had a problem detecting file type
-    # of generic_io.InputStream:
-    class OnlyHasAReadMethod:
-        def __init__(self, content):
-            self._fd = io.BytesIO(content)
-
-        def read(self, size=-1):
-            return self._fd.read(size)
-
-    with pytest.deprecated_call():
-        fd = generic_io.get_file(OnlyHasAReadMethod(content))
-    assert util.get_file_type(fd) == expected_type
     assert fd.read() == content
 
 

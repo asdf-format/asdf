@@ -10,13 +10,13 @@ the block manager to have a reference to the `AsdfFile`
 
 from __future__ import annotations
 
-import enum
 import os
 import urllib
 import urllib.request
-from typing import TYPE_CHECKING, Final, Literal
+from typing import TYPE_CHECKING
 
 import numpy as np
+from typing_extensions import sentinel
 
 from asdf import generic_io, util
 
@@ -24,17 +24,7 @@ if TYPE_CHECKING:
     from asdf.typing import ByteArray1D
 
 
-class _USE_INTERNAL_TYPE(enum.Enum):
-    USE_INTERNAL = "UseInternal"
-
-    def __repr__(self) -> str:
-        return str(self.value)
-
-
-USE_INTERNAL: Final = _USE_INTERNAL_TYPE.USE_INTERNAL
-
-#: Type corresponding to ``USE_INTERNAL`` value for use in type-checking
-UseInternal: Final = Literal[_USE_INTERNAL_TYPE.USE_INTERNAL]
+USE_INTERNAL = sentinel("USE_INTERNAL", repr="UseInternal")
 
 
 class ExternalBlockCache:
@@ -43,7 +33,7 @@ class ExternalBlockCache:
 
     def load(
         self, base_uri: str | None, uri: str, memmap: bool = False, validate_checksums: bool = False
-    ) -> ByteArray1D | UseInternal:
+    ) -> ByteArray1D | USE_INTERNAL:
         key = util.get_base_uri(uri)
         if key not in self._cache:
             resolved_uri = generic_io.resolve_uri(base_uri, uri)

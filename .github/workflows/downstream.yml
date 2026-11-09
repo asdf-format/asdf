@@ -34,7 +34,7 @@ jobs:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         persist-credentials: false
-    - uses: wntrblm/nox@3284968a16fa5bd7fc0cc64a69a531404ccb4756 # 2026.07.11
+    - uses: wntrblm/nox@afa3983bbac3143bab5c8406244327581f76a3d7 # 2026.10.20
     - id: set-matrix
       shell: bash
       run: echo session=$(nox --json -l -t downstream | jq -c '[.[].session]') | tee --append $GITHUB_OUTPUT
@@ -52,8 +52,8 @@ jobs:
           # Need tags for dynamic versioning
           fetch-depth: 0
           persist-credentials: false
-    - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0 # zizmor: ignore[cache-poisoning] this workflow doesn't publish any artifacts
-    - uses: wntrblm/nox@3284968a16fa5bd7fc0cc64a69a531404ccb4756 # 2026.07.11
+    - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v9.0.0 # zizmor: ignore[cache-poisoning] this workflow doesn't publish any artifacts
+    - uses: wntrblm/nox@afa3983bbac3143bab5c8406244327581f76a3d7 # 2026.10.20
     - run: nox -v -s "${MATRIX_SESSION}"
       env:
         MATRIX_SESSION: ${{ matrix.session }}

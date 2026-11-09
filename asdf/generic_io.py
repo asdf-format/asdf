@@ -16,13 +16,12 @@ import pathlib
 import re
 import sys
 import typing
-import warnings
 from os import SEEK_CUR, SEEK_END, SEEK_SET
-from typing import TYPE_CHECKING, overload
+from typing import TYPE_CHECKING, cast
 from urllib.request import url2pathname
 
 import numpy as np
-from typing_extensions import Reader, Writer, deprecated
+from typing_extensions import Reader
 
 from ._extern import atomicfile
 from .exceptions import DelimiterNotFoundError
@@ -33,7 +32,7 @@ if TYPE_CHECKING:
 
     from fsspec.core import OpenFile
 
-    from asdf.typing import ByteArray1D, FileLike, FileMode, PathLike, Reader
+    from asdf.typing import ByteArray1D, FileLike, FileMode
 
 __all__ = ["GenericFile", "get_file", "get_uri", "relative_uri", "resolve_uri"]
 
@@ -879,97 +878,6 @@ class MemoryIO(RandomAccessFile):
         return result
 
 
-class InputStream(GenericFile):
-    """
-    Handles an input stream, such as stdin.
-    """
-
-    def __init__(self, fd, mode: FileMode = "r", close: bool = False, uri: str | None = None):
-        super().__init__(fd, mode, close=close, uri=uri)
-        self._fd = fd
-        self._buffer = b""
-
-    def peek(self, size=-1):
-        if size < 0:
-            self._buffer += self._fd.read()
-        else:
-            len_buffer = len(self._buffer)
-            if len_buffer < size:
-                self._buffer += self._fd.read(size - len_buffer)
-        return self._buffer
-
-    def read(self, size=-1):
-        # On Python 3, reading 0 bytes from a socket causes it to stop
-        # working, so avoid doing that at all costs.
-        if size == 0:
-            return b""
-
-        len_buffer = len(self._buffer)
-        if len_buffer == 0:
-            return self._fd.read(size)
-
-        if size < 0:
-            self._buffer += self._fd.read()
-            buffer = self._buffer
-            self._buffer = b""
-
-            return buffer
-
-        if len_buffer < size:
-            if len_buffer < size:
-                self._buffer += self._fd.read(size - len(self._buffer))
-
-            buffer = self._buffer
-            self._buffer = b""
-
-            return buffer
-
-        buffer = self._buffer[:size]
-        self._buffer = self._buffer[size:]
-
-        return buffer
-
-    def reader_until(
-        self,
-        delimiter,
-        readahead_bytes,
-        delimiter_name=None,
-        include=True,
-        initial_content=b"",
-        exception=True,
-    ):
-        return _TruncatedReader(
-            self,
-            delimiter,
-            readahead_bytes,
-            delimiter_name=delimiter_name,
-            include=include,
-            initial_content=initial_content,
-            exception=exception,
-        )
-
-    def fast_forward(self, size):
-        if size >= 0 and len(self.read(size)) != size:
-            msg = "Read past end of file"
-            raise OSError(msg)
-
-    def read_into_array(self, size):
-        try:
-            # See if Numpy can handle this as a real file first...
-            return np.fromfile(self._fd, np.uint8, size)
-        except (OSError, AttributeError):
-            # Else, fall back to reading into memory and then
-            # returning the Numpy array.
-            data = self.read(size)
-            # We need to copy the array, so it is writable
-            result = np.frombuffer(data, np.uint8, size)
-            # When creating an array from a buffer, it is read-only.
-            # If we need a read/write array, we have to copy it.
-            if "w" in self._mode:
-                result = result.copy()
-            return result
-
-
 class OutputStream(GenericFile):
     """
     Handles an output stream, such as stdout.
@@ -1002,23 +910,6 @@ def get_uri(file_obj):
     return getattr(file_obj, "name", "")
 
 
-@overload
-def get_file(
-    init: PathLike | io.IOBase | GenericFile,
-    mode: FileMode = ...,
-    uri: str | None = ...,
-    close: bool = ...,
-) -> GenericFile: ...
-@overload
-@deprecated("Duck-typed file objects are deprecated. Use an instance of IOBase instead.")
-def get_file(
-    init: Reader | Writer,
-    mode: FileMode = ...,
-    uri: str | None = ...,
-    close: bool = ...,
-) -> GenericFile: ...
-
-
 def get_file(
     init: FileLike,
     mode: FileMode = "r",
@@ -1040,17 +931,7 @@ def get_file(
 
         - A ``bytes`` or ``unicode`` file path or ``file:`` or ``http:``
           url.
-
-        - A Python 2 ``file`` object.
-
         - An `io.IOBase` object (the default file object on Python 3).
-
-        - A ducktyped object that looks like a file object.  If ``mode``
-          is ``"r"``, it must have a ``read`` method.  If ``mode`` is
-          ``"w"``, it must have a ``write`` method.  If ``mode`` is
-          ``"rw"`` it must have the ``read``, ``write``, ``tell`` and
-          ``seek`` methods.
-
         - A `GenericFile` instance, in which case it is wrapped in a
           ``GenericWrapper`` instance, so that the file is closed when
           only when the final layer is unwrapped.
@@ -1083,7 +964,7 @@ def get_file(
         raise ValueError(msg)
 
     if isinstance(init, io.TextIOWrapper) and init in (sys.__stdout__, sys.__stdin__, sys.__stderr__):
-        init = os.fdopen(init.fileno(), init.mode + "b")
+        init = cast("io.IOBase", os.fdopen(init.fileno(), init.mode + "b"))
 
     if isinstance(init, (GenericFile, GenericWrapper)):
         if mode not in init.mode:
@@ -1134,86 +1015,55 @@ def get_file(
         try:
             import fsspec
         except ImportError:
-            fsspec = None
+            msg = f"Unable to open file URI {init}. Try installing fsspec."
+            raise ValueError(msg)
 
-        if fsspec:
-            # Cast because fsspec doesn't have type hints
-            fd = typing.cast("OpenFile", fsspec.open(init, realmode))
-            try:
-                fd = fd.__enter__()
-            except NotImplementedError as err:
-                msg = f"Unable to open {init} with mode {mode}"
-                raise ValueError(msg) from err
-            return get_file(fd, uri=str(uri or init), close=True)
+        # Cast because fsspec doesn't have type hints
+        fd = typing.cast("OpenFile", fsspec.open(init, realmode))
+        try:
+            fd = fd.__enter__()
+        except NotImplementedError as err:
+            msg = f"Unable to open {init} with mode {mode}"
+            raise ValueError(msg) from err
+        return get_file(fd, uri=str(uri or init), close=True)
 
     if isinstance(init, io.BytesIO):
         return MemoryIO(init, mode, uri=uri)
 
+    # This check isn't strictly necessary but does provide more specific errors
     if isinstance(init, io.StringIO):
         msg = "io.StringIO objects are not supported.  Use io.BytesIO instead."
         raise TypeError(msg)
 
     if not isinstance(init, io.IOBase):
-        # Only generate a warning if its an actual duck-typed file.
-        # If its just a random object it will raise a ValueError below anyway.
-        if hasattr(init, "read") or hasattr(init, "write"):
-            warnings.warn(
-                "Duck-typed file objects are deprecated. Use an instance of IOBase instead.",
-                DeprecationWarning,
-            )
-    elif not init.seekable() and mode != "w":
-        warnings.warn(
-            (
-                "Reading from non-seekable files is deprecated. "
-                "Consider implementing seek() or reading the file into a BytesIO instance."
-            ),
-            DeprecationWarning,
-        )
+        msg = f"Expected file object that implements IOBase, got instance of {type(init).__name__}"
+        raise TypeError(msg)
 
-    if isinstance(init, io.IOBase):
-        if ("r" in mode and not init.readable()) or ("w" in mode and not init.writable()):
-            msg = f"File is opened as '{init.mode}', but '{mode}' was requested"
-            raise ValueError(msg)
+    if ("r" in mode and not init.readable()) or ("w" in mode and not init.writable()):
+        fmode = getattr(init, "mode", ("r" * init.readable()) + ("w" * init.writable()))
+        msg = f"File is opened as '{fmode}', but '{mode}' was requested"
+        raise ValueError(msg)
 
-        if init.seekable():
-            init2 = init.raw if hasattr(init, "raw") else init
-
-            if hasattr(init2, "getvalue"):
-                return MemoryIO(init2, mode, uri=uri, inner_fd=init)
-
-            # can we call 'fileno'? if not, we can't memmap so don't
-            # make a RealFile
-            try:
-                init2.fileno()
-                return RealFile(init2, mode, uri=uri, close=close, inner_fd=init)
-            except io.UnsupportedOperation:
-                return RandomAccessFile(init2, mode, uri=uri, close=close, inner_fd=init)
-
+    if not init.seekable():
         if mode == "w":
             return OutputStream(init, uri=uri, close=close)
 
-        if mode == "r":
-            return InputStream(init, mode, uri=uri, close=close)
-
-        msg = f"File '{init}' could not be opened in 'rw' mode"
+        msg = (
+            "Cannot read from non-seekable file. "
+            "Consider implementing seek() or reading the file into a BytesIO instance."
+        )
         raise ValueError(msg)
 
-    if mode == "w" and (hasattr(init, "write") and hasattr(init, "seek") and hasattr(init, "tell")):
-        return MemoryIO(init, mode, uri=uri)
+    ### At this point the file is seekable and mode is r or rw ###
 
-    if mode == "r" and (hasattr(init, "read") and hasattr(init, "seek") and hasattr(init, "tell")):
-        return MemoryIO(init, mode, uri=uri)
+    init2 = init.raw if hasattr(init, "raw") else init
+    if hasattr(init2, "getvalue"):
+        return MemoryIO(init2, mode, uri=uri, inner_fd=init)
 
-    if mode == "rw" and (
-        hasattr(init, "read") and hasattr(init, "write") and hasattr(init, "seek") and hasattr(init, "tell")
-    ):
-        return MemoryIO(init, mode, uri=uri)
-
-    if mode == "w" and hasattr(init, "write"):
-        return OutputStream(init, uri=uri, close=close)
-
-    if mode == "r" and hasattr(init, "read"):
-        return InputStream(init, mode, uri=uri, close=close)
-
-    msg = f"Can't handle '{init}' as a file for mode '{mode}'"
-    raise ValueError(msg)
+    # can we call 'fileno'? if not, we can't memmap so don't
+    # make a RealFile
+    try:
+        init2.fileno()
+        return RealFile(init2, mode, uri=uri, close=close, inner_fd=init)
+    except io.UnsupportedOperation:
+        return RandomAccessFile(init2, mode, uri=uri, close=close, inner_fd=init)

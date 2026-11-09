@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
     from asdf._block.io import BlockHeader
     from asdf.generic_io import GenericFile
-    from asdf.typing import BlockDataCallback, ByteArray1D, Compression
+    from asdf.typing import ArrayCallback, ByteArray1D, Compression, NDArray
 
 
 class WriteBlock:
@@ -25,7 +25,7 @@ class WriteBlock:
 
     def __init__(
         self,
-        data: ByteArray1D | BlockDataCallback | None,
+        data: NDArray | ArrayCallback | None,
         compression: Compression = None,
         compression_kwargs: dict[str, Any] | None = None,
     ):
@@ -34,7 +34,7 @@ class WriteBlock:
         self.compression_kwargs: dict[str, Any] | None = compression_kwargs
 
     @property
-    def data(self) -> ByteArray1D | None:
+    def data(self) -> NDArray | None:
         if callable(self._data):
             return self._data()
         return self._data

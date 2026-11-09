@@ -59,7 +59,7 @@ See :ref:`overview_reading` for a description of how to open this file.
 Sharing of data
 ===============
 
-Arrays that are views on the same data automatically share the same
+Arrays that are views on the same data can share the same
 data in the file.  In this example an array and a subview on that same
 array are saved to the same file, resulting in only a single block of
 data being saved.
@@ -76,13 +76,13 @@ data being saved.
    ...     'subset':   subset
    ... }
    >>> ff = AsdfFile(tree)
+   >>> ff.set_array_save_base(subset, True)
    >>> ff.write_to("array_with_subset.asdf")
 
-For circumstances where this is undesirable (such as saving
-a small view of a large array) this can be disabled by setting
-`asdf.config.AsdfConfig.default_array_save_base` (to set the default behavior)
-or `asdf.AsdfFile.set_array_save_base` to control the behavior for
-a specific array.
+In the above example, `asdf.AsdfFile.set_array_save_base` was used to
+trigger saving the base array (``my_array``) of the view (``subset``).
+It is also possible to change the default behavior, making asdf save
+the base array of all views by enabling `asdf.config.AsdfConfig.default_array_save_base`.
 
 .. code:: yaml
 
@@ -448,7 +448,7 @@ written out again, by default the new file will use the same compression as the
 original file. This behavior can be overridden by explicitly providing a
 different compression algorithm when writing the file out again.
 
-.. code::
+.. code:: python
 
     import asdf
 
@@ -468,11 +468,17 @@ Memory mapping
 
 When enabled, array data can be memory mapped using `numpy.memmap`. This
 allows for the efficient use of memory even when reading files with very large
-arrays. When memory mapping is enabled array data access must occur while
+arrays.
+
+.. note::
+  Opening a file with ``memmap=True`` does not guarantee that any given array will actually be memory mapped:
+  compressed arrays are never memory mapped, and memory mapping is not possible for remote files.
+
+When memory mapping is enabled array data access must occur while
 the corresponding file is open. This is most easily done using a ``with``
 context.
 
-.. code::
+.. code:: python
 
     import asdf
 
@@ -481,10 +487,26 @@ context.
         # will keep my_data.asdf open
         print(af["my_array"][0])
 
-Attempting to access memory mapped array data after the corresponding
-file has been closed will result in an error.
-
 .. warning::
+  Memory mapping creates a new ``numpy``-managed file handle which may persist after the
+  corresponding ASDF file is closed (see `numpy.memmap`).
 
-   If a file is opened with memory mapping and write access
-   any changes to the array data will change the corresponding file.
+Memory-mapped arrays can be written to while in memory.
+Changes to an array are flushed to disk by calling `AsdfFile.close` or `AsdfFile.update`.
+
+.. code:: python
+
+    import asdf
+
+    with asdf.open('my_data.asdf', memmap=True) as af:
+        # Write to memmapped array (in memory)
+        x[:10] = np.arange(10)
+
+        # Flush changes to disk
+        af.update()
+
+        # Another in-memory update
+        x[10:] = -1
+
+    # File is closed when we exit the context manager
+    # All changes have been flushed to disk

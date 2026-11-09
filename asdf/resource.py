@@ -4,7 +4,7 @@ as schemas.
 """
 
 import pkgutil
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 
 from asdf_standard import DirectoryResourceMapping as _DirectoryResourceMapping
 
@@ -17,6 +17,8 @@ __all__ = [
     "ResourceMappingProxy",
 ]
 
+_ResourceMapping = Mapping[str, str | bytes]
+
 
 class DirectoryResourceMapping(_DirectoryResourceMapping):
     """
@@ -26,7 +28,7 @@ class DirectoryResourceMapping(_DirectoryResourceMapping):
     """
 
 
-class ResourceMappingProxy(Mapping):
+class ResourceMappingProxy(_ResourceMapping):
     """
     Wrapper around a resource mapping that carries
     additional information on the package that provided
@@ -71,7 +73,7 @@ class ResourceMappingProxy(Mapping):
         return self._delegate
 
     @property
-    def package_name(self):
+    def package_name(self) -> str | None:
         """
         Get the name of the Python package that provided this mapping.
 
@@ -83,7 +85,7 @@ class ResourceMappingProxy(Mapping):
         return self._package_name
 
     @property
-    def package_version(self):
+    def package_version(self) -> str | None:
         """
         Get the version of the Python package that provided the mapping.
 
@@ -95,7 +97,7 @@ class ResourceMappingProxy(Mapping):
         return self._package_version
 
     @property
-    def class_name(self):
+    def class_name(self) -> str:
         """ "
         Get the fully qualified class name of the mapping.
 
@@ -123,7 +125,7 @@ class ResourceMappingProxy(Mapping):
         return f"<ResourceMappingProxy class: {self.class_name} package: {package_description} len: {len(self)}>"
 
 
-class ResourceManager(Mapping):
+class ResourceManager(_ResourceMapping):
     """
     Wraps multiple resource mappings into a single interface
     with some friendlier error handling.
@@ -135,16 +137,16 @@ class ResourceManager(Mapping):
         the first mapping takes precedence.
     """
 
-    def __init__(self, resource_mappings):
+    def __init__(self, resource_mappings: Iterable[ResourceMappingProxy]):
         self._resource_mappings = resource_mappings
 
-        self._mappings_by_uri = {}
+        self._mappings_by_uri: dict[str, ResourceMappingProxy] = {}
         for mapping in resource_mappings:
             for uri in mapping:
                 if uri not in self._mappings_by_uri:
                     self._mappings_by_uri[uri] = mapping
 
-    def __getitem__(self, uri):
+    def __getitem__(self, uri: str) -> str | bytes:
         if uri not in self._mappings_by_uri:
             msg = f"Resource unavailable for URI: {uri}"
             raise KeyError(msg)
@@ -155,13 +157,13 @@ class ResourceManager(Mapping):
 
         return content
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._mappings_by_uri)
 
     def __iter__(self):
         yield from self._mappings_by_uri
 
-    def __contains__(self, uri):
+    def __contains__(self, uri: object) -> bool:
         # Implement __contains__ only for efficiency.
         return uri in self._mappings_by_uri
 

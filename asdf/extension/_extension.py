@@ -1,30 +1,31 @@
 from __future__ import annotations
 
 import abc
+import warnings
+from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
 from packaging.specifiers import SpecifierSet
 
+from asdf.exceptions import DeprecatedCompressorWarning
+from asdf.extension import Compressor
+from asdf.extension._compressor import _Compress, _Decompress
 from asdf.util import get_class_name
 
-from ._compressor import Compressor
 from ._converter import ConverterProxy
 from ._tag import TagDefinition
 from ._validator import Validator
 
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
-class Extension(abc.ABC):
-    """
-    Abstract base class defining an extension to ASDF.
+    from asdf.extension import Converter
 
-    Implementing classes must provide the `extension_uri`.
-    Other properties are optional.
-    """
 
-    @classmethod
-    def __subclasshook__(cls, class_):
-        if cls is Extension:
-            return hasattr(class_, "extension_uri")
-        return NotImplemented  # pragma: no cover
+# Alternate version of `Extension` for use in type-hints
+# The way `Extension` works is weird enough that it can't be replaced in actual code without a lot of changes
+@runtime_checkable
+class ExtensionLike(Protocol):
+    """Object that contains an extension URI and can be wrapped by ``ExtensionProxy``."""
 
     @property
     @abc.abstractmethod
@@ -38,9 +39,25 @@ class Extension(abc.ABC):
         -------
         str
         """
+        ...
+
+
+class Extension(ExtensionLike):
+    """
+    Abstract base class defining an extension to ASDF.
+
+    Implementing classes must provide the ``extension_uri``.
+    Other properties are optional.
+    """
+
+    @classmethod
+    def __subclasshook__(cls, class_):
+        if cls is Extension:
+            return hasattr(class_, "extension_uri")
+        return NotImplemented  # pragma: no cover
 
     @property
-    def legacy_class_names(self):
+    def legacy_class_names(self) -> Iterable[str]:
         """
         Get the set of fully-qualified class names used by older
         versions of this extension.  This allows a new-style
@@ -54,7 +71,7 @@ class Extension(abc.ABC):
         return set()
 
     @property
-    def asdf_standard_requirement(self):
+    def asdf_standard_requirement(self) -> str | None:
         """
         Get the ASDF Standard version requirement for this extension.
 
@@ -64,10 +81,10 @@ class Extension(abc.ABC):
             If str, PEP 440 version specifier.
             If None, support all versions.
         """
-        return
+        return None
 
     @property
-    def converters(self):
+    def converters(self) -> Iterable[Converter]:
         """
         Get the `asdf.extension.Converter` instances for tags
         and Python types supported by this extension.
@@ -79,7 +96,7 @@ class Extension(abc.ABC):
         return []
 
     @property
-    def tags(self):
+    def tags(self) -> Iterable[str | TagDefinition]:
         """
         Get the YAML tags supported by this extension.
 
@@ -90,19 +107,19 @@ class Extension(abc.ABC):
         return []
 
     @property
-    def compressors(self):
+    def compressors(self) -> Iterable[Compressor]:
         """
         Get the `asdf.extension.Compressor` instances for
         compression schemes supported by this extension.
 
         Returns
         -------
-        iterable of asdf.extension.Compressor
+        iterable of `asdf.extension.Compressor`
         """
         return []
 
     @property
-    def yaml_tag_handles(self):
+    def yaml_tag_handles(self) -> dict[str, str]:
         """
         Get a dictionary of custom yaml TAG handles defined by the extension.
 
@@ -120,7 +137,7 @@ class Extension(abc.ABC):
         return {}
 
     @property
-    def validators(self):
+    def validators(self) -> Iterable[Validator]:
         """
         Get the `asdf.extension.Validator` instances for additional
         schema properties supported by this extension.
@@ -132,7 +149,7 @@ class Extension(abc.ABC):
         return []
 
 
-class ExtensionProxy(Extension):
+class ExtensionProxy(ExtensionLike):
     """
     Proxy that wraps an extension, provides default implementations
     of optional methods, and carries additional information on the
@@ -140,14 +157,14 @@ class ExtensionProxy(Extension):
     """
 
     @classmethod
-    def maybe_wrap(cls, delegate) -> ExtensionProxy:
+    def maybe_wrap(cls, delegate: ExtensionLike) -> ExtensionProxy:
         if isinstance(delegate, ExtensionProxy):
             return delegate
 
         return ExtensionProxy(delegate)
 
-    def __init__(self, delegate, package_name=None, package_version=None):
-        if not isinstance(delegate, Extension):
+    def __init__(self, delegate: ExtensionLike, package_name=None, package_version=None):
+        if not isinstance(delegate, ExtensionLike):
             msg = "Extension must implement the Extension interface"
             raise TypeError(msg)
 
@@ -203,8 +220,12 @@ class ExtensionProxy(Extension):
         if hasattr(self._delegate, "compressors"):
             for compressor in self._delegate.compressors:
                 if not isinstance(compressor, Compressor):
-                    msg = "Extension property 'compressors' must contain instances of asdf.extension.Compressor"
-                    raise TypeError(msg)
+                    if isinstance(compressor, (_Compress, _Decompress)):
+                        # Handle compressors that use the old interface
+                        warnings.warn(DeprecatedCompressorWarning())
+                    else:
+                        msg = "Extension property 'compressors' must contain instances of asdf.extension.Compressor"
+                        raise TypeError(msg)
                 self._compressors.append(compressor)
 
         self._validators = []
@@ -229,7 +250,7 @@ class ExtensionProxy(Extension):
         return getattr(self._delegate, "extension_uri", None)
 
     @property
-    def legacy_class_names(self):
+    def legacy_class_names(self) -> set[str]:
         """
         Get the set of fully-qualified class names used by older
         versions of this extension.  This allows a new-style
@@ -243,7 +264,7 @@ class ExtensionProxy(Extension):
         return self._legacy_class_names
 
     @property
-    def asdf_standard_requirement(self):
+    def asdf_standard_requirement(self) -> SpecifierSet:
         """
         Get the extension's ASDF Standard requirement.
 
@@ -254,7 +275,7 @@ class ExtensionProxy(Extension):
         return self._asdf_standard_requirement
 
     @property
-    def converters(self):
+    def converters(self) -> list[ConverterProxy]:
         """
         Get the extension's converters.
 
@@ -265,18 +286,18 @@ class ExtensionProxy(Extension):
         return self._converters
 
     @property
-    def compressors(self):
+    def compressors(self) -> list[Compressor]:
         """
         Get the extension's compressors.
 
         Returns
         -------
-        list of asdf.extension.Compressor
+        list of asdf.extension.CompressionPlugin
         """
         return self._compressors
 
     @property
-    def tags(self):
+    def tags(self) -> list[TagDefinition]:
         """
         Get the YAML tags supported by this extension.
 
@@ -287,7 +308,7 @@ class ExtensionProxy(Extension):
         return self._tags
 
     @property
-    def types(self):
+    def types(self) -> list[str | type[Any]]:
         """
         Get the legacy extension's ExtensionType subclasses.
 
@@ -320,7 +341,7 @@ class ExtensionProxy(Extension):
         return getattr(self._delegate, "url_mapping", [])
 
     @property
-    def delegate(self):
+    def delegate(self) -> ExtensionLike:
         """
         Get the wrapped extension instance.
 
@@ -331,7 +352,7 @@ class ExtensionProxy(Extension):
         return self._delegate
 
     @property
-    def package_name(self):
+    def package_name(self) -> str | None:
         """
         Get the name of the Python package that provided this extension.
 
@@ -343,7 +364,7 @@ class ExtensionProxy(Extension):
         return self._package_name
 
     @property
-    def package_version(self):
+    def package_version(self) -> str | None:
         """
         Get the version of the Python package that provided the extension
 
@@ -355,7 +376,7 @@ class ExtensionProxy(Extension):
         return self._package_version
 
     @property
-    def class_name(self):
+    def class_name(self) -> str:
         """
         Get the fully qualified class name of the extension.
 
@@ -366,14 +387,14 @@ class ExtensionProxy(Extension):
         return self._class_name
 
     @property
-    def legacy(self):
+    def legacy(self) -> bool:
         """
         False
         """
         return self._legacy
 
     @property
-    def yaml_tag_handles(self):
+    def yaml_tag_handles(self) -> dict[str, str]:
         """
         Get a dictionary of custom yaml TAG handles defined by the extension.
 
@@ -391,7 +412,7 @@ class ExtensionProxy(Extension):
         return self._yaml_tag_handles
 
     @property
-    def validators(self):
+    def validators(self) -> list[Validator]:
         """
         Get the `asdf.extension.Validator` instances for additional
         schema properties supported by this extension.

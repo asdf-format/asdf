@@ -2,44 +2,34 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping, Sequence
+from io import IOBase
 from pathlib import Path
-from typing import Any, Literal, Protocol, TypeAlias
+from typing import Any, Literal, Protocol, TypeAlias, overload
 
 import numpy as np
 import numpy.typing as npt
-from typing_extensions import Reader, Writer
+from typing_extensions import TypeVar
 
 from asdf.generic_io import GenericFile
-from asdf.util import _NOT_SET_TYPE
+from asdf.tags.core import NDArrayType
 from asdf.versioning import AsdfVersion
 
 __all__ = [
+    "ArrayCallback",
     "ArrayStorage",
     "AsdfVersionLike",
+    "BlockAttrCallback",
     "BlockDataCallback",
     "ByteArray1D",
     "Compression",
-    "ExtensionLike",
     "FileLike",
     "FileMode",
     "FilterFn",
     "NDArray",
-    "NotSetType",
     "PathLike",
-    "Reader",
     "TreeKey",
-    "Writer",
 ]
-
-
-# Alternate version of `Extension` for use in type-hints
-# The way `Extension` works is weird enough that it can't be replaced in actual code without a lot of changes
-class ExtensionLike(Protocol):
-    """Object that contains an extension URI and can be wrapped by ``ExtensionProxy``."""
-
-    @property
-    def extension_uri(self) -> str | None: ...
 
 
 # Ideally this would be `str | int | bool`
@@ -51,13 +41,15 @@ class ExtensionLike(Protocol):
 
 #: Valid ASDF tree keys
 TreeKey: TypeAlias = Any
+#: A YAML node that can be passed to or returned from an ASDF converter
+YamlNode: TypeAlias = Mapping[TreeKey, Any] | Sequence[Any] | str
 
 #: Local file path or remote file URI
 PathLike: TypeAlias = str | Path
 #: Readable/writable file object or the path or URI of an openable file
-FileLike: TypeAlias = PathLike | Reader | Writer | GenericFile
+FileLike: TypeAlias = PathLike | IOBase | GenericFile
 #: A type interpretable as a version number
-AsdfVersionLike: TypeAlias = AsdfVersion | str | list[int] | tuple[int, ...]
+AsdfVersionLike: TypeAlias = AsdfVersion | str
 
 #: Supported modes for opening a file
 FileMode: TypeAlias = Literal["r", "w", "rw"]
@@ -72,12 +64,30 @@ ArrayStorage: TypeAlias = Literal["internal", "external", "inline", "streamed"] 
 FilterFn: TypeAlias = Callable[[Any], bool] | Callable[[Any, Any], bool]
 
 #: ASDF-compatible multi-dimensional array
-NDArray: TypeAlias = npt.NDArray[Any]
+NDArray: TypeAlias = npt.NDArray[Any] | NDArrayType
 
 #: A 1-D byte numpy array used to read and write block data
 ByteArray1D: TypeAlias = np.ndarray[tuple[int], np.dtype[np.uint8]]
 
-#: A callback that returns a `ByteArray1D`
-BlockDataCallback = Callable[[], ByteArray1D]
+_Array_co = TypeVar("_Array_co", default=NDArray, covariant=True)
 
-NotSetType = Literal[_NOT_SET_TYPE.NOT_SET]
+
+class ArrayCallback(Protocol[_Array_co]):
+    """A callback that returns a numpy array"""
+
+    def __call__(self) -> _Array_co: ...
+
+
+#: A callback that returns a `ByteArray1D`
+BlockDataCallback = ArrayCallback[ByteArray1D]
+
+
+class BlockAttrCallback(ArrayCallback[ByteArray1D], Protocol):
+    """A data callback that provides access to low-level block attributes."""
+
+    @overload
+    def __call__(self) -> ByteArray1D: ...
+    @overload
+    def __call__(self, _attr: str) -> Any: ...
+
+    def __call__(self, _attr: str | None = None) -> ByteArray1D | Any: ...
