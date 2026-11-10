@@ -27,6 +27,7 @@ log = logging.getLogger("properdocs.plugins.export_legacy_labels")
 
 CONFIG_KEY = "legacy_labels_path"
 ANCHORS = set()
+LABELS = []
 
 
 # This event is the latest point before mkdocstrings finalizes the inventory
@@ -36,7 +37,12 @@ def on_env(env: Environment, /, *, config: ProperDocsConfig, files: Files) -> En
     mkdocstrings = typing.cast("MkdocstringsPlugin", config.plugins["mkdocstrings"])
     inventory = mkdocstrings.handlers.inventory
 
+    if not config.use_directory_urls:
+        log.info("Skipping exporting legacy labels: 'use_directory_urls' is disabled")
+        return
+
     for label in LegacyLabel.load(config):
+        LABELS.append(label)
         inventory.register(label.anchor, "std", "label", label.url, dispname=label.title)
 
 
@@ -50,7 +56,7 @@ def on_post_page(output: str, /, *, page: Page, config: ProperDocsConfig):
 
 def on_post_build(config: ProperDocsConfig) -> None:
     """Verify that all legacy label URLs exist."""
-    for label in LegacyLabel.load(config):
+    for label in LABELS:
         if label.url not in ANCHORS:
             log.warning(f"URL for legacy label '{label.anchor}' does not exist: {label.url}")
 
