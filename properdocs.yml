@@ -5,6 +5,7 @@ site_author: The ASDF Developers
 site_description: Python implementation of the ASDF Standard
 repo_url: https://github.com/asdf-format/asdf
 repo_name: asdf-format/asdf
+use_directory_urls: false
 
 watch:
   - asdf
