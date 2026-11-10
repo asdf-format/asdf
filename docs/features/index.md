@@ -16,7 +16,7 @@ The fundamental data object in ASDF is the `tree`, which is a nested combination
 !!! note
 	The ASDF specification does not have an immutable sequence type that maps directly to Python's `tuple`. Following the behavior of pyyaml, asdf writes tuples as YAML sequences, which when loaded are converted to lists. If round-tripping of tuples is important to your application see *[Extending ASDF](/extending/use_cases.md)* to write a custom extension to save and load tuples.
 
-One of the key features of [`asdf`][] is its ability to serialize `numpy` arrays. This is discussed in detail in *[Array Data](arrays.md#array-data)*.
+One of the key features of [`asdf`][] is its ability to serialize `numpy` arrays. This is discussed in detail in *[Array Data](#array-data)*.
 
 While the core [`asdf`][] package supports serialization of basic data types and Numpy arrays, its true power comes from its ability to be extended to support serialization of a wide range of custom data types. Details on using ASDF extensions can be found in *[Using Extensions][using-extensions-using-extensions]*. Details on creating custom ASDF extensions to support custom data types can be found in *[Extending ASDF](/extending/use_cases.md)*.
 
