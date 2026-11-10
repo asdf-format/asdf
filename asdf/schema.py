@@ -259,6 +259,9 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
             # validator for the same schema
             self.evolved_validators = kwargs.pop("evolved_validators", {})
             self.serialization_context = kwargs.pop("serialization_context", None)
+            self._context = kwargs.pop("_context", None)
+            if self._context is None:
+                self._context = _ValidationContext()
 
             original_init(self, *args, **kwargs)
 
@@ -290,6 +293,7 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
             validator.ctx = self.ctx
             validator.parent = weakref.ref(parent)
             validator.serialization_context = self.serialization_context
+            validator._context = self._context
             parent.evolved_validators[schema_key] = validator
             return validator
 
@@ -297,8 +301,6 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
 
     def _patch_iter_errors(cls):
         original_iter_errors = cls.iter_errors
-
-        cls._context = _ValidationContext()
 
         def iter_errors(self, instance, *args, **kwargs):
             # We can't validate anything that looks like an external reference,

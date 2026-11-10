@@ -1,0 +1,1 @@
+Fixed issue where concurrent schema validation shared validation context across threads, causing invalid trees to be accepted or valid trees to be rejected.

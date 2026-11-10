@@ -1,5 +1,7 @@
 import contextlib
 import io
+import threading
+from collections import Counter
 from datetime import datetime
 
 import numpy as np
@@ -1134,3 +1136,48 @@ properties:
             # deserialized (but is still validated)
             with asdf.open(bio, custom_schema=schema_id, lazy_tree=True):
                 pass
+
+
+def test_concurrent_schema_validation():
+    """
+    Test that concurrent schema validation does not leak validation context
+    across threads (issue #2154).
+    """
+    schema_tree = {
+        "type": "object",
+        "oneOf": [
+            {"properties": {"kind": {"enum": ["pixel"]}, "size": {"type": "number"}}},
+            {"properties": {"kind": {"enum": ["sky"]}, "size": {"type": "string"}}},
+        ],
+    }
+
+    n_threads = 8
+    n_calls = 100
+    results = Counter()
+
+    def worker(barrier, valid):
+        barrier.wait()
+        for _ in range(n_calls):
+            if valid:
+                tree = {"kind": "pixel", "size": 5.0}
+            else:
+                tree = {"kind": "pixel", "size": "big"}
+            try:
+                schema.validate(tree, schema=schema_tree)
+            except ValidationError:
+                if valid:
+                    results["valid tree rejected"] += 1
+            except Exception as exc:
+                results[f"{type(exc).__name__}: {exc}"] += 1
+            else:
+                if not valid:
+                    results["invalid tree accepted"] += 1
+
+    barrier = threading.Barrier(n_threads)
+    threads = [threading.Thread(target=worker, args=(barrier, i % 2 == 0)) for i in range(n_threads)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+
+    assert not results, f"Concurrent validation failures: {dict(results)}"
