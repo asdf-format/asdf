@@ -129,7 +129,7 @@ plugins:
 - git-revision-date-localized:
     fallback_to_build_date: true
 - offline:
-    enabled: !ENV [OFFLINE, false]
+    enabled: !ENV [ASDF_DOCS_OFFLINE, false]
 - redirects:
     redirect_maps:
       'changes.md': 'changelog.md'
