@@ -1,4 +1,3 @@
-[](){ #using-extensions-using-extensions }
 # Using Extensions
 
 ## The built-in extension
@@ -21,7 +20,7 @@ For the purposes of this documentation, a "custom type" is any data type that ca
 
 In order for a particular custom type to be serialized, a special class called a "converter" must be implemented. Each converter defines how the corresponding custom type will be serialized and deserialized. More details on how converters are implemented can be found in *[Converters](/extending/converters.md)*. Users should never have to refer to converter implementations directly; they simply enable [`asdf`][] to recognize and process custom types.
 
-In addition to converters, each custom type may have a corresponding schema, which is used for validation. The definition of the schema if present is closely tied to the definition of the converter. More details on schema validation can be found in *[Schema validation][features-schema-validation]*.
+In addition to converters, each custom type may have a corresponding schema, which is used for validation. The definition of the schema if present is closely tied to the definition of the converter. More details on schema validation can be found in *[Schema validation](index.md#schema-validation)*.
 
 Schemas are generally versioned and change in sync with their associated converters. The version number will increase whenever a schema (and therefore the converter implementation) changes.
 
@@ -48,7 +47,6 @@ In this case, a warning will occur by default to indicate to the user that the c
 
 Even if an extension for the custom type is present, it does not guarantee that the type can be deserialized successfully. Instantiating the custom type may involve additional software dependencies, which, if not present, will cause an error when the type is deserialized. Users should be aware of the dependencies that are required for instantiating custom types when reading ASDF files.
 
-[](){ #using-extensions-custom-types }
 ## Custom types, extensions, and versioning { #custom-type-versioning }
 
 Tags and schemas that follow best practices are versioned. This allows changes to tags and schemas to be recorded, and it allows [`asdf`][] to define behavior with respect to version compatibility.
@@ -69,10 +67,9 @@ When writing a object to a file, [`asdf`][] compares the object's type to the li
 
 If multiple converters are present that both handle the same type, the first found by the library will be used. Users may disable a converter by removing its extension with the [`remove_extension`][asdf.config.AsdfConfig.remove_extension] method.
 
-[](){ #features-extensions-other-packages }
 ## Extensions from other packages { #other-packages }
 
-Some external packages may define extensions that allow [`asdf`][] to recognize some or all of the types that are defined by that package. Such packages may install the extension class as part of the package itself (details for developers can be found in *[Installing extensions via entry points][extending-extensions-installing-entry-points]*).
+Some external packages may define extensions that allow [`asdf`][] to recognize some or all of the types that are defined by that package. Such packages may install the extension class as part of the package itself (details for developers can be found in *[Installing extensions via entry points](/extending/extensions.md#from-entry-point)*).
 
 If the package installs its extension, then [`asdf`][] will automatically detect the extension and use it when processing any files. No specific action is required by the user in order to successfully read and write custom types defined by the extension for that particular package.
 
@@ -86,7 +83,6 @@ Extension Name: 'builtin' (from asdf 2.0.0) Class: asdf.extension.BuiltinExtensi
 
 The output will always include the built-in extension, but may also display other extensions from other packages, depending on what is installed.
 
-[](){ #features-extensions-explicit }
 ## Explicit use of extensions { #explicit }
 
 Sometimes no packaged extensions are provided for the types you wish to serialize. In this case, it is necessary to explicitly install any necessary extension classes when reading and writing files that contain custom types.
@@ -119,8 +115,7 @@ asdf.get_config().add_extension(MyCustomExtension())
 af = asdf.open("custom.asdf")
 ```
 
-[](){ #using-extensions-extension-checking }
-## Extension checking
+## Extension checking { #extension-checking }
 
 When writing ASDF files using this software, metadata about the extensions that were used to create the file will be added to the file itself. This includes the extension's URI, which uniquely identifies a particular version of the extension.
 

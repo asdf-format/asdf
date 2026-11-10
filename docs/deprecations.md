@@ -39,10 +39,9 @@ SerializationContext was previously importable from `asdf.asdf.SerializationCont
 
 ASDF 2.15 introduced many new [`asdf.exceptions.AsdfDeprecationWarning`][] messages. These warnings are subclasses of the built-in python [`DeprecationWarning`][] and will by default be ignored except in `__main__` and with testing tools such as {{ pytest('pytest', 'how-to/capture-warnings#deprecation-warnings') }}.
 
-These are intended to highlight use of features that we will likely remove in the next major version of ASDF (see our *[Release Cycle and Major Dependency Support Policy][release-and-support]* for more details about our versioning, compatibility and support policy).
+These are intended to highlight use of features that we will likely remove in the next major version of ASDF (see our *[Release Cycle and Major Dependency Support Policy](release_and_support.md)* for more details about our versioning, compatibility and support policy).
 
-[](){ #legacy-extension-deprecation }
-### Legacy Extension API Deprecation
+### Legacy Extension API Deprecation { #legacy-extension-api }
 
 A large number of [`asdf.exceptions.AsdfDeprecationWarning`][] messages appear related to use of the `legacy extension api`. Some examples include:
 
@@ -69,8 +68,7 @@ A large number of [`asdf.exceptions.AsdfDeprecationWarning`][] messages appear r
 
 This deprecated api is replaced by new-style [converters](extending/converters.md), [extensions](extending/extensions.md) and [validators](extending/validators.md). [asdf-astropy](https://asdf-astropy.readthedocs.io/en/latest/) is a useful example package that uses these new-style extension api.
 
-[](){ #asdf-in-fits-deprecation }
-### ASDF-in-FITS Deprecation
+### ASDF-in-FITS Deprecation { #asdf-in-fits }
 
 Support for `AsdfInFits` (including the `asdf.fits_embed` module) is deprecated. Code using this format can migrate to using [`stdatamodels`][] which contains functions to read and write AsdfInFits files (see {{ stdatamodels('AsdfInFits', 'asdf_in_fits') }} for migration information).
 

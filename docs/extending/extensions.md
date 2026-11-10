@@ -61,8 +61,7 @@ class FooExtension(Extension):
     converters = [FooConverter()]
 ```
 
-[](){ #extending-extensions-compressors }
-### Additional block compressors
+### Additional block compressors { #compressors }
 
 Binary block compressors implement the [`Compressor`][asdf.extension.Compressor] interface and are included in an extension via the `compressors` property:
 
@@ -166,19 +165,16 @@ class FooExtension(Extension):
     ]
 ```
 
-[](){ #extending-exposing-extension-object-internals }
 ### Making converted object's contents visible to `info` and `search` { #exposing-contents }
 
 If the object produced by the extension supports a class method `__asdf_traverse__` then it can be used by those tools to expose the contents of the object. That method should accept no arguments and return either a dict of attributes and their values, or a list if the object itself is list-like.
 
 Similarly a [`Converter`][asdf.extension.Converter] can implement a method `to_info` which converts an instance of one of the supported types to a dict, tuple or list of items to show during `info` and `search`. This can be useful when the supported type cannot be easily updated to add an `__asdf_traverse__` method.
 
-[](){ #extending-extensions-installing }
 ## Installing an extension { #installing }
 
 Once an extension is implemented, it must be installed so that the [`asdf`][] library knows to use it. There are two options for installing an extension: manually per session using [`AsdfConfig`][asdf.config.AsdfConfig], or automatically for every session using the `asdf.extensions` entry point
 
-[](){ #extending-extensions-installing-asdf-config }
 ### Installing extensions via AsdfConfig { #from-config }
 
 The simplest way to install an extension is to add it at runtime using the [`AsdfConfig.add_extension`][asdf.config.AsdfConfig.add_extension] method. For example, the following code defines and installs a minimal extension:
@@ -197,7 +193,6 @@ asdf.get_config().add_extension(FooExtension())
 
 Now the extension will be available when working with ASDF files, but only for the duration of the current Python session.
 
-[](){ #extending-extensions-installing-entry-points }
 ### Installing extensions via entry points { #from-entry-point }
 
 The [`asdf`][] package also offers an entry point for installing extensions This registers a package's extensions automatically on package install without requiring calls to the AsdfConfig method. The entry point is called `asdf.extensions` and expects to receive a method that returns a list of `Extension` instances.
@@ -236,7 +231,6 @@ It is important to consider the order of extensions registered via the entry poi
 
 For the good of [`asdf`][] users everywhere, it's important that entry point methods load as quickly as possible. All extensions must be loaded before reading an ASDF file, so any entry point method that lingers will introduce a delay to the initial call to [`asdf.open`][]. For that reason, we recommend that extension authors minimize the number of imports that occur in the module containing the entry point method, particularly imports of modules outside of the Python standard library or [`asdf`][] itself.
 
-[](){ #extending-extensions-from-manifest }
 ## Populating an extension from a manifest { #from-manifest }
 
 An "extension manifest" is a language-independent description of an ASDF extension (little 'e') that includes information such as the extension URI, list of tags, ASDF Standard requirement, etc. Instructions on writing a manifest can be found in *[Extension manifests](manifests.md)*, but once written, we'll still need a Python Extension (big 'E') whose content mirrors the manifest. Rather than duplicate that information in Python code, we recommend use of the [`ManifestExtension`][asdf.extension.ManifestExtension] class, which reads a manifest and maps its content to the appropriate Extension interface properties.
@@ -316,7 +310,7 @@ To expand on this example let's assume the `xyz-1.0.0` schema was linked to tag 
 
 After this update is made, asdf will be able to open files with both the old and new tags and write out files with the new tag. To expand on this, when a file with an old tag is opened, asdf will look for an extension that supports that tag. The new extension will be checked first (since it occurs earlier in the list) but since the new manifest does not contain the old tag the new extension will be skipped. Next the old extension will be checked, support for the tag will be confirmed and the converted included in that old extension will be used to handle the tag. On write, asdf will again check the list of extensions. Except this time asdf will see that the new extension supports the type and select the new tag when writing the file.
 
-For more details on the behavior of schema and tag versioning from a user perspective, see *[Versioning and Compatibility][features-versioning-and-compat]*, and also *[Custom types, extensions, and versioning][using-extensions-custom-types]*.
+For more details on the behavior of schema and tag versioning from a user perspective, see *[Versioning and Compatibility](/features/index.md#versioning-and-compatibility)*, and also *[Custom types, extensions, and versioning](/features/using_extensions.md#custom-type-versioning)*.
 
 ### Versioning during development
 

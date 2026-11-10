@@ -2,7 +2,7 @@
 
 The [`Compressor`][asdf.extension.Compressor] interface provides an implementation of a compression algorithm that can be used to transform binary blocks in an [`AsdfFile`][asdf.AsdfFile]. Each Compressor must provide a 4-byte compression code that identifies the algorithm. Once the Compressor is installed as part of an Extension plugin, this code will be available to users as an argument to [`set_array_compression`][asdf.AsdfFile.set_array_compression] and the `all_array_compression` argument to [`write_to`][asdf.AsdfFile.write_to] and [`update`][asdf.AsdfFile.update].
 
-See *[Additional block compressors][extending-extensions-compressors]* for details on including a Compressor in an extension.
+See *[Additional block compressors](extensions.md#compressors)* for details on including a Compressor in an extension.
 
 ## The Compressor interface
 

@@ -1,6 +1,6 @@
 # Extension manifests
 
-An extension "manifest" is a YAML document that defines an extension in a language-independent way. Use of a manifest is recommended for ASDF extensions that are intended to be implemented by ASDF libraries in multiple languages, so that other implementers do not need to go spelunking through Python code to discover the tags and schemas that are included in the extension. This library provides support for automatically populating a [`Extension`][asdf.extension.Extension] object from a manifest; see *[Populating an extension from a manifest][extending-extensions-from-manifest]* for more information.
+An extension "manifest" is a YAML document that defines an extension in a language-independent way. Use of a manifest is recommended for ASDF extensions that are intended to be implemented by ASDF libraries in multiple languages, so that other implementers do not need to go spelunking through Python code to discover the tags and schemas that are included in the extension. This library provides support for automatically populating a [`Extension`][asdf.extension.Extension] object from a manifest; see *[Populating an extension from a manifest](extensions.md#from-manifest)* for more information.
 
 ## Anatomy of a manifest
 

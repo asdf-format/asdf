@@ -1,4 +1,3 @@
-[](){ #release-and-support }
 # Release Cycle and Major Dependency Support Policy
 
 This document describes a general plan for releasing the asdf library, along with how long we intend to support each release. Moreover, it also describes our policy for how long we plan to support versions of CPython and NumPy. Note that this is a living document, and may be updated at any time.

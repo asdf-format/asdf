@@ -41,6 +41,10 @@ def on_env(env: Environment, /, *, config: ProperDocsConfig, files: Files) -> En
         log.info("Skipping exporting legacy labels: 'use_directory_urls' is disabled")
         return
 
+    # This is needed with `properdocs serve`
+    ANCHORS.clear()
+    LABELS.clear()
+
     for label in LegacyLabel.load(config):
         LABELS.append(label)
         inventory.register(label.anchor, "std", "label", label.url, dispname=label.title)

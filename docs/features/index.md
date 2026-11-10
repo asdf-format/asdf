@@ -18,7 +18,7 @@ The fundamental data object in ASDF is the `tree`, which is a nested combination
 
 One of the key features of [`asdf`][] is its ability to serialize `numpy` arrays. This is discussed in detail in *[Array Data](#array-data)*.
 
-While the core [`asdf`][] package supports serialization of basic data types and Numpy arrays, its true power comes from its ability to be extended to support serialization of a wide range of custom data types. Details on using ASDF extensions can be found in *[Using Extensions][using-extensions-using-extensions]*. Details on creating custom ASDF extensions to support custom data types can be found in *[Extending ASDF](/extending/use_cases.md)*.
+While the core [`asdf`][] package supports serialization of basic data types and Numpy arrays, its true power comes from its ability to be extended to support serialization of a wide range of custom data types. Details on using ASDF extensions can be found in *[Using Extensions](using_extensions.md)*. Details on creating custom ASDF extensions to support custom data types can be found in *[Extending ASDF](/extending/use_cases.md)*.
 
 ## Array Data
 
@@ -39,8 +39,7 @@ Even though this particular implementation of ASDF necessarily serializes Python
 
 [toctree using_extensions.md depth=2]
 
-[](){ #features-schema-validation }
-## Schema validation
+## Schema validation { #schema-validation }
 
 Schema validation is used to determine whether an ASDF file is well formed. All ASDF files must conform to the schemas defined by the {{ asdf_standard('ASDF specification', 'index') }}. Schema validation can be run using [`AsdfFile.validate`][asdf.AsdfFile.validate] and occurs when reading ASDF files (using [`asdf.open`][]) and writing them out (using [`AsdfFile.write_to`][asdf.AsdfFile.write_to] or [`AsdfFile.update`][asdf.AsdfFile.update]).
 
@@ -107,8 +106,7 @@ If your custom schema is registered with ASDF in an extension, you may pass the 
 !!! note
 	The top-level core schemas can be found {{ asdf_standard('here', 'schemas/core') }}.
 
-[](){ #features-versioning-and-compat }
-## Versioning and Compatibility
+## Versioning and Compatibility { #versioning-and-compatibility }
 
 There are several different versions to keep in mind when discussing ASDF:
 
@@ -119,7 +117,7 @@ There are several different versions to keep in mind when discussing ASDF:
 
 Each ASDF file contains information about the various versions that were used to create the file. The most important of these are the ASDF core schemas version and the ASDF file format version. A particular version of the ASDF software package will explicitly provide support for specific combinations of these versions.
 
-Tag, schema, and extension versions are also important for serializing and deserializing data types that are stored in ASDF files. A detailed discussion of these versions from a user perspective can be found in *[Custom types, extensions, and versioning][using-extensions-custom-types]*.
+Tag, schema, and extension versions are also important for serializing and deserializing data types that are stored in ASDF files. A detailed discussion of these versions from a user perspective can be found in *[Custom types, extensions, and versioning](using_extensions.md#custom-type-versioning)*.
 
 Since ASDF is designed to serve as an archival format, this library is careful to maintain backwards compatibility with older versions of the ASDF core schemas, ASDF file format, and core tags. However, since deserializing custom tags requires other software packages, backwards compatibility is often contingent on the available versions of such software packages.
 
@@ -410,7 +408,7 @@ a: !core/ndarray-1.1.0
 ...
 ```
 
-[`asdf`][] automatically saves history metadata about the extensions that were used to create the file. This information is used when opening files to determine if the proper extensions are installed (see *[Extension checking][using-extensions-extension-checking]* for more details).
+[`asdf`][] automatically saves history metadata about the extensions that were used to create the file. This information is used when opening files to determine if the proper extensions are installed (see *[Extension checking](using_extensions.md#extension-checking)* for more details).
 
 ## Rendering ASDF trees
 
@@ -445,7 +443,7 @@ If the attribute is described in a schema, the info functionality will see if it
 
 The [`AsdfFile.info`][asdf.AsdfFile.info] method behaves similarly to [`asdf.info`][], rendering the tree of the associated [`AsdfFile`][asdf.AsdfFile].
 
-Normally [`asdf.info`][] will not show the contents of asdf nodes turned into Python custom objects, but if that object supports a special method, you may see the contents of such objects. See *[Making converted object's contents visible to `info` and `search`][extending-exposing-extension-object-internals]* for how to implement such support for [`asdf.info`][] and [`asdf.search`][].
+Normally [`asdf.info`][] will not show the contents of asdf nodes turned into Python custom objects, but if that object supports a special method, you may see the contents of such objects. See *[Making converted object's contents visible to `info` and `search`](/extending/extensions.md#exposing-contents)* for how to implement such support for [`asdf.info`][] and [`asdf.search`][].
 
 ## Searching the ASDF tree
 

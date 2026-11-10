@@ -10,11 +10,11 @@ Every Converter implementation must provide two required properties and two requ
 
 [`Converter.types`][asdf.extension.Converter.types] - a list of Python types or fully-qualified Python type names handled by the converter. For strings, the private or public path can be used. For example, if class `Foo` is implemented in `example_package.foo.Foo` but imported as `example_package.Foo` for convenience either `example_package.foo.Foo` or `example_package.Foo` can be used. As most libraries do not consider moving where a class is implemented it is preferred to use the "public" location where the class is imported (in this example `example_package.Foo`).
 
-The string type name is recommended over a type object for performance reasons, see *[Entry point performance considerations][extending-converters-performance]*.
+The string type name is recommended over a type object for performance reasons, see *[Entry point performance considerations](#entry-point-performance)*.
 
 [`Converter.to_yaml_tree`][asdf.extension.Converter.to_yaml_tree] - a method that accepts a complex Python object and returns a simple node object (typically a [`dict`][]) suitable for serialization to YAML. The node is permitted to contain nested complex objects; these will in turn be passed to other `to_yaml_tree` methods in other Converters.
 
-[`Converter.from_yaml_tree`][asdf.extension.Converter.from_yaml_tree] - a method that accepts a simple node object from parsed YAML and returns the appropriate complex Python object. For a non-lazy-tree, nested nodes in the received node will have already been converted to complex objects by other calls to `from_yaml_tree` methods, except where reference cycles are present -- see *[Reference cycles][extending-converters-reference-cycles]* for information on how to handle that situation. For a `lazy_tree` (see [`asdf.open`][]) the node will contain [`asdf.lazy_nodes`][] instances which act like dicts and lists but convert child objects only when they are accessed.
+[`Converter.from_yaml_tree`][asdf.extension.Converter.from_yaml_tree] - a method that accepts a simple node object from parsed YAML and returns the appropriate complex Python object. For a non-lazy-tree, nested nodes in the received node will have already been converted to complex objects by other calls to `from_yaml_tree` methods, except where reference cycles are present -- see *[Reference cycles](#reference-cycles)* for information on how to handle that situation. For a `lazy_tree` (see [`asdf.open`][]) the node will contain [`asdf.lazy_nodes`][] instances which act like dicts and lists but convert child objects only when they are accessed.
 
 Additionally, the Converter interface includes a method that must be implemented when some logic is required to select the tag to assign to a `to_yaml_tree` result:
 
@@ -59,7 +59,7 @@ class RectangleConverter(Converter):
         return Rectangle(node["width"], node["height"])
 ```
 
-Note that import of the `Rectangle` class has been deferred to inside the `from_yaml_tree` method. This is a performance consideration that is discussed in *[Entry point performance considerations][extending-converters-performance]*.
+Note that import of the `Rectangle` class has been deferred to inside the `from_yaml_tree` method. This is a performance consideration that is discussed in *[Entry point performance considerations](#entry-point-performance)*.
 
 In order to use this Converter, we'll need to create a simple extension around it and install that extension:
 
@@ -134,7 +134,6 @@ class RectangleConverter(Converter):
 
 As noted above [`Converter.tags`][asdf.extension.Converter.tags] can contain wildcard patterns (`asdf://example.com/shapes/tags/rectangle-1.*` to match all `1.x.x` versions of the rectangle tag). When a wildcard is used the specific tag versions should be defined in the manifest (or extension) that uses the [`Converter`][asdf.extension.Converter]. If a [`Converter`][asdf.extension.Converter] with a tag wildcard is provided to an extension with a manifest that contains no tags that match the pattern the [`Converter`][asdf.extension.Converter] will be ignored. No errors or warnings will be produced when this extension is registered with asdf (as this can be a useful pattern). However attempts to use the [`Converter`][asdf.extension.Converter] can produce errors during reading and writing (if it's expected that the [`Converter`][asdf.extension.Converter] is used). Developers are encouraged to write unit tests that check reading and writing with any custom [`Converter`][asdf.extension.Converter] instances.
 
-[](){ #extending-converters-deferral }
 ## Deferring to another converter { #deferral }
 
 Converters only support the exact types listed in [`Converter.types`][asdf.extension.Converter.types]. When a supported type is subclassed the extension will need to be updated to support the new subclass. There are a few options for supporting subclasses.
@@ -176,8 +175,7 @@ class AspectRectangleConverter(Converter):
 
 Just like a non-deferring Converter this Converter will need to be added to an Extension and registered with asdf.
 
-[](){ #extending-converters-reference-cycles }
-## Reference cycles
+## Reference cycles { #reference-cycles }
 
 Special considerations must be made when deserializing a tagged object that contains a reference to itself among its descendants. Consider a [`fractions.Fraction`][] subclass that maintains a reference to its multiplicative inverse:
 
@@ -280,7 +278,6 @@ with asdf.open("with_inverse.asdf") as af:
 assert reconstituted_f1.inverse.inverse is reconstituted_f1
 ```
 
-[](){ #extending-converters-block-storage }
 ## Block storage { #block-storage }
 
 As described above *[Converters](#)* can return complex objects that will be passed to other Converters. If a Converter returns a ndarray, asdf will recognize this array and store it in an ASDF block. This is the easiest and preferred means of storing data in ASDF blocks.
@@ -290,7 +287,7 @@ For applications that require more flexibility, Converters can control block sto
 It is helpful to first review some details of how asdf {{ asdf_standard('stores blocks', 'file_layout#block') }}. Blocks are stored sequentially within a ASDF file following the YAML tree. During reads and writes, asdf will need to know the index of the block a Converter would like to use to read or write the correct block. However, the index used for reading might not be the same index for writing if the tree was modified or the file is being written to a new location. During serialization and deserialization, asdf will associate each object with the accessed block during [`Converter.from_yaml_tree`][asdf.extension.Converter.from_yaml_tree] and [`Converter.to_yaml_tree`][asdf.extension.Converter.to_yaml_tree].
 
 !!! note
-	Converters using multiple blocks are slightly more complicated. See *[Converters using multiple blocks][extending-converters-multiple-block-storage]*
+	Converters using multiple blocks are slightly more complicated. See *[Converters using multiple blocks](#multiple-blocks)*
 
 A simple example of a Converter using block storage to store the `payload` for `BlockData` object instances is as follows:
 
@@ -335,7 +332,6 @@ During read, [`Converter.from_yaml_tree`][asdf.extension.Converter.from_yaml_tre
 
 During write, [`Converter.to_yaml_tree`][asdf.extension.Converter.to_yaml_tree] will be called. The Converter can use `SerializationContext.find_available_block_index` to find the location of an available block for writing. The data to be written to the block can be provided as an `ndarray` or a callable function that will return a `ndarray` (note that it is possible this callable function will be called multiple times and the developer should cache results from any non-repeatable sources).
 
-[](){ #extending-converters-multiple-block-storage }
 ### Converters using multiple blocks { #multiple-blocks }
 
 As discussed above, while serializing and deserializing objects that use one block, asdf will watch which block is accessed by `find_available_block_index` and `get_block_data_callback` and associate the block with the converted object. This association allows asdf to map read and write blocks during updates of ASDF files. An object that uses multiple blocks must provide a unique key for each block it uses. These keys are generated using `SerializationContext.generate_block_key` and must be stored by the extension code. These keys must be resupplied to the converter when writing an object that was read from an ASDF file.
@@ -385,7 +381,6 @@ As discussed above, while serializing and deserializing objects that use one blo
 
 ```
 
-[](){ #extending-converters-performance }
 ## Entry point performance considerations { #entry-point-performance }
 
 For the good of [`asdf`][] users everywhere, it's important that entry point methods load as quickly as possible. All extensions must be loaded before reading an ASDF file, and therefore all converters are created as well. Any converter module or `__init__` method that lingers will introduce a delay to the initial call to [`asdf.open`][]. For that reason, we recommend that converter authors minimize the number of imports that occur in the module containing the Converter implementation, and defer imports of serializable types to within the `from_yaml_tree` method. This will prevent the type from ever being imported when reading ASDF files that do not contain the associated tag.

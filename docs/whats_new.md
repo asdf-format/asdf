@@ -115,8 +115,8 @@ Thank you to all the [contributors](https://github.com/asdf-format/asdf/graphs/c
 
 The following deprecated features are removed in asdf 3.0.0:
 
-- [AsdfInFits][asdf-in-fits-deprecation]
-- [Legacy Extensions][legacy-extension-deprecation]
+- [AsdfInFits](deprecations.md#asdf-in-fits)
+- [Legacy Extensions](deprecations.md#legacy-extension-api)
 
 Please see the links above or *[Deprecations](deprecations.md)* for more details.
 
@@ -124,9 +124,9 @@ Please see the links above or *[Deprecations](deprecations.md)* for more details
 
 As asdf now only supports new-style [extensions](extending/extensions.md) several new features were added to allow these extensions to retain all the functionality of the now removed type system.
 
-Converters can now [defer][extending-converters-deferral] conversion allowing a different converter to handle serailizing an object. This is useful if a subclass instance can be safely converted to a superclass during serialization. See *[Deferring to another converter][extending-converters-deferral]* for an example and more information.
+Converters can now [defer](extending/converters.md#deferral) conversion allowing a different converter to handle serailizing an object. This is useful if a subclass instance can be safely converted to a superclass during serialization. See *[Deferring to another converter](extending/converters.md#deferral)* for an example and more information.
 
-Converters can now access [ASDF block storage][extending-converters-block-storage] during serialization and deserialization. See *[Block storage][extending-converters-block-storage]* for examples and more information.
+Converters can now access [ASDF block storage](extending/converters.md#block-storage) during serialization and deserialization. See *[Block storage](extending/converters.md#block-storage)* for examples and more information.
 
 Converters have always been "strict" about tag version mismatches (returning 'raw' objects if a specific tag version is not supported). This "strictness" now extends to all objects handled by asdf. As all known asdf extensions have already migrated to converters this should pose no issue for users. Please [open an issue](https://github.com/asdf-format/asdf/issues) if you run into any difficulty.
 
