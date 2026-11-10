@@ -223,16 +223,23 @@ def collect_schema_info(
     if schema_info is None:
         return None
 
-    info = schema_info.collect_info(preserve_list=preserve_list)
+    if path is None:
+        return schema_info.collect_info(preserve_list=preserve_list)
 
-    if path is not None:
-        for path_key in path.split("."):
-            info = info.get(path_key, None)
+    tokens = [p.strip("'\"") for p in re.split(r"\.|\[|\]", path) if p.strip("'\"")]
+    current = schema_info
+    for path_key in tokens:
+        matched = None
+        for child in current.visible_children:
+            if str(child.identifier) == path_key:
+                matched = child
+                break
+        if matched is None:
+            return None
+        current = matched
 
-            if info is None:
-                return None
-
-    return info
+    info = current.collect_info(preserve_list=preserve_list)
+    return info if len(info) > 0 else None
 
 
 def _get_extension_manager():

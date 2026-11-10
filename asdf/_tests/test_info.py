@@ -568,6 +568,28 @@ def test_schema_info_support(tmp_path):
 
         assert af.schema_info("title", "object.anyof_attribute.attribute2.foo") is None
 
+        # Test path traversing through a list (fixes #1888)
+        assert af.schema_info("title", "list_of_stuff.0") == {
+            "attributeOne": {
+                "title": ("AttributeOne Title", "v1"),
+            },
+            "attributeTwo": {
+                "title": ("AttributeTwo Title", "v2"),
+            },
+            "title": ("object with info support 3 title", af.tree["list_of_stuff"][0]),
+        }
+        assert af.schema_info("title", "list_of_stuff.0.attributeOne") == {
+            "title": ("AttributeOne Title", "v1"),
+        }
+        assert af.schema_info("title", "list_of_stuff[0]") == af.schema_info("title", "list_of_stuff.0")
+        assert af.schema_info("title", "list_of_stuff[0].attributeOne") == af.schema_info(
+            "title", "list_of_stuff.0.attributeOne"
+        )
+        assert af.schema_info("title", "list_of_stuff.0", preserve_list=False) == af.schema_info(
+            "title", "list_of_stuff.0"
+        )
+        assert af.schema_info("title", "list_of_stuff.5") is None
+
         assert af.schema_info() == {
             "list_of_stuff": [
                 {
@@ -608,6 +630,52 @@ def test_schema_info_support(tmp_path):
                 "description": ("object with info support description", af.tree["object"]),
             },
         }
+
+
+def test_schema_info_list_path_mixed_types():
+    my_tag_uri = "asdf://somewhere.org/tags/foo-1.0.0"
+    my_schema_uri = "asdf://somewhere.org/tags/foo-1.0.0"
+
+    schema_bytes = f"""%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: {my_schema_uri}
+title: "some title"
+""".encode("ascii")
+
+    class MyExtension:
+        extension_uri = "asdf://somewhere.org/extensions/foo-1.0.0"
+        tags = [
+            asdf.extension.TagDefinition(
+                my_tag_uri,
+                schema_uris=[my_schema_uri],
+            )
+        ]
+
+    class Thing:
+        _tag = my_tag_uri
+
+        def __asdf_traverse__(self):
+            return []
+
+    ext = MyExtension()
+    with asdf.config_context() as cfg:
+        cfg.add_extension(ext)
+        cfg.add_resource_mapping({my_schema_uri: schema_bytes})
+        af = asdf.AsdfFile(
+            {
+                "my_list": [
+                    0,
+                    Thing(),
+                ]
+            }
+        )
+        info_dot = af.schema_info("title", "my_list.1")
+        assert info_dot == {"title": ("some title", af.tree["my_list"][1])}
+        info_bracket = af.schema_info("title", "my_list[1]")
+        assert info_bracket == info_dot
+        assert af.schema_info("title", "my_list.0") is None
+        assert af.schema_info("title", "my_list.2") is None
 
 
 def test_info_object_support(capsys, tmp_path):

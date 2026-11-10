@@ -1,0 +1,1 @@
+Support list indexing in ``schema_info`` ``path`` argument.
