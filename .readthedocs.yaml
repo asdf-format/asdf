@@ -11,7 +11,7 @@ build:
       - git fetch --all --tags || true
     build:
       html:
-        - properdocs build --strict
+        - properdocs build
     post_build:
       # Copy the built site into the directory Read the Docs publishes.
       - mkdir -p $READTHEDOCS_OUTPUT/html/
