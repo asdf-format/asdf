@@ -39,35 +39,35 @@ __all__ = [
 # fails when you try to actually index the map.
 # Hopefully someday we will find a way to specialize this type more.
 
-#: Valid ASDF tree keys
 TreeKey: TypeAlias = Any
-#: A YAML node that can be passed to or returned from an ASDF converter
+"""Valid ASDF tree keys"""
 YamlNode: TypeAlias = Mapping[TreeKey, Any] | Sequence[Any] | str
+"""A YAML node that can be passed to or returned from an ASDF converter"""
 
-#: Local file path or remote file URI
 PathLike: TypeAlias = str | Path
-#: Readable/writable file object or the path or URI of an openable file
+"""Local file path or remote file URI"""
 FileLike: TypeAlias = PathLike | IOBase | GenericFile
-#: A type interpretable as a version number
+"""Readable/writable file object or the path or URI of an openable file"""
 AsdfVersionLike: TypeAlias = AsdfVersion | str
+"""A type interpretable as a version number"""
 
-#: Supported modes for opening a file
 FileMode: TypeAlias = Literal["r", "w", "rw"]
+"""Supported modes for opening a file"""
 
 # TODO: find a way to represent this where it will accept arbitrary strings but still suggest the set of literals
-#: Supported compression types
 Compression: TypeAlias = Literal["zlib", "bzp2", "lz4", "input", ""] | str | bytes | None
-#: Supported array storage modes
+"""Supported compression types"""
 ArrayStorage: TypeAlias = Literal["internal", "external", "inline", "streamed"] | None
+"""Supported array storage modes"""
 
-#: Function used to filter nodes in an ASDF tree
 FilterFn: TypeAlias = Callable[[Any], bool] | Callable[[Any, Any], bool]
+"""Function used to filter nodes in an ASDF tree"""
 
-#: ASDF-compatible multi-dimensional array
 NDArray: TypeAlias = npt.NDArray[Any] | NDArrayType
+"""ASDF-compatible multi-dimensional array"""
 
-#: A 1-D byte numpy array used to read and write block data
 ByteArray1D: TypeAlias = np.ndarray[tuple[int], np.dtype[np.uint8]]
+"""A 1-D byte numpy array used to read and write block data"""
 
 _Array_co = TypeVar("_Array_co", default=NDArray, covariant=True)
 
@@ -78,8 +78,8 @@ class ArrayCallback(Protocol[_Array_co]):
     def __call__(self) -> _Array_co: ...
 
 
-#: A callback that returns a `ByteArray1D`
 BlockDataCallback = ArrayCallback[ByteArray1D]
+"""A callback that returns a `ByteArray1D`"""
 
 
 class BlockAttrCallback(ArrayCallback[ByteArray1D], Protocol):

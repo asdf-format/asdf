@@ -266,9 +266,11 @@ def get_class_name(obj, instance=True):
     return f"{typ.__module__}.{typ.__qualname__}"
 
 
-#: Special value indicating that a parameter is not set.
-#: Distinct from None, which may for example be a value of interest in a search.
 NOT_SET = sentinel("NOT_SET", repr="NotSet")
+"""Special value indicating that a parameter is not set.
+
+Distinct from None, which may for example be a value of interest in a search.
+"""
 NotSet: Final[NOT_SET] = NOT_SET
 
 
