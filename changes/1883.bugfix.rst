@@ -1,0 +1,1 @@
+Fix ``info`` and ``schema_info`` failing to display schema attributes for custom items that don't implement ``__asdf_traverse__``.

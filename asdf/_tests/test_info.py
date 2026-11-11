@@ -834,6 +834,69 @@ def test_info_no_infinite_loop(capsys):
     assert "recursive" in captured.out
 
 
+def test_info_and_schema_info_without_asdf_traverse(capsys):
+    """
+    Test that info and schema_info display schema attributes (such as title)
+    for custom objects with a valid _tag even if they do not implement
+    __asdf_traverse__ (fixes #1883).
+    """
+    my_tag_uri = "asdf://somewhere.org/tags/foo-1.0.0"
+    my_schema_uri = "asdf://somewhere.org/schemas/foo-1.0.0"
+
+    schema_bytes = f"""%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: {my_schema_uri}
+title: "Custom Title"
+""".encode("ascii")
+
+    class CustomExtension:
+        extension_uri = "asdf://somewhere.org/extensions/foo-1.0.0"
+        tags = [
+            asdf.extension.TagDefinition(
+                my_tag_uri,
+                schema_uris=[my_schema_uri],
+            )
+        ]
+
+    class ItemWithoutTraverse:
+        _tag = my_tag_uri
+
+        def __repr__(self):
+            return "ItemWithoutTraverse()"
+
+    class ItemWithTraverse:
+        _tag = my_tag_uri
+
+        def __repr__(self):
+            return "ItemWithTraverse()"
+
+        def __asdf_traverse__(self):
+            return []
+
+    ext = CustomExtension()
+
+    with asdf.config_context() as cfg:
+        cfg.add_resource_mapping({my_schema_uri: schema_bytes})
+        cfg.add_extension(ext)
+
+        # Test object without __asdf_traverse__
+        af_without = asdf.AsdfFile({"t": ItemWithoutTraverse()})
+        af_without.info(max_cols=None)
+        captured_without = capsys.readouterr().out
+        assert "Custom Title" in captured_without
+        info_without = af_without.schema_info("title")
+        assert info_without == {"t": {"title": ("Custom Title", af_without.tree["t"])}}
+
+        # Test object with __asdf_traverse__
+        af_with = asdf.AsdfFile({"t": ItemWithTraverse()})
+        af_with.info(max_cols=None)
+        captured_with = capsys.readouterr().out
+        assert "Custom Title" in captured_with
+        info_with = af_with.schema_info("title")
+        assert info_with == {"t": {"title": ("Custom Title", af_with.tree["t"])}}
+
+
 def _get_block_output(capsys, af, *args, **kwargs) -> str:
     """Passes provided arguments to both `asdf.info` and `AsdfFile.info` and verifies the outputs match.
 

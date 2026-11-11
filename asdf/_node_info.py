@@ -426,18 +426,16 @@ class NodeSchemaInfo:
                     # This is tree wide but should be per-branch.
                     seen.add(id(node))
 
-                    # if the node has __asdf_traverse__ and a _tag attribute
-                    # that is a valid tag, load it's schema
-                    if traversable:
-                        if hasattr(node, "_tag") and isinstance(node._tag, str):
-                            try:
-                                info.set_schema_from_node(node, extension_manager)
-                            except KeyError:
-                                # if _tag is not a valid tag, no schema will be found
-                                # and a KeyError will be raised. We don't raise the KeyError
-                                # (or another exception) here as the node (object) might
-                                # be using _tag for a non-ASDF purpose.
-                                pass
+                    # if the node has a _tag attribute that is a valid tag, load its schema
+                    if hasattr(node, "_tag") and isinstance(node._tag, str):
+                        try:
+                            info.set_schema_from_node(node, extension_manager)
+                        except KeyError:
+                            # if _tag is not a valid tag, no schema will be found
+                            # and a KeyError will be raised. We don't raise the KeyError
+                            # (or another exception) here as the node (object) might
+                            # be using _tag for a non-ASDF purpose.
+                            pass
 
                     # add children to queue
                     for child_identifier, child_node in get_children(t_node):
