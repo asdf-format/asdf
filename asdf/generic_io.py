@@ -1,4 +1,6 @@
 """
+A common interface to the file and stream types that asdf can read and write.
+
 This provides abstractions around a number of different file and
 stream types available to Python so that they are always used in the
 most efficient way.

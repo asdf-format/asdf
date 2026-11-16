@@ -1,3 +1,7 @@
+"""
+Exception and warning classes used by asdf.
+"""
+
 from yaml.representer import RepresenterError
 
 from asdf._jsonschema import ValidationError

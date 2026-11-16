@@ -1,3 +1,7 @@
+"""
+Miscellaneous utilities for working with ASDF files, trees and URIs.
+"""
+
 from __future__ import annotations
 
 import enum

@@ -1,3 +1,7 @@
+"""
+Conversion between custom Python objects and the tagged trees read from and written to YAML.
+"""
+
 from __future__ import annotations
 
 import warnings

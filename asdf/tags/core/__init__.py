@@ -1,3 +1,7 @@
+"""
+Python types for the tags defined in the ASDF Standard's core schemas.
+"""
+
 import collections
 
 from .constant import Constant

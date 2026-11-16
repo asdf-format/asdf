@@ -1,3 +1,7 @@
+"""
+Loading ASDF schemas and validating trees against them.
+"""
+
 import copy
 import datetime
 import json
