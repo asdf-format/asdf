@@ -4,6 +4,10 @@ File to load labels from is determined by setting `extra.legacy_labels_path` in 
 Labels are added to the inventory as `std:label` objects.
 
 Raises a warning if the URL for a label doesn't exist in the docs.
+
+Label URLs in the CSV file should be in non-directory_url format, meaning paths should
+end with `.html` and directories should end with `/index.html`.
+The hook will automatically convert the URLs if `use_directory_urls` is set.
 """
 
 from __future__ import annotations
