@@ -199,14 +199,5 @@ extra:
   - title: Community
     href: https://www.asdf-format.org/en/latest/community/index.html
   legacy_labels_path: docs/.overrides/hooks/legacy_labels.csv  # Config for `export_legacy_labels` hook
-  external_links: # Config for `extlink` macro
-    check: true
-    stdatamodels:
-      url: https://stdatamodels.readthedocs.io/en/latest/
-      suffix: ".html"
-    asdf_standard:
-      url: https://www.asdf-format.org/projects/asdf-standard/en/latest/
-      suffix: ".html"
-    pytest:
-      url: https://docs.pytest.org/en/latest/
-      suffix: ".html"
+  asdf_standard: https://www.asdf-format.org/projects/asdf-standard/en/latest/
+  stdatamodels: https://stdatamodels.readthedocs.io/en/latest/
