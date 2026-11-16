@@ -81,15 +81,21 @@ validation:
   anchors: warn
 
 markdown_extensions:
+# Required by mkdocs-material to generate in-page TOCs
 - toc:
     # Add permalinks to all headers
     permalink: true
-- footnotes
 # Required for several other plugins to work correctly
 - attr_list
+# Required by other plugins
+- md_in_html
+# Support markdown `^1`-style footnotes
+- footnotes
+# Require space after `#` for a line to be considered a header
 - pymdownx.saneheaders
-# Regular and collapsible admonitions
+# Regular admonitions (!!!)
 - admonition
+# Collapsible admonitions (???)
 - pymdownx.details
 # Preprocessing to include snippets from other files
 - pymdownx.snippets:
@@ -102,14 +108,14 @@ markdown_extensions:
     anchor_linenums: true
     pygments_lang_class: true
     line_spans: __span
-- pymdownx.inlinehilite
+# Additional block highlighting, required by other extensions
 - pymdownx.superfences
 - pymdownx.tabbed:
     alternate_style: true
 # Convert `--` to emdash, `...` to ellipse, etc
 - smarty
+# Expand additional symbols, e.g. {tm} to trademark
 - pymdownx.smartsymbols
-- md_in_html
 
 plugins:
 - search
