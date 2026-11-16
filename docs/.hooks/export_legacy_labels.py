@@ -13,6 +13,7 @@ import logging
 import typing
 from dataclasses import dataclass, fields
 from pathlib import Path
+from urllib.parse import urldefrag
 
 if typing.TYPE_CHECKING:
     from collections.abc import Iterator
@@ -36,10 +37,6 @@ def on_env(env: Environment, /, *, config: ProperDocsConfig, files: Files) -> En
 
     mkdocstrings = typing.cast("MkdocstringsPlugin", config.plugins["mkdocstrings"])
     inventory = mkdocstrings.handlers.inventory
-
-    if not config.use_directory_urls:
-        log.info("Skipping exporting legacy labels: 'use_directory_urls' is disabled")
-        return
 
     # This is needed with `properdocs serve`
     ANCHORS.clear()
@@ -77,4 +74,25 @@ class LegacyLabel:
         with path.open(newline="") as file:
             reader = csv.DictReader(file, [f.name for f in fields(cls)])
             for row in reader:
+                row["url"] = cls._make_url(row["url"], config)
                 yield cls(**row)
+
+    @staticmethod
+    def _make_url(url: str, config: ProperDocsConfig) -> str:
+        if config.use_directory_urls:
+            # Convert URL to directory_url format, assuming URL in source ends with .html
+            base, frag = urldefrag(url)
+            without_file, _, filename = base.rpartition("/")
+            # Remove `index.html` from directories
+            if filename == "index.html":
+                base = without_file
+
+            # Remove `.html` suffix
+            url = base.removesuffix(".html")
+            # Add trailing slash assuming non-empty URL
+            if url:
+                url += "/"
+            if frag:
+                url += f"#{frag}"
+
+        return url
