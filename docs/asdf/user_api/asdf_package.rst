@@ -9,4 +9,10 @@ asdf Package
     :inherited-members:
     :no-inheritance-diagram:
     :skip: ValidationError
-    :skip: Stream
+
+Aliases
+-------
+
+.. py:data:: ValidationError
+
+    Alias of :exc:`asdf.exceptions.ValidationError`.

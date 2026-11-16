@@ -247,7 +247,7 @@ a schema, which can then be used to validate a file:
     >>> af.validate()
     Traceback (most recent call last):
     ...
-    asdf._jsonschema.exceptions.ValidationError: 'foo' is a required property
+    asdf.exceptions.ValidationError: 'foo' is a required property
     ...
     >>> af["foo"] = "bar"
     >>> af.validate()
