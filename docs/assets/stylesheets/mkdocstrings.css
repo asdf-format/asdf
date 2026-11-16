@@ -1,3 +1,5 @@
+/* From https://mkdocstrings.github.io/python/usage/customization/#material */
+
 /* Fancier color for operators such as * and |. */
 .doc-signature .o {
     color: var(--md-code-hl-special-color);
@@ -16,10 +18,10 @@
 
 
 /* Indentation. */
-div.doc-contents:not(.first) {
+/* div.doc-contents:not(.first) {
     padding-left: 25px;
     border-left: .05rem solid var(--md-typeset-table-color);
-}
+} */
 
 /* Mark external links as such. */
 a.external::after,
