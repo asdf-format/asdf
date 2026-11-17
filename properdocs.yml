@@ -60,7 +60,7 @@ theme:
 hooks:
 - docs/.overrides/hooks/toctree.py
 - docs/.overrides/hooks/strip_doctest_flags.py
-- docs/.overrides/hooks/export_legacy_labels.py
+- docs/.overrides/hooks/intersphinx_compat.py
 extra_css:
 - assets/stylesheets/mkdocstrings.css
 - assets/stylesheets/asdf.css
@@ -140,8 +140,9 @@ plugins:
 - redirects:
     redirect_maps:
       'changes.md': 'changelog.md'
-      'user_api.md': 'user/index.md'
-      'developer_api.md': 'developer/index.md'
+      'user_api/index.md': 'user/index.md'
+      'developer_api/index.md': 'developer/index.md'
+      'features.md': 'features/index.md'
       'using_extensions.md': 'features/using_extensions.md'
       'arrays.md': 'features/arrays.md'
 
@@ -198,6 +199,11 @@ extra:
     href: https://www.asdf-format.org/en/latest/tutorials/index.html
   - title: Community
     href: https://www.asdf-format.org/en/latest/community/index.html
-  legacy_labels_path: docs/.overrides/hooks/legacy_labels.csv  # Config for `export_legacy_labels` hook
-  asdf_standard: https://www.asdf-format.org/projects/asdf-standard/en/latest/
-  stdatamodels: https://stdatamodels.readthedocs.io/en/latest/
+  intersphinx_compat: # Config for `intersphinx_compat` hook
+    roles: ["label", "doc"]
+    labels: docs/.overrides/hooks/intersphinx_labels.csv
+    remap_doc_names:
+      # Remap /* -> /asdf/*, except for root and /api/*
+      "(?!(index)|(api))(.+)": "asdf/\\3"
+  asdf_standard: https://www.asdf-format.org/projects/asdf-standard/en/latest
+  stdatamodels: https://stdatamodels.readthedocs.io/en/latest
