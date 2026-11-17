@@ -10,18 +10,18 @@ class ExternalArrayReference:
     Parameters
     ----------
 
-    fileuri: `str`
+    fileuri: str
         The path to the path to be referenced. Can be relative to the file
         containing the reference.
 
-    target: `object`
+    target: object
         Some internal target to the data in the file. Examples may include a HDU
         index, a HDF path or an asdf fragment.
 
-    dtype: `str`
+    dtype: str
         The (numpy) dtype of the contained array.
 
-    shape: `tuple`
+    shape: tuple
         The shape of the array to be loaded.
 
 

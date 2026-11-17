@@ -27,10 +27,10 @@ class IntegerType:
     Parameters
     ----------
 
-    value: `numbers.Integral`
+    value: numbers.Integral
         A Python integral value (e.g. `int` or `numpy.integer`)
 
-    storage_type: `str`, optional
+    storage_type: str, optional
         Optionally overrides the storage type of the array used to represent
         the integer value. Valid values are "internal" (the default) and
         "inline"
