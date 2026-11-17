@@ -99,7 +99,6 @@ extensions = [
     "sphinx_inline_tabs",
     "sphinx.ext.intersphinx",
     "sphinx.ext.extlinks",
-    "sphinx_asdf",
     "sphinx.ext.autodoc",
     "sphinx.ext.coverage",
     "sphinx.ext.inheritance_diagram",
