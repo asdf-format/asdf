@@ -60,9 +60,6 @@ nitpick_ignore = [
     ("py:class", "BlockManager"),
     ("py:class", "BlockKey"),
     ("py:class", "asdf._block.key.Key"),
-    # Needed because sphinx breaks trying to process `asdf.typing.NDArray` for some reason
-    ("py:class", "NDArray"),
-    ("py:class", "ByteArray1D"),
     # Needed because `dict_keys` isn't documented
     ("py:class", "dict_keys"),
 ]
@@ -190,3 +187,53 @@ latex_logo = "_static/images/logo-light-mode.png"
 
 def setup(app):
     app.add_css_file("css/globalnav.css")
+    workarounds(app)
+
+
+def workarounds(app):
+    _skip_numpydoc_signature_for_data(app)
+    app.connect("missing-reference", _resolve_class_as_any_object)
+
+
+def _skip_numpydoc_signature_for_data(app):
+    """
+    Workaround for numpydoc returning a signature for callable data objects
+
+    This happens when a generic type alias like ``np.ndarray[...]`` is still
+    a callable object, so numpydoc's ``autodoc-process-signature`` handler
+    returns ``ndararray``'s constructor signature for it, and obvious bug
+    (actually a regression) with fix in sphinx#15576 but not yet released.
+
+    This wraps the original numpydoc ``autodoc-process-signature`` event
+    handler as a temporary workaround.
+    """
+    no_signature = {"module", "data", "type", "attribute", "property"}
+    listeners = app.events.listeners["autodoc-process-signature"]
+    for idx, listener in enumerate(listeners):
+        if listener.handler.__module__ != "numpydoc.numpydoc":
+            continue
+
+        def handler(app, what, *args, _wrapped=listener.handler):
+            return None if what in no_signature else _wrapped(app, what, *args)
+
+        listeners[idx] = listener._replace(handler=handler)
+
+
+def _resolve_class_as_any_object(app, env, node, contnode):
+    """
+    Retry an unresolved ``py:class`` reference as any Python object
+
+    Annotations are looked up as classes but some libraries (namely
+    numpy) register tpyes under other object types, e.g. numpy documents
+    ``numpy.uint8`` (an alias of ``numpy.ubytes``) as an attribute.
+    This allows ``numpy.uint8`` to still be referenced directly.
+    """
+
+    if node.get("refdomain") != "py" or node.get("reftype") != "class":
+        # we are only concerned with py:class reference resolutions
+        return None
+
+    from sphinx.ext.intersphinx import resolve_reference_any_inventory
+    new_node = node.deepcopy()
+    new_node["reftype"] = "obj"  # rewrite as a generic obj reference
+    return resolve_reference_any_inventory(env, True, new_node, contnode)
