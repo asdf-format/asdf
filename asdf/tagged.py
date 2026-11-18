@@ -1,5 +1,7 @@
 """
-This file manages a transient representation of the tree made up of
+Basic Python data types annotated with the YAML tag of an ASDF tree node.
+
+This module manages a transient representation of the tree made up of
 simple Python data types (lists, dicts, scalars) wrapped inside of
 `Tagged` subclasses, which add a ``tag`` attribute to hold the
 associated YAML tag.

@@ -1,4 +1,4 @@
-"""This module contains type aliases and protocols useful for type checking."""
+"""Type aliases and protocols useful for type checking code that uses asdf."""
 
 from __future__ import annotations
 

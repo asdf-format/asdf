@@ -1,3 +1,7 @@
+"""
+Loading ASDF schemas and validating trees against them.
+"""
+
 import copy
 import datetime
 import json
@@ -524,7 +528,7 @@ def get_validator(
         Explicit schema to use.  If not provided, the schema to use
         is determined by the tag on instance (or subinstance).
 
-    ctx : AsdfFile context
+    ctx : AsdfFile
         Used to resolve tags and urls
 
     validators : dict, optional
@@ -629,10 +633,10 @@ def validate(instance, ctx=None, schema=None, validators=None, reading=False, *a
     ----------
     instance : tagged tree
 
-    ctx : AsdfFile context
+    ctx : AsdfFile
         Used to resolve tags and urls
 
-    schema : schema, optional
+    schema : dict, optional
         Explicit schema to use.  If not provided, the schema to use
         is determined by the tag on instance (or subinstance) and
         any custom schema provided to ``ctx``.
@@ -676,7 +680,7 @@ def fill_defaults(instance, ctx, reading=False):
     ----------
     instance : tagged tree
 
-    ctx : AsdfFile context
+    ctx : AsdfFile
         Used to resolve tags and urls
 
     reading: bool, optional
@@ -695,7 +699,7 @@ def remove_defaults(instance, ctx):
     ----------
     instance : tagged tree
 
-    ctx : AsdfFile context
+    ctx : AsdfFile
         Used to resolve tags and urls
     """
     validate(instance, ctx, validators=REMOVE_DEFAULTS)

@@ -1,4 +1,6 @@
 """
+Version numbers for the ASDF Standard and for versioned tags.
+
 This module deals with things that change between different versions
 of the ASDF spec.
 """

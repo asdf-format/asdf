@@ -470,3 +470,24 @@ def docs(session: Session) -> None:
         "docs/_build/html",
         *session.posargs,
     )
+
+
+@nox.session(name="live-docs", tags=["docs"], python=PY_NEWEST, default=False)
+def live_docs(session: Session) -> None:
+    """Serve the Sphinx documentation with live reload on changes"""
+
+    Asdf(extras=[], deps_groups=["docs"]).install(session, "sphinx-autobuild")
+
+    session.run(
+        "sphinx-autobuild",
+        "-T",
+        # watch all files in the tree, not just docs/
+        # arguably it would suffice to narrow this down more but
+        # the --watch feature doesn't work as it should when files
+        # are written atomically by editors; needs upstream fix
+        "--watch", ".",
+        "--re-ignore", "__pycache__",
+        "docs",
+        "docs/_build/html",
+        *session.posargs
+    )

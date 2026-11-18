@@ -60,9 +60,6 @@ nitpick_ignore = [
     ("py:class", "BlockManager"),
     ("py:class", "BlockKey"),
     ("py:class", "asdf._block.key.Key"),
-    # Needed because sphinx breaks trying to process `asdf.typing.NDArray` for some reason
-    ("py:class", "NDArray"),
-    ("py:class", "ByteArray1D"),
     # Needed because `dict_keys` isn't documented
     ("py:class", "dict_keys"),
 ]
@@ -70,6 +67,7 @@ nitpick_ignore = [
 # Add intersphinx mappings
 intersphinx_mapping = {
     "numpy": ("https://numpy.org/doc/stable/", None),
+    "packaging": ("https://packaging.pypa.io/en/stable/", None),
     "pypa-packaging": ("https://packaging.python.org/en/latest/", None),
     "pytest": ("https://docs.pytest.org/en/latest/", None),
     "python": ("https://docs.python.org/3/", None),
@@ -99,15 +97,14 @@ extensions = [
     "sphinx_inline_tabs",
     "sphinx.ext.intersphinx",
     "sphinx.ext.extlinks",
-    "sphinx_asdf",
     "sphinx.ext.autodoc",
     "sphinx.ext.coverage",
     "sphinx.ext.inheritance_diagram",
     "sphinx.ext.mathjax",
+    "sphinx.ext.napoleon",
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
     "sphinxcontrib.jquery",
-    "numpydoc",
     "sphinx_automodapi.automodapi",
     "sphinx_automodapi.smart_resolver",
 ]
@@ -126,13 +123,25 @@ master_doc = "index"
 # documents. Set to the "smart" one.
 default_role = "obj"
 
-# Don't show summaries of the members in each class along with the
-# class' docstring
-numpydoc_show_class_members = False
-
 autosummary_generate = True
 
 automodapi_toctreedirnm = "api"
+
+autodoc_typehints = "description"
+autodoc_typehints_description_target = "documented"
+napoleon_preprocess_types = True
+napoleon_type_aliases = {
+    "AsdfFile": "~asdf.AsdfFile",
+    "NOT_SET": ":data:`~asdf.util.NOT_SET`",
+    "bytes-like": ":term:`python:bytes-like object`",
+    "file-like": ":term:`python:file object`",
+    "file-like object": ":term:`python:file object`",
+    "integer": "int",
+    "iterable": ":term:`python:iterable`",
+    "read-write bytes-like": ":term:`python:bytes-like object`",
+    "tagged tree": ":term:`tagged tree`",
+    "tree node": ":term:`tree node`",
+}
 
 # Class documentation should contain *both* the class docstring and
 # the __init__ docstring
@@ -191,3 +200,28 @@ latex_logo = "_static/images/logo-light-mode.png"
 
 def setup(app):
     app.add_css_file("css/globalnav.css")
+    workarounds(app)
+
+
+def workarounds(app):
+    app.connect("missing-reference", _resolve_class_as_any_object)
+
+
+def _resolve_class_as_any_object(app, env, node, contnode):
+    """
+    Retry an unresolved ``py:class`` reference as any Python object
+
+    Annotations are looked up as classes but some libraries (namely
+    numpy) register tpyes under other object types, e.g. numpy documents
+    ``numpy.uint8`` (an alias of ``numpy.ubytes``) as an attribute.
+    This allows ``numpy.uint8`` to still be referenced directly.
+    """
+
+    if node.get("refdomain") != "py" or node.get("reftype") != "class":
+        # we are only concerned with py:class reference resolutions
+        return None
+
+    from sphinx.ext.intersphinx import resolve_reference_any_inventory
+    new_node = node.deepcopy()
+    new_node["reftype"] = "obj"  # rewrite as a generic obj reference
+    return resolve_reference_any_inventory(env, True, new_node, contnode)

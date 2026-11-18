@@ -1,6 +1,5 @@
 """
-asdf: Python library for reading and writing Advanced Scientific
-Data Format (ASDF) files
+Python library for reading and writing Advanced Scientific Data Format (ASDF) files.
 """
 
 __all__ = [

@@ -1,6 +1,13 @@
+"""
+Exception and warning classes used by asdf.
+"""
+
 from yaml.representer import RepresenterError
 
 from asdf._jsonschema import ValidationError
+
+# Implemented in the vendored jsonschema, but this is its public home
+ValidationError.__module__ = __name__
 
 __all__ = [
     "AsdfConversionWarning",

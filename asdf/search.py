@@ -120,21 +120,21 @@ class AsdfSearchResult:
 
         Parameters
         ----------
-        key : NOT_SET, str, or any other object
+        key : NOT_SET, str, or object
             Search query that selects nodes by dict key or list index.
             If NOT_SET, the node key is unconstrained.
             If str, the input is searched among keys/indexes as a regular
             expression pattern.
             If any other object, node's key or index must equal the queried key.
 
-        type_ : NOT_SET, str, or builtins.type
+        type_ : NOT_SET, str, or type
             Search query that selects nodes by type.
             If NOT_SET, the node type is unconstrained.
             If str, the input is searched among (fully qualified) node type
             names as a regular expression pattern.
             If builtins.type, the node must be an instance of the input.
 
-        value : NOT_SET, str, or any other object
+        value : NOT_SET, str, or object
             Search query that selects nodes by value.
             If NOT_SET, the node value is unconstrained.
             If str, the input is searched among values as a regular

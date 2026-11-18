@@ -1,3 +1,7 @@
+"""
+Python types for the tags defined in the ASDF Standard's core schemas.
+"""
+
 import collections
 
 from .constant import Constant
@@ -5,6 +9,12 @@ from .external_reference import ExternalArrayReference
 from .integer import IntegerType
 from .ndarray import NDArrayType
 from .stream import Stream
+
+# Report these by their public home rather than their implementation modules
+# (they are also re-exported by the top-level package for convenience)
+for _cls in (ExternalArrayReference, IntegerType, Stream):
+    _cls.__module__ = __name__
+del _cls
 
 __all__ = [
     "AsdfObject",
