@@ -128,6 +128,9 @@ plugins:
     api_root_uri: api
     exclude:
     - asdf.conftest
+    - asdf.constants
+    - asdf.reference
+    - "re:asdf\\.tags\\.core\\..*"
     on_implicit_namespace_package: skip
 - literate-nav:
     nav_file: SUMMARY.md
