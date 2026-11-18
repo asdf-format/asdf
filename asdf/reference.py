@@ -1,7 +1,10 @@
 """
-Manages external references in the YAML tree using the `JSON Reference
-standard <http://tools.ietf.org/html/draft-pbryan-zyp-json-ref-03>`__
-and `JSON Pointer standard <http://tools.ietf.org/html/rfc6901>`__.
+References from an ASDF tree to content in the same or another ASDF file.
+
+References are written in the tree as ``{$ref: <uri>}`` using the `JSON
+Reference standard <http://tools.ietf.org/html/draft-pbryan-zyp-json-ref-03>`__,
+where the URI's fragment is a `JSON Pointer
+<http://tools.ietf.org/html/rfc6901>`__ into the target file's tree.
 """
 
 import weakref
@@ -42,6 +45,43 @@ def resolve_fragment(tree, pointer):
 
 
 class Reference:
+    """
+    A lazily-resolved JSON Reference to a node in an ASDF tree.
+
+    A ``Reference`` stands in for the node it points to.  The target is
+    loaded the first time it is needed, opening the external file if
+    necessary, and attribute access, indexing, ``len()``, ``in`` and
+    conversion to a numpy array are all forwarded to it.  `repr` and `str`
+    do not load the target.
+
+    Calling the reference returns the target itself.  Any keyword
+    arguments are passed to `asdf.AsdfFile.open_external` if the external
+    file has not been loaded yet.
+
+    When a tree containing a ``Reference`` is written, it is written as a
+    ``{$ref: <uri>}`` node, with the URI made relative to the file being
+    written where possible.
+
+    References are usually not created directly; see
+    `asdf.AsdfFile.make_reference` and `asdf.AsdfFile.find_references`.
+
+    Parameters
+    ----------
+    uri : str
+        The URI of the referenced node, possibly relative, with a JSON
+        Pointer to the node as its fragment, e.g.
+        ``"target.asdf#/data/0"``.
+    base_uri : str, optional
+        The URI to resolve a relative ``uri`` against.  Defaults to the URI
+        of ``asdffile``.
+    asdffile : asdf.AsdfFile, optional
+        The file containing the reference, used to open external files.
+        Only a weak reference to it is kept.
+    target : object, optional
+        The referenced node, if it is already known, in which case it is
+        not loaded from ``uri``.
+    """
+
     def __init__(self, uri, base_uri=None, asdffile=None, target=None):
         self._uri = uri
         if asdffile is not None:
@@ -97,6 +137,15 @@ class Reference:
         return np.asarray(self._get_target())
 
     def __call__(self, **kwargs):
+        """
+        Return the referenced node, loading it first if necessary.
+
+        Parameters
+        ----------
+        **kwargs
+            Passed to `asdf.AsdfFile.open_external` when the external file
+            has not been loaded yet.
+        """
         return self._get_target(**kwargs)
 
     def __contains__(self, item):
@@ -139,7 +188,7 @@ def make_reference(asdffile, path):
 
     Parameters
     ----------
-    asdffile : AsdfFile
+    asdffile : asdf.AsdfFile
 
     path : list of str and int, optional
         The parts of the path pointing to an item in this tree.
@@ -147,7 +196,7 @@ def make_reference(asdffile, path):
 
     Returns
     -------
-    reference : reference.Reference
+    reference : Reference
         A reference object.
     """
     path_str = "/".join(x.replace("~", "~0").replace("/", "~1") for x in path)

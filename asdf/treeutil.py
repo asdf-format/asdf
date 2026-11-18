@@ -426,7 +426,7 @@ def get_children(node):
 
     Returns
     -------
-    list of (object, object) tuples
+    list of tuple
         list of (identifier, child node) tuples, or empty list if the
         node has no children (either it is an empty container, or is
         a non-container type)

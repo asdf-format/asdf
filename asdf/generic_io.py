@@ -342,7 +342,7 @@ class GenericFile:
 
         Parameters
         ----------
-        array : np.ndarray
+        array : numpy.ndarray
             Must be 1D contiguous.
         """
         if len(array.shape) != 1 or not array.flags.contiguous:
@@ -499,7 +499,7 @@ class GenericFile:
 
         Raises
         ------
-        DelimiterNotFoundError :
+        DelimiterNotFoundError
             If the delimiter is not found before the end of the file.
         """
         buff = io.BytesIO()
@@ -558,7 +558,7 @@ class GenericFile:
 
         Raises
         ------
-        DelimiterNotFoundError :
+        DelimiterNotFoundError
             If the delimiter is not found before the end of the file.
         """
         raise NotImplementedError
@@ -609,7 +609,7 @@ class GenericFile:
 
         Raises
         ------
-        DelimiterNotFoundError :
+        DelimiterNotFoundError
             If ``exception`` is enabled and the delimiter is not found
             before the end of the file.
         """
@@ -661,7 +661,7 @@ class GenericFile:
 
         Returns
         -------
-        array : np.memmap
+        array : numpy.memmap
         """
         msg = f"memmapping is not implemented for {self.__class__.__name__}"
         raise NotImplementedError(msg)
@@ -692,7 +692,7 @@ class GenericFile:
 
         Returns
         -------
-        array : np.memmap
+        array : numpy.memmap
         """
         buff = self.read(size)
         # Need cast because numpy doesn't type frombuffer as a 1D array

@@ -23,6 +23,7 @@ to create their own custom ASDF types and extensions.
     developer_api/asdf_tags_core.rst
     developer_api/asdf_testing_helpers.rst
     developer_api/asdf_lazy_nodes.rst
+    developer_api/asdf_reference.rst
     developer_api/asdf_generic_io.rst
 
 .. autosummary::
@@ -39,4 +40,5 @@ to create their own custom ASDF types and extensions.
     asdf.tags.core
     asdf.testing.helpers
     asdf.lazy_nodes
+    asdf.reference
     asdf.generic_io

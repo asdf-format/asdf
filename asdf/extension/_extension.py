@@ -292,7 +292,7 @@ class ExtensionProxy(ExtensionLike):
 
         Returns
         -------
-        list of asdf.extension.CompressionPlugin
+        list of asdf.extension.Compressor
         """
         return self._compressors
 
@@ -314,7 +314,10 @@ class ExtensionProxy(ExtensionLike):
 
         Returns
         -------
-        iterable of asdf.type.ExtensionType
+        list
+            The delegate's ``types`` attribute, if any.  A leftover from
+            legacy (pre-3.0) extensions; always empty for new
+            extensions.
         """
         return getattr(self._delegate, "types", [])
 

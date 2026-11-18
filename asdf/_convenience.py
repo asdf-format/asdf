@@ -24,7 +24,7 @@ def info(
 
     Parameters
     ----------
-    node_or_path : str, pathlib.Path, asdf.AsdfFile, or any ASDF tree node
+    node_or_path : str, pathlib.Path, asdf.AsdfFile, or tree node
         The tree or sub-tree to render.  Strings and Path objects
         will first be passed to asdf.open(...).
 

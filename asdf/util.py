@@ -55,8 +55,9 @@ def load_yaml(init, tagged=False):
     Parameters
     ----------
 
-    init : filename or file-like
-        If file-like this must be opened in binary mode.
+    init : str or file-like
+        File path or file-like object. If file-like, must be opened in
+        binary mode.
 
     tagged: bool, optional
         Return tree with instances of `asdf.tagged.Tagged` this

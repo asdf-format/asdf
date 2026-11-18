@@ -32,7 +32,7 @@ def roundtrip_object(obj, version=None):
     ----------
     obj : object
         Object to serialize.
-    version : str or None.
+    version : str or None
         ASDF Standard version.  If None, use the library's default version.
 
     Returns
@@ -59,7 +59,7 @@ def yaml_to_asdf(yaml_content, version=None):
     ----------
     yaml_content : string or bytes
         YAML content.
-    version : str or None.
+    version : str or None
         ASDF Standard version.  If None, use the library's default version.
 
     Returns

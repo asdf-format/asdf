@@ -77,6 +77,7 @@ Resources
   asdf/deprecations
   asdf/changes
   asdf/citation
+  asdf/glossary
 
 See also
 ========
