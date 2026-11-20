@@ -6,13 +6,16 @@ import math
 import re
 import struct
 from functools import lru_cache
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 import numpy as np
 import yaml
 from typing_extensions import sentinel
 
 from . import constants
+
+if TYPE_CHECKING:
+    from asdf.generic_io import GenericFile
 
 # We're importing our own copy of urllib.parse because
 # we need to patch it to support asdf:// URIs, but it'd
@@ -266,9 +269,11 @@ def get_class_name(obj, instance=True):
     return f"{typ.__module__}.{typ.__qualname__}"
 
 
-#: Special value indicating that a parameter is not set.
-#: Distinct from None, which may for example be a value of interest in a search.
 NOT_SET = sentinel("NOT_SET", repr="NotSet")
+"""Special value indicating that a parameter is not set.
+
+Distinct from None, which may for example be a value of interest in a search.
+"""
 NotSet: Final[NOT_SET] = NOT_SET
 
 
@@ -313,20 +318,9 @@ def _compile_uri_match_pattern(pattern):
     return re.compile(pattern)
 
 
-def get_file_type(fd):
+def get_file_type(fd: GenericFile) -> FileType:
     """
-    Determine the file type of an open GenericFile instance.
-
-    Parameters
-    ----------
-
-    fd : ``asdf.generic_io.GenericFile``
-
-    Returns
-    -------
-
-    `asdf.util.FileType`
-    """
+    Determine the file type of an open GenericFile instance."""
     if fd.peek(5) == constants.ASDF_MAGIC:
         return FileType.ASDF
 

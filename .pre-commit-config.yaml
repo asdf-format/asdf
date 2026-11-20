@@ -22,8 +22,6 @@ repos:
 - repo: https://github.com/pre-commit/pygrep-hooks
   rev: v1.10.0
   hooks:
-    - id: rst-directive-colons
-    - id: rst-inline-touching-normal
     - id: text-unicode-replacement-char
 
 - repo: https://github.com/codespell-project/codespell
@@ -39,7 +37,9 @@ repos:
   hooks:
     - id: ruff-check
       args: ["--fix"]
+      types_or: [python, pyi, jupyter, markdown]
     - id: ruff-format
+      types_or: [python, pyi, jupyter, markdown]
 
 - repo: https://github.com/tombi-toml/tombi-pre-commit
   rev: v1.2.0

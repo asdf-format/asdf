@@ -54,7 +54,7 @@ class Converter(Protocol[_T, _Node]):
     `from_yaml_tree`.
 
     The ``to_info`` method is optional. If implemented it must
-    accept 1 parameter ``obj` which is a tree node/custom
+    accept 1 parameter ``obj`` which is a tree node/custom
     object and return a container (list, tuple, dict) containing
     information about that object to display during ``AsdfFile.info``.
     """
@@ -292,7 +292,7 @@ class ConverterProxy(Generic[_T, _Node], Converter[_T, _Node]):
 
         Parameters
         ----------
-        tree : dict or list or str
+        node : dict or list or str
             The YAML node to convert.
         tag : str
             The YAML tag of the object being converted.

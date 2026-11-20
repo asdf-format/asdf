@@ -45,12 +45,6 @@ def iter_tree(top):
     top : object
         The root of the tree.  May be a dict, list or other Python object.
 
-    callback : callable
-        A function to call at each node in the tree.
-
-        The callback is called on an instance after all of its
-        children have been visited (depth-first order).
-
     Returns
     -------
     tree : object
@@ -236,7 +230,7 @@ def walk_and_modify(top, callback, postorder=True, _context=None):
         - a json id (optional)
 
         It may return a different instance in order to modify the
-        tree.  If the singleton instance `~asdf.treeutil._RemoveNode`
+        tree.  If the singleton instance [`RemoveNode`][]
         is returned, the node will be removed from the tree.
 
         The json id is the context under which any relative URLs
