@@ -203,6 +203,7 @@ extra:
   intersphinx_compat: # Config for `intersphinx_compat` hook
     roles: ["label", "doc"]
     labels: docs/.overrides/hooks/intersphinx_labels.csv
+    package: asdf
     remap_doc_names:
       # Remap /* -> /asdf/*, except for root and /api/*
       "(?!(index)|(api))(.+)": "asdf/\\3"

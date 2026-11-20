@@ -26,6 +26,7 @@ substitution templates. These can be used to modify the names of exported `std:d
 from __future__ import annotations
 
 import csv
+import importlib.metadata
 import logging
 import re
 import typing
@@ -62,6 +63,7 @@ class LegacyLabelsConfig(Config):
     labels: str | None = opt.Optional(opt.File(exists=True))  # type: ignore[bad-assignment]
     include_redirects: bool = opt.Type(bool, default=True)  # type: ignore[bad-assignment]
     remap_doc_names: dict[str, str] = opt.DictOfItems(opt.Type(str), default={})  # type: ignore[bad-assignment]
+    package: str | None = opt.Optional(opt.Type(str))  # type: ignore[bad-assignment]
 
 
 class LegacyLabelsPlugin(BasePlugin[LegacyLabelsConfig]):
@@ -92,6 +94,8 @@ class LegacyLabelsPlugin(BasePlugin[LegacyLabelsConfig]):
         mkdocstrings = typing.cast("MkdocstringsPlugin", config.plugins["mkdocstrings"])
         inventory = mkdocstrings.handlers.inventory
 
+        self._set_version(inventory)
+
         if "doc" in self.config.roles:
             self._register_docs(files, inventory)
 
@@ -110,6 +114,12 @@ class LegacyLabelsPlugin(BasePlugin[LegacyLabelsConfig]):
         for label in self.labels:
             if label.url not in self._anchors:
                 log.warning(f"URL for intersphinx label '{label.anchor}' does not exist: {label.url}")
+
+    def _set_version(self, inventory: Inventory) -> None:
+        if not self.config.package:
+            return
+
+        inventory.version = importlib.metadata.version(self.config.package)
 
     def _register_labels(self, inventory: Inventory) -> None:
         for label in self.labels:
