@@ -123,7 +123,7 @@ class LegacyLabelsPlugin(BasePlugin[LegacyLabelsConfig]):
 
     def _register_labels(self, inventory: Inventory) -> None:
         for label in self.labels:
-            inventory.register(label.anchor, "std", "label", label.url, dispname=label.title)
+            _register_unique(inventory, label.anchor, "std", "label", label.url, label.title)
 
         log.info(f"Registered {len(self.labels)} 'std:label' objects to intersphinx inventory")
 
@@ -153,7 +153,23 @@ class LegacyLabelsPlugin(BasePlugin[LegacyLabelsConfig]):
             for pattern, sub in self.config.remap_doc_names.items():
                 if m := re.fullmatch(pattern, name):
                     name = m.expand(sub)
-            inventory.register(name, "std", "doc", file.url, dispname=dispname)
+
+            _register_unique(inventory, name, "std", "doc", file.url, dispname)
+
+
+def _register_unique(inventory: Inventory, name: str, domain: str, role: str, uri: str, dispname: str | None) -> None:
+    """Register an object to the intersphinx inventory.
+
+    Emits a warning if an object with the same name already exists.
+    """
+    if obj := inventory.get(name):
+        old_ty = f"{obj.domain}:{obj.role}"
+        new_ty = f"{domain}:{role}"
+        log.warning(
+            f"Registering '{name}' `{new_ty}` object, but a `{old_ty}` object with that name is already registered."
+        )
+
+    inventory.register(name, domain, role, uri, dispname=dispname)
 
 
 @dataclass(frozen=True, slots=True)
