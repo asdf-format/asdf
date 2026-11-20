@@ -20,7 +20,7 @@ For the purposes of this documentation, a "custom type" is any data type that ca
 
 In order for a particular custom type to be serialized, a special class called a "converter" must be implemented. Each converter defines how the corresponding custom type will be serialized and deserialized. More details on how converters are implemented can be found in *[Converters](/extending/converters.md)*. Users should never have to refer to converter implementations directly; they simply enable [`asdf`][] to recognize and process custom types.
 
-In addition to converters, each custom type may have a corresponding schema, which is used for validation. The definition of the schema if present is closely tied to the definition of the converter. More details on schema validation can be found in *[Schema validation](index.md#schema-validation)*.
+In addition to converters, each custom type may have a corresponding schema, which is used for validation. The definition of the schema if present is closely tied to the definition of the converter. More details on schema validation can be found in *[Schema validation](features.md#schema-validation)*.
 
 Schemas are generally versioned and change in sync with their associated converters. The version number will increase whenever a schema (and therefore the converter implementation) changes.
 

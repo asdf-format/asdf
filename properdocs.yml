@@ -145,9 +145,6 @@ plugins:
       'changes.md': 'changelog.md'
       'user_api/index.md': 'user/index.md'
       'developer_api/index.md': 'developer/index.md'
-      'features.md': 'features/index.md'
-      'using_extensions.md': 'features/using_extensions.md'
-      'arrays.md': 'features/arrays.md'
 
 - mkdocstrings:
     handlers:

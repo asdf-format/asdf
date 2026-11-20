@@ -310,7 +310,7 @@ To expand on this example let's assume the `xyz-1.0.0` schema was linked to tag 
 
 After this update is made, asdf will be able to open files with both the old and new tags and write out files with the new tag. To expand on this, when a file with an old tag is opened, asdf will look for an extension that supports that tag. The new extension will be checked first (since it occurs earlier in the list) but since the new manifest does not contain the old tag the new extension will be skipped. Next the old extension will be checked, support for the tag will be confirmed and the converted included in that old extension will be used to handle the tag. On write, asdf will again check the list of extensions. Except this time asdf will see that the new extension supports the type and select the new tag when writing the file.
 
-For more details on the behavior of schema and tag versioning from a user perspective, see *[Versioning and Compatibility](/features/index.md#versioning-and-compatibility)*, and also *[Custom types, extensions, and versioning](/features/using_extensions.md#custom-type-versioning)*.
+For more details on the behavior of schema and tag versioning from a user perspective, see *[Versioning and Compatibility](/features.md#versioning-and-compatibility)*, and also *[Custom types, extensions, and versioning](/using_extensions.md#custom-type-versioning)*.
 
 ### Versioning during development
 

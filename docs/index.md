@@ -10,7 +10,7 @@
 ## Getting Started
 [toctree install.md depth=2]
 [toctree overview.md depth=2]
-[toctree features/index.md depth=2]
+[toctree features.md depth=2]
 [toctree config.md depth=2]
 [toctree asdf_tool.md depth=2]
 

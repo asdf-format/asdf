@@ -10,7 +10,7 @@
 - `edit`: Edit the YAML portion of an ASDF file.
 - `info`: Print a rendering of an ASDF tree.
 - `search`: Search an ASDF file.
-- `extensions`: Show information about installed extensions (see *[Extensions from other packages](features/using_extensions.md#other-packages)*).
+- `extensions`: Show information about installed extensions (see *[Extensions from other packages](using_extensions.md#other-packages)*).
 - `tags`: List currently available tags.
 - `to_yaml`: Inline all of the data in an ASDF file so that it is pure YAML.
 - `validate`: Validate an ASDF file's blocks and schema.
