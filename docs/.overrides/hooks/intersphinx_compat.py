@@ -37,6 +37,7 @@ from typing import Literal
 from urllib.parse import urldefrag
 
 import properdocs.config.config_options as opt
+from mkdocstrings import Inventory, InventoryItem
 from properdocs.config.base import Config
 from properdocs.plugins import BasePlugin
 from properdocs.structure.files import File, InclusionLevel
@@ -46,7 +47,7 @@ if typing.TYPE_CHECKING:
 
     from jinja2 import Environment
     from mkdocs_redirects.plugin import RedirectPlugin
-    from mkdocstrings import Inventory, MkdocstringsPlugin
+    from mkdocstrings import MkdocstringsPlugin
     from properdocs.config.defaults import ProperDocsConfig
     from properdocs.structure.files import Files
     from properdocs.structure.pages import Page
@@ -92,7 +93,8 @@ class LegacyLabelsPlugin(BasePlugin[LegacyLabelsConfig]):
         """Inject 'std' domain objects into the mkdocstrings inventory."""
 
         mkdocstrings = typing.cast("MkdocstringsPlugin", config.plugins["mkdocstrings"])
-        inventory = mkdocstrings.handlers.inventory
+        inventory = MultiInventory(mkdocstrings.handlers.inventory)
+        mkdocstrings.handlers.inventory = inventory
 
         self._set_version(inventory)
 
@@ -123,7 +125,7 @@ class LegacyLabelsPlugin(BasePlugin[LegacyLabelsConfig]):
 
     def _register_labels(self, inventory: Inventory) -> None:
         for label in self.labels:
-            _register_unique(inventory, label.anchor, "std", "label", label.url, label.title)
+            inventory.register(label.anchor, "std", "label", label.url, dispname=label.title)
 
         log.info(f"Registered {len(self.labels)} 'std:label' objects to intersphinx inventory")
 
@@ -154,22 +156,7 @@ class LegacyLabelsPlugin(BasePlugin[LegacyLabelsConfig]):
                 if m := re.fullmatch(pattern, name):
                     name = m.expand(sub)
 
-            _register_unique(inventory, name, "std", "doc", file.url, dispname)
-
-
-def _register_unique(inventory: Inventory, name: str, domain: str, role: str, uri: str, dispname: str | None) -> None:
-    """Register an object to the intersphinx inventory.
-
-    Emits a warning if an object with the same name already exists.
-    """
-    if obj := inventory.get(name):
-        old_ty = f"{obj.domain}:{obj.role}"
-        new_ty = f"{domain}:{role}"
-        log.warning(
-            f"Registering '{name}' `{new_ty}` object, but a `{old_ty}` object with that name is already registered."
-        )
-
-    inventory.register(name, domain, role, uri, dispname=dispname)
+            inventory.register(name, "std", "doc", file.url, dispname=dispname)
 
 
 @dataclass(frozen=True, slots=True)
@@ -205,3 +192,33 @@ class LegacyLabel:
                 url += f"#{frag}"
 
         return url
+
+
+class MultiInventory(Inventory):
+    """Subclass of inventory that patches it to support multiple objects with the same name."""
+
+    def __init__(self, src: Inventory):
+        super().__init__()
+
+        for item in src.values():
+            key = f"{item.domain}:{item.role}:{item.name}"
+            self[key] = item
+
+    def register(
+        self,
+        name: str,
+        domain: str,
+        role: str,
+        uri: str,
+        priority: int = 1,
+        dispname: str | None = None,
+    ) -> None:
+        key = f"{domain}:{role}:{name}"
+        self[key] = InventoryItem(
+            name=name,
+            domain=domain,
+            role=role,
+            uri=uri,
+            priority=priority,
+            dispname=dispname,
+        )
