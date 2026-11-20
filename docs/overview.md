@@ -6,7 +6,7 @@ To follow along with this tutorial, you will need to install the `asdf` package.
 
 ## Hello World
 
-At its core, ASDF is a way of saving nested data structures to YAML. Here we save a `dict` with the key/value pair `'hello': 'world'`.
+At its core, ASDF is a way of saving nested data structures to YAML. Here we save a [`dict`][] with the key/value pair `'hello': 'world'`.
 
 ```pycon
 >>> from asdf import AsdfFile
@@ -50,6 +50,6 @@ A rendering of the binary data contained in the file can be found below. Observe
 
 --8<-- "README.md:compress-file"
 
-## Reading Files
+## Reading Files { #reading-files }
 
 --8<-- "README.md:read-file"

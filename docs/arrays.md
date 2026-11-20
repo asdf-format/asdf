@@ -42,7 +42,7 @@ my_array: !core/ndarray-1.1.0
 ...
 ```
 
-See `overview_reading` for a description of how to open this file.
+See *[Reading Files](/overview.md#reading-files)* for a description of how to open this file.
 
 ## Sharing of data
 
@@ -100,9 +100,7 @@ For small arrays, you may not care about the efficiency of a binary representati
 
 - `internal`: The default. The array data will be stored in a binary
   block in the same ASDF file.
-- `external`: Store the data in a binary block in a separate ASDF file
-  (also known as "exploded" format, which discussed below in
-  `exploded`).
+- `external`: Store the data in a binary block in a separate ASDF file (also known as "exploded" format, which discussed below in *[Saving external arrays](#exploded)*).
 - `inline`: Store the data as YAML inline in the tree.
 
 ```pycon
@@ -157,12 +155,12 @@ my_array: !core/ndarray-1.1.0
 
 Alternatively, it is possible to use the `all_array_storage` parameter of [`AsdfFile.write_to`][asdf.AsdfFile.write_to] and [`AsdfFile.update`][asdf.AsdfFile.update] to control the storage format of all arrays in the file.
 
-```
+```py
 # This controls the output format of all arrays in the file
-ff.write_to("all_inline.asdf", all_array_storage='inline')
+ff.write_to("all_inline.asdf", all_array_storage="inline")
 ```
 
-For automatic management of the array storage type based on number of elements, see `config_options_array_inline_threshold`.
+For automatic management of the array storage type based on number of elements, see the [`array_inline_threshold` config option](/config.md#array_inline_threshold).
 
 ## Saving external arrays { #exploded }
 
@@ -268,11 +266,11 @@ my_stream: !core/ndarray-1.1.0
 ...
 ```
 
-When reading a file with a streamed block the streamed block will be treated as a normal non-streamed block. It may be useful to enable `memory_mapping` if the corresponding block is too large to hold in memory.
+When reading a file with a streamed block the streamed block will be treated as a normal non-streamed block. It may be useful to enable [memory mapping](#memory-mapping) if the corresponding block is too large to hold in memory.
 
 A case where streaming may be useful is when converting large data sets from a different format into ASDF. In these cases it would be impractical to hold all of the data in memory as an intermediate step. Consider the following example that streams a large CSV file containing rows of integer data and converts it to numpy arrays stored in ASDF:
 
-```
+```py
 import csv
 import numpy as np
 from asdf import AsdfFile
@@ -280,15 +278,15 @@ from asdf.tags.core import Stream
 
 tree = {
     # We happen to know in advance that each row in the CSV has 100 ints
-    'data': Stream([100], np.int64)
+    "data": Stream([100], np.int64)
 }
 
 ff = AsdfFile(tree)
 # open the output file handle
-with open('new_file.asdf', 'wb') as fd:
+with open("new_file.asdf", "wb") as fd:
     ff.write_to(fd)
     # open the CSV file to be converted
-    with open('large_file.csv', 'r') as cfd:
+    with open("large_file.csv", "r") as cfd:
         # read each line of the CSV file
         reader = csv.reader(cfd)
         for row in reader:
@@ -306,9 +304,9 @@ Individual blocks in an ASDF file may be compressed.
 	Files created by `asdf` versions prior to `5.2.1` used an incorrect
 	method of computing checksums for compressed blocks. This bug was
 	fixed in `5.2.1`. As a result files created by `asdf<=5.2.0` may fail
-	block checksum validation with `asdf	=5.2.1` and vice-versa.
+	block checksum validation with `asdf>=5.2.1` and vice-versa.
 
-	By default `asdf` does not verify block checksums when reading a file 	so this change does not impact anyone already using the default 	configuration. If you encounter validation errors while reading a file 	created by an older or newer `asdf` version you will need to disable 	validation by setting `validate_checksums=False` in 	[`asdf.open`][].
+	By default `asdf` does not verify block checksums when reading a file 	so this change does not impact anyone already using the default 	configuration. If you encounter validation errors while reading a file 	created by an older or newer `asdf` version you will need to disable 	validation by setting `validate_checksums=False` in [`asdf.open`][].
 
 [zlib](http://www.zlib.net/) and [bzip2](http://www.bzip.org) are included in every asdf install. Passing one of these 4 character codes as `all_array_compression` to [`asdf.AsdfFile.write_to`][asdf.AsdfFile.write_to] will compress all blocks with the corresponding algorithm:
 
@@ -369,20 +367,20 @@ assert af.get_array_compression(af["arr"]) == "lz4"
 
 When reading a file with compressed blocks, the blocks will be automatically decompressed when accessed. If a file with compressed blocks is read and then written out again, by default the new file will use the same compression as the original file. This behavior can be overridden by explicitly providing a different compression algorithm when writing the file out again.
 
-```
+```py
 import asdf
 
 # Open a file with some compression
-af = asdf.open('compressed.asdf')
+af = asdf.open("compressed.asdf")
 
 # Use the same compression when writing out a new file
-af.write_to('same.asdf')
+af.write_to("same.asdf")
 
 # Or specify the (possibly different) algorithm to use when writing out
-af.write_to('different.asdf', all_array_compression='lz4')
+af.write_to("different.asdf", all_array_compression="lz4")
 ```
 
-## Memory mapping
+## Memory mapping { #memory-mapping }
 
 When enabled, array data can be memory mapped using [`numpy.memmap`][]. This allows for the efficient use of memory even when reading files with very large arrays.
 

@@ -180,6 +180,7 @@ plugins:
           show_symbol_type_heading: true
           show_symbol_type_toc: true
           ### Docstrings ###
+          scoped_crossrefs: true
           merge_init_into_class: true
         # Load sphinx-style inventories
         inventories:

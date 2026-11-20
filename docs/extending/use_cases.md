@@ -46,13 +46,13 @@ Now anyone who installs the package containing the entry points will be able to 
 Finally, let's consider the case where we want to serialize instances of our type to an ASDF file that will be read using ASDF libraries written in other languages. The problem with our previous efforts is that the extension definition exists only as Python code, so here we'll want to create an additional YAML document called an extension manifest that defines the extension in a language-independent way.
 
 1. Identify the Python type to serialize. We'll need to know the fully-qualified name of the type (module path + class name).
-2. Select a tag URI that will signify the type in YAML. See [URIs in ASDF --> Entities --> Tags](uris.md#entities-tags)* for recommendations on tag URI structure.
+2. Select a tag URI that will signify the type in YAML. See *[URIs in ASDF --> Entities --> Tags](uris.md#entities-tags)* for recommendations on tag URI structure.
 3. Designate a URI for the schema. See *[URIs in ASDF --> Entities --> Schemas](uris.md#entities-schemas)* for recommendations on schema URI structure.
 4. Write the schema that will validate the tagged object. See *[ASDF Schemas](schemas.md)* if you're new to authoring schemas.
 5. Write an extension manifest document that describes the tag and schema that we're including in our extension. See *[Extension manifests](manifests.md)* for information on the manifest format.
 6. Make the schema and manifest installable as [`asdf`][] library resources. See *[Resources and resource mappings](resources.md)* for an overview of resources in [`asdf`][] and *[Installing resources via entry points](resources.md#installing-entry-points)* for information on installing resources via an entry point.
-7. Implement a [`Converter`][asdf.extension.Converter]     class that converts the type to YAML-serializable objects and back again. See *[Converters](converters.md)* for a discussion of the Converter interface. Refer to the schema to ensure that the Converter is writing YAML objects correctly.
-8. Use [`asdf.extension.ManifestExtension.from_uri`][asdf.extension.ManifestExtension.from_uri] to populate an extension with the Converter and information from the     manifest document. See *[Populating an extension from a manifest(extensions.md#from-manifest)* for instructions on using `ManifestExtension`.
+7. Implement a [`Converter`][asdf.extension.Converter] class that converts the type to YAML-serializable objects and back again. See *[Converters](converters.md)* for a discussion of the Converter interface. Refer to the schema to ensure that the Converter is writing YAML objects correctly.
+8. Use [`asdf.extension.ManifestExtension.from_uri`][asdf.extension.ManifestExtension.from_uri] to populate an extension with the Converter and information from the manifest document. See *[Populating an extension from a manifest](extensions.md#from-manifest)* for instructions on using `ManifestExtension`.
 9. Install the extension via an entry point. See *[Installing extensions via entry points](extensions.md#from-entry-point)*.
 
 That's it! Python users should experience the same convenience, but now the manifest document is available as a reference for developers who wish to implement support for reading our tagged objects in their language of choice.
@@ -63,8 +63,8 @@ In order to support a new compression algorithm for ASDF binary blocks, we need 
 
 1. Select a 4-byte compression code that will signify the compression algorithm.
 2. Implement a [`Compressor`][asdf.extension.Compressor] class that associates the 4-byte code with compression and decompression methods. See *[Compressors](compressors.md)* for a discussion of the Compressor interface.
-3. Implement an [`Extension`][asdf.extension.Extension] class which is the vehicle for plugging our compressor into the     [`asdf`][] library. See *[Extensions](extensions.md)* for a discussion of the Extension interface.
-4. Install the extension via one of the two available methods. See *[Installing an extension(extensions.md#installing)* for instructions.
+3. Implement an [`Extension`][asdf.extension.Extension] class which is the vehicle for plugging our compressor into the [`asdf`][] library. See *[Extensions](extensions.md)* for a discussion of the Extension interface.
+4. Install the extension via one of the two available methods. See *[Installing an extension](extensions.md#installing)* for instructions.
 
 Now the compression algorithm will be available for both reading and writing ASDF files. Users writing files will simply need to specify the new 4-byte compression code when making calls to [`asdf.AsdfFile.set_array_compression`][asdf.AsdfFile.set_array_compression].
 

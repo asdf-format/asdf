@@ -230,7 +230,7 @@ def walk_and_modify(top, callback, postorder=True, _context=None):
         - a json id (optional)
 
         It may return a different instance in order to modify the
-        tree.  If the singleton instance `~asdf.treeutil._RemoveNode`
+        tree.  If the singleton instance [`RemoveNode`][]
         is returned, the node will be removed from the tree.
 
         The json id is the context under which any relative URLs

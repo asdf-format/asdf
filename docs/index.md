@@ -2,6 +2,8 @@
 
 --8<-- "README.md:badges"
 
+[`asdf`][] is a tool for reading and writing Advanced Scientific Data Format (ASDF) files.
+
 --8<-- "README.md:summary"
 
 !!! note

@@ -578,7 +578,7 @@
 !!! note
 	The ASDF Standard is at v1.6.0
 
-- Require numpy\<1.25 for python 3.8
+- Require numpy<1.25 for python 3.8
   \[[\#1327](https://github.com/asdf-format/asdf/issues/1327)\]
 - Add AsdfProvisionalAPIWarning to warn developers of new features that
   may undergo breaking changes but are likely to be included as stable
@@ -640,7 +640,7 @@
 !!! note
 	The ASDF Standard is at v1.6.0
 
-- require jsonschema\<4.18
+- require jsonschema<4.18
   \[[\#1487](https://github.com/asdf-format/asdf/issues/1487)\]
 
 ## 2.14.3 (2022-12-15)
@@ -908,7 +908,7 @@
   standard limits mapping keys to string, integer, or boolean.
   \[[\#866](https://github.com/asdf-format/asdf/issues/866)\]
 - Stop removing schema defaults for all ASDF Standard versions, and
-  automatically fill defaults only for versions \<= 1.5.0.
+  automatically fill defaults only for versions <= 1.5.0.
   \[[\#860](https://github.com/asdf-format/asdf/issues/860)\]
 - Stop removing keys with `None` values from the tree on write. This
   fixes a long-standing issue where the tree structure is not preserved
@@ -1161,7 +1161,7 @@
 !!! note
 	The ASDF Standard is at v1.3.0
 
-- Limit the version of `semantic_version` to \<=2.6.0 to work around a
+- Limit the version of `semantic_version` to <=2.6.0 to work around a
   Deprecation warning.
   \[[\#700](https://github.com/asdf-format/asdf/issues/700)\]
 

@@ -229,10 +229,7 @@ class FractionWithInverseConverter(asdf.extension.Converter):
 ```
 
 !!! warning
-	The type `FractionsWithInverse` and not a string was used above to
-	keep this example simple. See the note about
-	[`Converter.types`][asdf.extension.Converter.types] as strings in the
-	`converter_interface` section above.
+	The type `FractionsWithInverse` and not a string was used above to keep this example simple. See the note about [`Converter.types`][asdf.extension.Converter.types] as strings in the *[Converter Interface](#converter-interface)* section above.
 
 After adding this Converter to an Extension and installing it, the fraction will serialize correctly:
 

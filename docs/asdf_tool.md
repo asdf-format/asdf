@@ -3,7 +3,7 @@
 [`asdf`][] includes a command-line tool,
 `asdftool` that performs a number of useful operations:
 
-- `explode`: Convert a self-contained ASDF file into exploded form (see `exploded`).
+- `explode`: Convert a self-contained ASDF file into exploded form (see *[Saving external arrays](arrays.md#exploded)*).
 - `implode`: Convert an ASDF file in exploded form into a self-contained file.
 - `defragment`: Remove unused blocks and extra space.
 - `diff`: Report differences between two ASDF files.

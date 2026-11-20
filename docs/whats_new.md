@@ -54,7 +54,7 @@ Hi! Asdf 4.0.0 is a new major version including:
 - `asdf.asdf`, the public items in this submodule are all in the top level [`asdf`][] module
 - `asdf.asdf.SerializationContext`, available at [`asdf.extension.SerializationContext`][]
 - `asdf.stream`, see [`asdf.tags.core.Stream`][]
-- `ignore_implicit_conversion` has been removed (see `whats_new_4.0.0_implicit_conversion` below)
+- `ignore_implicit_conversion` has been removed (see *[Implicit Conversion](#400-implicit-conversion)* below)
 - providing a tag uri within a schema `$ref` will no longer resolve to the schema uri associated with that tag
 
 ### New Defaults { #400-defaults }
