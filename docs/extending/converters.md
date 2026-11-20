@@ -18,9 +18,9 @@ The string type name is recommended over a type object for performance reasons, 
 
 Additionally, the Converter interface includes a method that must be implemented when some logic is required to select the tag to assign to a `to_yaml_tree` result:
 
-`Converter.select_tag` - an optional method that accepts a complex Python object and a list of candidate tags and returns the tag that should be used to serialize the object.
+[`Converter.select_tag`][asdf.extension.Converter] - an optional method that accepts a complex Python object and a list of candidate tags and returns the tag that should be used to serialize the object.
 
-`Converter.lazy` - a boolean attribute indicating if this converter accepts "lazy" objects (those defined in [`asdf.lazy_nodes`][]). This is mostly useful for container-like classes (where the "lazy" objects can defer conversion of contained objects until they are accessed). If a converter produces a generator lazy should be set to `False` as asdf will need to generate nodes further out the branch to fully resolve the object returned from the generator.
+[`Converter.lazy`][asdf.extension.Converter] - a boolean attribute indicating if this converter accepts "lazy" objects (those defined in [`asdf.lazy_nodes`][]). This is mostly useful for container-like classes (where the "lazy" objects can defer conversion of contained objects until they are accessed). If a converter produces a generator lazy should be set to `False` as asdf will need to generate nodes further out the branch to fully resolve the object returned from the generator.
 
 ## A simple example
 
